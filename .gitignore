@@ -1,1 +1,38 @@
-.venv
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python cache/artefacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Tool caches
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# Coverage
+.coverage
+.coverage.*
+coverage.xml
+
+# IDE/editor
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+.envrc
+
+# Data outputs
+data/raw/
+data/tmp/
