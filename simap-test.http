@@ -1,0 +1,7 @@
+GET https://www.simap.ch/api/cantons/v1
+Accept: application/json
+
+
+
+GET https://www.simap.ch/api/publications/v1
+Accept: application/json
