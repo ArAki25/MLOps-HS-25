@@ -1,70 +1,84 @@
-# SIMAP CSV-Export – Kurzanleitung
+# SIMAP CSV-Export – Einfache Anleitung für Einsteiger
 
-Dieses Repo enthält einen kleinen Python‑Client, um aus der SIMAP‑Archiv‑API (https://archiv.simap.ch/api) Aufträge zu suchen und als CSV zu exportieren. Optional kannst du die CSV auch in Excel konvertieren und formatieren.
+## Was ist SIMAP?
 
-## Voraussetzungen
-- Python 3.10+ und ein virtuelles Environment (`.venv`) empfohlen
-- Installiere Abhängigkeiten: `pip install -r requirements.txt` 
+SIMAP ist eine Plattform, auf der öffentliche Aufträge in der Schweiz veröffentlicht werden. Mit diesem kleinen Programm kannst du Aufträge aus SIMAP suchen und als Tabelle (CSV-Datei) speichern. So kannst du die Daten einfach anschauen oder weiterverarbeiten.
 
-## Schnellstart: CSV für ein Datumsspektrum erzeugen
-1) Basis‑URL prüfen/setzen (Standard ist bereits korrekt):
-   - `SIMAP_BASE_URL` default: `https://archiv.simap.ch/api`
-2) Zeitraum und Typen einstellen (ENV‑Variablen, optional):
-   - `SIMAP_START` z. B. `2024-01-01`
-   - `SIMAP_END` z. B. `2024-06-30`
-   - `SIMAP_TYPES` z. B. `OB00,OB01,OB02,OB03,OB04,OB05,OB06,OB07,OB08,OB09` (alle Typen)
-3) Export starten:
-   - `python -m source_code.export_csv`
-4) Ergebnis:
-   - CSV liegt in `data/raw/`, z. B. `auftraege_2024-01-01_2024-06-30_all.csv`
+## Was macht dieses Tool?
 
-## Relevante Dateien
-- `source_code/api_client.py` – HTTP‑Client, Suche, CSV‑Export und Filter‑Helper
-- `source_code/export_csv.py` – einfaches Skript, das Filter setzt und exportiert
+Das Tool holt für dich die Aufträge von SIMAP und speichert sie in einer Datei. Du kannst einen Zeitraum und Auftragsarten einstellen und bekommst dann eine Tabelle mit den passenden Aufträgen.
 
-## Filter bequem setzen (Helper)
-Zum Setzen der Filter gibt es `build_search_filters(...)` in `source_code/api_client.py`. Damit kannst du gängige Felder komfortabel übergeben:
+---
 
-Beispiel (Python):
+## Schritt 1: Python installieren
+
+Python ist eine Programmiersprache. Das Programm läuft damit.
+
+- Gehe auf https://www.python.org/downloads/
+- Lade die neueste Version herunter (am besten 3.10 oder neuer)
+- Folge den Installationsanweisungen auf der Webseite
+
+---
+
+## Schritt 2: Das Programm vorbereiten
+
+1. Öffne die Kommandozeile (Terminal oder Eingabeaufforderung).
+2. Wechsle in den Ordner, in dem das Programm liegt.
+3. Installiere die benötigten Zusatzprogramme (Pakete) mit diesem Befehl:
+
 ```
-from source_code.api_client import SimapAPIClient, build_search_filters
-
-filters = build_search_filters(
-    start_date="2024-01-01",
-    end_date="2024-06-30",
-    types=["OB00","OB01","OB02","OB03","OB04","OB05","OB06","OB07","OB08","OB09"],
-    contract_types=["WORKS","SERVICES"],
-    procedures=["OPEN","RESTRICTED"],
-    cpv=["45000000"],
-    bkp=["40","211"],
-    keywords="*Brücke*",
-    canton_codes=["ZH","BE"],
-)
-
-client = SimapAPIClient()
-pubs = client.iterate_publications(filters, records_per_page=1000)
-client.export_publications_csv(pubs, filename="auftraege_custom.csv")
+pip install -r requirements.txt  # Installiert alle nötigen Pakete
 ```
 
-Oder per ENV‑Variablen mit `source_code/export_csv.py`:
-- `SIMAP_START` / `SIMAP_END`
-- `SIMAP_TYPES` (kommagetrennt, z. B. `OB00,OB01,...`)
-- `SIMAP_CONTRACT_TYPES` (z. B. `WORKS,SERVICES,SUPPLIES,CONTEST`)
-- `SIMAP_PROCEDURES` (z. B. `OPEN,RESTRICTED,OTHER`)
-- `SIMAP_CPV` / `SIMAP_BKP` (kommagetrennt)
-- `SIMAP_KEYWORDS` (z. B. `*Tunnel*`)
-- `SIMAP_CSV_NAME` (Dateiname der Ausgabe)
+---
 
-Beispiel (PowerShell):
+## Schritt 3: Das Programm starten
+
+Du kannst jetzt das Programm starten, um Aufträge herunterzuladen.
+
+- Beispiel: Alle Aufträge vom 1. Januar bis 30. Juni 2024
+
+Vorher kannst du noch einstellen, welche Aufträge du willst. Das machst du mit Umgebungsvariablen. So geht das:
+
 ```
-$env:SIMAP_START = "2024-01-01"
-$env:SIMAP_END = "2024-06-30"
-$env:SIMAP_TYPES = "OB00,OB01,OB02,OB03,OB04,OB05,OB06,OB07,OB08,OB09"
-$env:SIMAP_KEYWORDS = "*Brücke*"
-python -m source_code.export_csv
+# Zeitraum einstellen
+set SIMAP_START=2024-01-01
+set SIMAP_END=2024-06-30
+
+# Auftragstypen einstellen (Beispiel: alle Typen)
+set SIMAP_TYPES=OB00,OB01,OB02,OB03,OB04,OB05,OB06,OB07,OB08,OB09
 ```
 
-## Optional: Excel‑Konvertierung und Formatierung
-Wenn Excel installiert ist, kannst du die CSV per PowerShell/COM in `.xlsx` umwandeln und formatieren (Autofilter, Kopfzeile fixieren, Datumsspalten etc.). Beispiel‑Skripte sind nicht im Repo enthalten, aber wir haben die Abläufe bereits getestet.
+(Diese Befehle sind für Windows. Auf Mac oder Linux benutzt du `export` statt `set`.)
 
-Alternativ lässt sich eine reine Python‑Variante (z. B. `openpyxl`) ergänzen – melde dich, wenn wir das hinzufügen sollen.
+Dann startest du das Programm so:
+
+```
+python -m source_code.export_csv  # Startet den Export
+```
+
+---
+
+## Schritt 4: Ergebnis anschauen
+
+Das Programm speichert die Daten als CSV-Datei im Ordner `data/raw/`.
+
+Beispiel-Datei:
+
+```
+data/raw/auftraege_2024-01-01_2024-06-30_all.csv
+```
+
+Du kannst diese Datei mit Excel oder einem anderen Tabellenprogramm öffnen.
+
+---
+
+## Zusammenfassung
+
+1. Python installieren
+2. Pakete installieren mit `pip install -r requirements.txt`
+3. Zeitraum und Typen einstellen (optional)
+4. Programm starten mit `python -m source_code.export_csv`
+5. Ergebnis-Datei in `data/raw/` öffnen
+
+Viel Erfolg beim Arbeiten mit SIMAP-Daten!
