@@ -1,2 +1,5 @@
 requests==2.32.4
 pandas
+python-dotenv
+pyyaml
+psycopg2-binary

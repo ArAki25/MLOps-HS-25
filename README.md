@@ -82,3 +82,19 @@ Du kannst diese Datei mit Excel oder einem anderen Tabellenprogramm öffnen.
 5. Ergebnis-Datei in `data/raw/` öffnen
 
 Viel Erfolg beim Arbeiten mit SIMAP-Daten!
+
+---
+
+## Schnellstart mit main.py
+
+- Abhängigkeiten installieren: `pip install -r requirements.txt`
+- CSV exportieren, z. B. die letzten 10 Tage und max. 3 Seiten:
+  - `python main.py --days-back 10 --max-pages 3 --output simap_projects.csv`
+- Weitere Optionen:
+  - `--detail-delay`, `--page-delay`, `--max-projects`, `--log-level`
+
+Beispiel:
+
+```
+python main.py --days-back 30 --max-pages 5 --output data/raw/simap_last30d.csv
+```
