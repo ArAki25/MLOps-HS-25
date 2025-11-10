@@ -12,6 +12,7 @@ import logging
 import re
 import sys
 import time
+import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
@@ -490,6 +491,15 @@ def run(argv: Optional[Sequence[str]] = None) -> int:
             except SimapApiError as exc:
                 logging.error("Detail request failed for project %s / publication %s: %s", project_id, publication_id, exc)
                 continue
+
+            # --- DEBUG: Speichere ein Beispielprojekt als JSON ---
+            if idx == 1:
+                import json
+                out_path = os.path.abspath("sample_project.json")
+                with open(out_path, "w", encoding="utf-8") as f:
+                    json.dump({"project": project, "detail": detail}, f, ensure_ascii=False, indent=2)
+                logging.info(f"Beispieldatei gespeichert: {out_path}")
+            # -----------------------------------------------------
 
             record = enrich_project(project, detail)
             records.append(record)
