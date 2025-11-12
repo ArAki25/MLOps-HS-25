@@ -23,6 +23,7 @@ coverage.xml
 # IDE/editor
 .idea/
 .vscode/
+.claude/
 
 # OS
 .DS_Store
@@ -34,8 +35,7 @@ Thumbs.db
 .envrc
 
 # Data outputs
-data/raw/
-data/tmp/
+data/
 
 Main_fenlin.py
 jhonny.py

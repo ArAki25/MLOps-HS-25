@@ -1,5 +1,4 @@
+# SIMAP CSV Exporter - Dependencies
+# Nur die essentiellen Libraries für API-Zugriff und CSV-Export
+
 requests==2.32.4
-pandas
-python-dotenv
-pyyaml
-psycopg2-binary
