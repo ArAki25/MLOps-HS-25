@@ -39,6 +39,38 @@ python main.py
 
 Das erstellt eine Datei `data/simap_projects.csv` mit allen Projekten der letzten 30 Tage und zeigt automatisch Statistiken an.
 
+## 🗄️ Supabase-Integration (Optional)
+
+**Standardmäßig** exportiert das Tool nur CSV-Dateien. Wenn du die Daten zusätzlich in einer **Supabase-Datenbank** speichern möchtest (z.B. für tägliche Updates oder ML-Pipelines):
+
+1. **Setup für Supabase**:
+   ```bash
+   # Kopiere das .env Template
+   cp .env.example .env
+
+   # Öffne .env und trage deine Supabase DATABASE_URL ein
+   # (aus Supabase Dashboard → Settings → Database → Connection String)
+   ```
+
+2. **Aktiviere DB-Import in main.py**:
+   ```python
+   IMPORT_TO_DB = True  # Ändere von False auf True
+   ```
+
+3. **Führe aus**:
+   ```bash
+   python main.py
+   ```
+
+Das Tool erstellt automatisch die Tabelle, Indizes und importiert die Daten mit Upsert-Logik (keine Duplikate).
+
+**Detaillierte Anleitung**: Siehe [DATABASE_SETUP.md](DATABASE_SETUP.md) für:
+- Automatisierte tägliche Updates
+- SQL-Queries für ML-Features
+- Team-Setup & Best Practices
+
+**Wichtig für Teams**: Die `.env` Datei ist in `.gitignore` und wird **nicht** committet. Jedes Team-Mitglied kann selbst entscheiden, ob es Supabase nutzen möchte oder nur CSV.
+
 ## 🎛️ Filter konfigurieren
 
 Öffnen Sie [main.py](main.py) und passen Sie die Filter an:
@@ -141,10 +173,16 @@ MLOps-HS-25/
 ├── Simap/
 │   ├── api.py         # API-Client mit Retry-Logik
 │   ├── extract.py     # Datenextraktion (39 Felder!)
-│   └── exporter.py    # CSV-Export mit Filtern & Statistiken
-├── data/              # Exportierte CSV-Dateien
+│   ├── exporter.py    # CSV-Export mit Filtern & Statistiken
+│   └── db_importer.py # Supabase-Import (optional)
+├── sql/
+│   └── schema.sql     # Datenbank-Schema & Views (optional)
+├── data/              # Exportierte CSV-Dateien (in .gitignore)
 ├── main.py            # Hauptprogramm mit Filter-Konfiguration
-└── requirements.txt   # Dependencies
+├── requirements.txt   # Dependencies
+├── .env.example       # Template für Supabase-Config
+├── README.md          # Diese Datei
+└── DATABASE_SETUP.md  # Detaillierte Supabase-Anleitung (optional)
 ```
 
 ## 🛠️ Erweiterte Nutzung

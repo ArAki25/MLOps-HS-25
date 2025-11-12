@@ -2,3 +2,7 @@
 # Nur die essentiellen Libraries für API-Zugriff und CSV-Export
 
 requests==2.32.4
+python-dotenv==1.0.1  # .env Dateien laden
+
+# Database
+psycopg2-binary==2.9.9  # PostgreSQL adapter für Supabase
