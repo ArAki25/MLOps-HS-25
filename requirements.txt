@@ -5,4 +5,4 @@ requests==2.32.4
 python-dotenv==1.0.1  # .env Dateien laden
 
 # Database
-psycopg2-binary==2.9.9  # PostgreSQL adapter für Supabase
+psycopg2-binary==2.9.11  # PostgreSQL adapter für Supabase
