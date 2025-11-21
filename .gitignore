@@ -31,7 +31,6 @@ Thumbs.db
 
 # Environment files
 .env
-.env.*
 .envrc
 
 # Data outputs
