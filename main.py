@@ -32,13 +32,13 @@ def main():
 
     # Basis-Parameter
     OUTPUT_FILE = "data/simap_projects.csv"
-    DAYS_BACK = 30              # Wie viele Tage zurück
+    DAYS_BACK = 60              # Wie viele Tage zurück
     MAX_PAGES = None            # Maximale Anzahl API-Seiten (None = alle)
-    MAX_PROJECTS = 100          # Maximale Anzahl Projekte (None = alle)
+    MAX_PROJECTS = 5000          # Maximale Anzahl Projekte (None = alle)
 
     # Datenbank-Konfiguration
     EXPORT_TO_CSV = True        # CSV-Export aktivieren
-    IMPORT_TO_DB = False        # Direkter Import in Supabase aktivieren (benötigt .env mit DATABASE_URL)
+    IMPORT_TO_DB = True        # Direkter Import in Supabase aktivieren (benötigt .env mit DATABASE_URL)
     USE_DIRECT_IMPORT = False   # True = Direkt von API in DB, False = CSV -> DB
 
     # ========================================================================
@@ -47,7 +47,7 @@ def main():
 
     # Publikationstypen filtern
     # Optionen: "tender" (Ausschreibungen), "award" (Zuschläge), "cancellation"
-    PUBLICATION_TYPES = None
+    PUBLICATION_TYPES = "tender"
     # Beispiele:
     # PUBLICATION_TYPES = ["tender"]              # Nur offene Ausschreibungen
     # PUBLICATION_TYPES = ["award"]               # Nur Zuschläge
@@ -55,21 +55,21 @@ def main():
 
     # Kantone filtern
     # Optionen: "ZH", "BE", "LU", "GE", "VD", "AG", "SG", etc.
-    CANTONS = None
+    CANTONS = ["ZH", "BL", "BS", "AG"]
     # Beispiele:
     # CANTONS = ["ZH", "BE"]                      # Nur Zürich und Bern
     # CANTONS = ["GE", "VD", "FR"]                # Nur Romandie
 
     # Sprachen filtern
     # Optionen: "de", "fr", "it", "en"
-    LANGUAGES = "de"
+    LANGUAGES = ["de", "en"]
     # Beispiele:
     # LANGUAGES = ["de"]                          # Nur deutschsprachig
     # LANGUAGES = ["fr", "it"]                    # Nur Französisch & Italienisch
 
     # Prozesstypen filtern
     # Optionen: "open", "selective", "invitation"
-    PROCESS_TYPES = "open"
+    PROCESS_TYPES = ["open", "selective"]
     # Beispiele:
     # PROCESS_TYPES = ["open"]                    # Nur offene Verfahren
 
