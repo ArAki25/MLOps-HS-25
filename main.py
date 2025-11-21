@@ -32,14 +32,14 @@ def main():
 
     # Basis-Parameter
     OUTPUT_FILE = "data/simap_projects.csv"
-    DAYS_BACK = 60              # Wie viele Tage zurück
+    DAYS_BACK = 2              # Wie viele Tage zurück
     MAX_PAGES = None            # Maximale Anzahl API-Seiten (None = alle)
-    MAX_PROJECTS = 5000          # Maximale Anzahl Projekte (None = alle)
+    MAX_PROJECTS = None          # Maximale Anzahl Projekte (None = alle)
 
     # Datenbank-Konfiguration
-    EXPORT_TO_CSV = True        # CSV-Export aktivieren
-    IMPORT_TO_DB = True        # Direkter Import in Supabase aktivieren (benötigt .env mit DATABASE_URL)
-    USE_DIRECT_IMPORT = False   # True = Direkt von API in DB, False = CSV -> DB
+    EXPORT_TO_CSV = True         # CSV-Export aktivieren (WICHTIG: Muss True sein!)
+    IMPORT_TO_DB = True          # Direkter Import in Supabase aktivieren (benötigt .env mit DATABASE_URL)
+    USE_DIRECT_IMPORT = False    # True = Direkt von API in DB, False = CSV -> DB
 
     # ========================================================================
     # FILTER (Optional - None = kein Filter)
@@ -136,7 +136,7 @@ def main():
                     logging.warning("Versuche existierende CSV zu importieren...")
 
                 try:
-                    stats = import_csv_to_db(OUTPUT_FILE)
+                    stats = import_csv_to_db(OUTPUT_FILE, batch_size=500 )
                     logging.info("")
                     logging.info(f"✓ {stats['inserted']} Projekte in Datenbank importiert")
                     if stats['failed'] > 0:
