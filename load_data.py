@@ -28,7 +28,7 @@ MIN_AMOUNT = None           # z.B. 100000 oder None
 MAX_AMOUNT = None           # z.B. 500000 oder None
 
 # Limit
-LIMIT = 10  # Maximale Anzahl Zeilen (None = alle)
+LIMIT = None  # Maximale Anzahl Zeilen (None = alle)
 
 # Speichern?
 SAVE_CSV = True
