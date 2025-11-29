@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Simap.ch KI-Assistent{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="header">
+    <div class="header-content">
+        <div class="logo">
+            <div class="logo-icon">S</div>
+            <div>
+                <h1 style="font-size: 18px; font-weight: bold;">Simap.ch KI-Assistent</h1>
+                <p style="font-size: 12px; color: #6b7280;">Intelligente Ausschreibungsberatung</p>
+            </div>
+        </div>
+        <div class="user-info">
+            <div style="text-align: right; margin-right: 1rem;">
+                <p style="font-size: 14px; font-weight: 500;">{{ user.firma }}</p>
+                <p style="font-size: 12px; color: #6b7280;">{{ user.email }}</p>
+            </div>
+            <div class="user-avatar">{{ user.firma[0] }}</div>
+            <form method="POST" action="/logout" style="margin-left: 1rem;">
+                <button type="submit" class="logout-btn">Abmelden</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <button class="nav-button active" onclick="showTab('dashboard')">Dashboard</button>
+        <button class="nav-button" onclick="showTab('projekte')">Projekte</button>
+        <button class="nav-button" onclick="showTab('analyse')">Analyse</button>
+        <button class="nav-button" onclick="showTab('einstellungen')">Einstellungen</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Tab -->
+        <div id="dashboard-content">
+            <!-- Statistiken -->
+            <div class="stats-grid">
+                <div class="stat-card blue">
+                    <p class="stat-label" style="color: #2563eb;">Neue Ausschreibungen</p>
+                    <p class="stat-value" style="color: #1e3a8a;">{{ stats.neue }}</p>
+                    <p style="font-size: 12px; color: #2563eb; margin-top: 0.5rem;">Heute aktualisiert</p>
+                </div>
+                <div class="stat-card yellow">
+                    <p class="stat-label" style="color: #ca8a04;">Laufende Projekte</p>
+                    <p class="stat-value" style="color: #78350f;">{{ stats.laufend }}</p>
+                    <p style="font-size: 12px; color: #ca8a04; margin-top: 0.5rem;">In Bearbeitung</p>
+                </div>
+                <div class="stat-card green">
+                    <p class="stat-label" style="color: #16a34a;">Abgeschlossen</p>
+                    <p class="stat-value" style="color: #14532d;">{{ stats.abgeschlossen }}</p>
+                    <p style="font-size: 12px; color: #16a34a; margin-top: 0.5rem;">Erfolgreich</p>
+                </div>
+                <div class="stat-card purple">
+                    <p class="stat-label" style="color: #9333ea;">Gesamtvolumen</p>
+                    <p class="stat-value" style="color: #581c87;">{{ stats.volumen }}</p>
+                    <p style="font-size: 12px; color: #9333ea; margin-top: 0.5rem;">Dieses Jahr</p>
+                </div>
+            </div>
+
+            <!-- Such- und Filterbereich -->
+            <div class="search-bar">
+                <input type="text" id="searchInput" class="search-input" placeholder="Ausschreibungen durchsuchen..." onkeyup="filterAusschreibungen()">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="setFilter('alle')">Alle</button>
+                    <button class="filter-btn" onclick="setFilter('neu')">Neu</button>
+                    <button class="filter-btn" onclick="setFilter('laufend')">Laufend</button>
+                    <button class="filter-btn" onclick="setFilter('abgeschlossen')">Abgeschlossen</button>
+                </div>
+            </div>
+
+            <!-- Ausschreibungen Liste -->
+            <div id="ausschreibungen-container">
+                {% for item in ausschreibungen %}
+                <div class="ausschreibung-card" data-status="{{ item.status }}">
+                    <div class="card-header">
+                        <div style="flex: 1;">
+                            <div>
+                                <span class="card-title">{{ item.titel }}</span>
+                                <span class="status-badge status-{{ item.status }}">{{ item.status|upper }}</span>
+                            </div>
+                            <p style="color: #6b7280; margin: 0.5rem 0;">{{ item.beschreibung }}</p>
+                            <div class="card-meta">
+                                <span>{{ item.unternehmen }}</span>
+                                <span>Deadline: {{ item.deadline }}</span>
+                                <span>{{ item.wert }}</span>
+                            </div>
+                        </div>
+                        <div style="margin-left: 2rem;">
+                            <div class="relevanz-box">
+                                <div class="relevanz-label">KI-Relevanz</div>
+                                <div class="relevanz-value">{{ item.relevanz }}%</div>
+                            </div>
+                            <span style="display: block; margin-top: 0.5rem; padding: 0.25rem 0.75rem; background: #f3f4f6; border-radius: 20px; font-size: 12px; text-align: center;">
+                                {{ item.kategorie }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" onclick="viewDetails({{ item.id }})">Details ansehen</button>
+                        <button class="btn btn-secondary" onclick="bookmarkItem({{ item.id }})">Merken</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Projekte Tab -->
+        <div id="projekte-content" style="display: none;">
+            <div style="background: white; padding: 2rem; border-radius: 12px; border: 1px solid #e5e7eb;">
+                <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 1rem;">Meine Projekte</h2>
+                <p style="color: #6b7280;">Hier werden alle Ihre gespeicherten und verfolgten Ausschreibungen angezeigt.</p>
+            </div>
+        </div>
+
+        <!-- Analyse Tab -->
+        <div id="analyse-content" style="display: none;">
+            <div style="background: white; padding: 2rem; border-radius: 12px; border: 1px solid #e5e7eb;">
+                <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 1rem;">Analyse und Statistiken</h2>
+                <p style="color: #6b7280;">KI-gestuetzte Analysen und Erfolgsstatistiken Ihrer Ausschreibungen.</p>
+            </div>
+        </div>
+
+        <!-- Einstellungen Tab -->
+        <div id="einstellungen-content" style="display: none;">
+            <div style="background: white; padding: 2rem; border-radius: 12px; border: 1px solid #e5e7eb;">
+                <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 1rem;">Einstellungen</h2>
+                <div style="margin-top: 2rem;">
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 0.5rem;">Unternehmensprofil</h3>
+                    <p style="color: #6b7280; margin-bottom: 2rem;">Verwalten Sie Ihre Unternehmensdaten und Praeferenzen.</p>
+
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 0.5rem;">KI-Praeferenzen</h3>
+                    <p style="color: #6b7280; margin-bottom: 2rem;">Passen Sie die KI-Empfehlungen an Ihre Beduerfnisse an.</p>
+
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 0.5rem;">Benachrichtigungen</h3>
+                    <p style="color: #6b7280;">Legen Sie fest, wie Sie ueber neue Ausschreibungen informiert werden moechten.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var currentFilter = 'alle';
+
+    function showTab(tabName) {
+        var contents = document.querySelectorAll('.main-content > div');
+        for (var i = 0; i < contents.length; i++) {
+            contents[i].style.display = 'none';
+        }
+        document.getElementById(tabName + '-content').style.display = 'block';
+
+        var buttons = document.querySelectorAll('.nav-button');
+        for (var j = 0; j < buttons.length; j++) {
+            buttons[j].classList.remove('active');
+        }
+        event.target.classList.add('active');
+    }
+
+    function setFilter(status) {
+        currentFilter = status;
+        var buttons = document.querySelectorAll('.filter-btn');
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].classList.remove('active');
+        }
+        event.target.classList.add('active');
+        filterAusschreibungen();
+    }
+
+    function filterAusschreibungen() {
+        var searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        var cards = document.querySelectorAll('.ausschreibung-card');
+
+        for (var i = 0; i < cards.length; i++) {
+            var card = cards[i];
+            var status = card.getAttribute('data-status');
+            var text = card.textContent.toLowerCase();
+
+            var matchesFilter = currentFilter === 'alle' || status === currentFilter;
+            var matchesSearch = text.indexOf(searchTerm) !== -1;
+
+            card.style.display = (matchesFilter && matchesSearch) ? 'block' : 'none';
+        }
+    }
+
+    function viewDetails(id) {
+        alert('Details fuer Ausschreibung #' + id + ' - Wird implementiert');
+    }
+
+    function bookmarkItem(id) {
+        alert('Ausschreibung #' + id + ' gespeichert!');
+    }
+</script>
+{% endblock %}
