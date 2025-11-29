@@ -115,39 +115,62 @@ def print_export_statistics(records: List[Dict[str, Any]]) -> None:
 
 def export_to_csv(
     output_file: str,
-    days_back: int = 30,
+    days_back: int = None,
+    start_date: str = None,
     max_pages: int = 5,
     max_projects: int = None,
     publication_types: List[str] = None,
     cantons: List[str] = None,
     languages: List[str] = None,
-    process_types: List[str] = None
+    process_types: List[str] = None,
+    api_delay: float = 0.1
 ) -> None:
     """
     Exportiert SIMAP-Projekte als CSV mit optionalen Filtern.
 
     Args:
         output_file: Pfad zur CSV-Datei (z.B. "output/projects.csv")
-        days_back: Wie viele Tage zurück sollen Projekte geholt werden
+        days_back: Wie viele Tage zurück (z.B. 30 für letzte 30 Tage)
+        start_date: ODER genaues Startdatum als String (z.B. "2024-11-01")
+                   Wenn gesetzt, wird days_back ignoriert!
         max_pages: Maximum Anzahl von API-Seiten
         max_projects: Maximum Anzahl von Projekten (None = alle)
         publication_types: Filter für Publikationstypen (z.B. ["tender", "award"])
         cantons: Filter für Kantone (z.B. ["ZH", "BE", "GE"])
         languages: Filter für Sprachen (z.B. ["de", "fr", "it"])
         process_types: Filter für Prozesstypen (z.B. ["open", "selective"])
+        api_delay: Wartezeit zwischen API-Requests in Sekunden (default 0.1 = schnell)
 
     Beispiele:
-        # Nur offene Ausschreibungen
-        export_to_csv("tenders.csv", publication_types=["tender"])
+        # Mit Tagen zurück (klassisch)
+        export_to_csv("projects.csv", days_back=30)
 
-        # Nur Zuschläge aus Zürich und Bern
-        export_to_csv("awards_zh_be.csv", publication_types=["award"], cantons=["ZH", "BE"])
+        # Mit genauen Startdatum (neu)
+        export_to_csv("projects.csv", start_date="2024-11-01")
 
-        # Nur deutschsprachige Projekte
-        export_to_csv("projects_de.csv", languages=["de"])
+        # Mit Filtern
+        export_to_csv("awards.csv", start_date="2024-01-01", publication_types=["award"])
     """
     logging.info("Starte SIMAP Export...")
-    logging.info(f"Parameter: days_back={days_back}, max_pages={max_pages}, max_projects={max_projects}")
+
+    # Bestimme das Startdatum
+    if start_date:
+        # Nutze das übergebene Startdatum
+        try:
+            since = datetime.strptime(start_date, "%Y-%m-%d")
+            logging.info(f"Nutze Startdatum: {start_date}")
+        except ValueError:
+            logging.error(f"Ungültiges Datumsformat: {start_date}. Nutze stattdessen YYYY-MM-DD!")
+            raise
+    elif days_back:
+        # Berechne aus Tagen zurück
+        since = datetime.now() - timedelta(days=days_back)
+        logging.info(f"Parameter: days_back={days_back}, max_pages={max_pages}, max_projects={max_projects}")
+    else:
+        # Standard: 30 Tage
+        days_back = 30
+        since = datetime.now() - timedelta(days=days_back)
+        logging.info(f"Standard: days_back=30, max_pages={max_pages}, max_projects={max_projects}")
 
     # Filter-Info ausgeben
     if publication_types:
@@ -163,7 +186,6 @@ def export_to_csv(
     client = SimapClient()
 
     # Zeitraum berechnen
-    since = datetime.now() - timedelta(days=days_back)
     params = {
         "newestPublicationFrom": since.strftime("%Y-%m-%d")
     }
@@ -180,6 +202,7 @@ def export_to_csv(
         pass
 
     logging.info(f"Hole Projekte seit: {params['newestPublicationFrom']}")
+    logging.info(f"API Delay: {api_delay}s zwischen Requests (0.1 = schnell, 0.5 = normal)")
 
     # Daten sammeln
     records: List[Dict[str, Any]] = []
@@ -187,7 +210,7 @@ def export_to_csv(
     filtered_count = 0
 
     try:
-        for project in client.get_projects(params, max_pages=max_pages):
+        for project in client.get_projects(params, max_pages=max_pages, delay=api_delay):
             project_count += 1
 
             # Limit prüfen
