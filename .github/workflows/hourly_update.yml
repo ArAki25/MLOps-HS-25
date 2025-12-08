@@ -5,7 +5,13 @@ on:
     # Läuft jede Stunde zur 15. Minute (z.B. 08:15, 09:15, ...)
     - cron: '15 * * * *'
   workflow_dispatch:
-    # Ermöglicht manuellen Start via GitHub UI
+    # Ermöglicht manuellen Start via GitHub UI mit Eingabe
+    inputs:
+      days_back:
+        description: 'Anzahl Tage zurück'
+        required: true
+        default: '2'
+        type: string
 
 jobs:
   update-data:
@@ -29,7 +35,8 @@ jobs:
         # Hier werden die Secrets aus GitHub Settings eingebunden
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: |
-        # Lädt Daten der letzten 2 Tage (um sicherzugehen, dass nichts verpasst wird)
-        # Die Filter (Kantone etc.) sind in main.py definiert
-        python main.py --days 2
+        # Nutze Input vom manuellen Start, sonst Default '2' (für den automatischen Cron-Job)
+        DAYS="${{ inputs.days_back || '2' }}"
+        echo "Starte Update für die letzten $DAYS Tage..."
+        python main.py --days "$DAYS"
 
