@@ -1,23 +1,17 @@
-# SIMAP CSV Exporter
+# SIMAP Data Pipeline
 
-**Einfaches Tool zum Exportieren von Schweizer öffentlichen Ausschreibungsdaten als CSV.**
+Automatisierte Pipeline zum Exportieren von Schweizer öffentlichen Ausschreibungsdaten von [SIMAP.ch](https://www.simap.ch) und Import in Supabase.
 
-Holt Daten von der [SIMAP-API](https://www.simap.ch) (Swiss Internet Market Place) und exportiert sie in eine übersichtliche CSV-Datei für Analysen.
+## Features
 
-## 🎯 Was macht dieses Tool?
+- **Stündliche Aktualisierung** via GitHub Actions
+- **SIMAP API Client** mit Retry-Logik und Rate-Limiting
+- **Supabase Integration** für persistente Datenhaltung
+- **Web-UI** zur Anzeige der Ausschreibungen
+- **ML-Klassifikator** für Projekttyp-Vorhersagen
+- **Flexible Filter** nach Kantonen, Sprachen, Prozesstypen
 
-- **Holt** öffentliche Ausschreibungen und Zuschläge von SIMAP
-- **Extrahiert** umfangreiche Informationen:
-  - Basis-Daten (Titel, Beschreibung, Auftraggeber, Ort)
-  - Fristen und geschätzte Preise
-  - **Award-Informationen**: Gewinner, Zuschlagspreise, Anzahl Eingaben
-  - **Projektdetails**: Projektnummern, Bautypen, Kategorien
-  - **Klassifizierungen**: CPV, BKP, NPK Codes
-- **Filtert** nach Ihren Bedürfnissen (Kantone, Sprachen, Publikationstypen)
-- **Exportiert** alles in eine CSV-Datei
-- **Zeigt automatisch Statistiken** nach dem Export
-
-## 🚀 Schnellstart
+## Schnellstart
 
 ### Installation
 
@@ -28,241 +22,199 @@ cd MLOps-HS-25
 
 # Dependencies installieren
 pip install -r requirements.txt
+
+# .env konfigurieren (optional für DB)
+cp .env.example .env
+# DATABASE_URL eintragen
 ```
 
-### Verwendung
+### Daten exportieren
 
 ```bash
-# Einfach ausführen
-python main.py
+# Letzte 2 Tage exportieren und in DB importieren
+python scripts/update_db.py --days 2
+
+# Nur CSV exportieren (ohne DB)
+python scripts/update_db.py --days 30 --dry-run
+
+# Ab bestimmtem Datum
+python scripts/update_db.py --start 2024-01-01
 ```
 
-Das erstellt eine Datei `data/simap_projects.csv` mit allen Projekten der letzten 30 Tage und zeigt automatisch Statistiken an.
+### Daten laden
 
-## 🗄️ Supabase-Integration (Optional)
+```bash
+# Alle Daten aus DB laden
+python scripts/load_data.py
 
-**Standardmäßig** exportiert das Tool nur CSV-Dateien. Wenn du die Daten zusätzlich in einer **Supabase-Datenbank** speichern möchtest (z.B. für tägliche Updates oder ML-Pipelines):
+# Mit Filtern
+python scripts/load_data.py --type filtered --cantons ZH BE --limit 100
 
-1. **Setup für Supabase**:
-   ```bash
-   # Kopiere das .env Template
-   cp .env.example .env
-
-   # Öffne .env und trage deine Supabase DATABASE_URL ein
-   # (aus Supabase Dashboard → Settings → Database → Connection String)
-   ```
-
-2. **Aktiviere DB-Import in main.py**:
-   ```python
-   IMPORT_TO_DB = True  # Ändere von False auf True
-   ```
-
-3. **Führe aus**:
-   ```bash
-   python main.py
-   ```
-
-Das Tool erstellt automatisch die Tabelle, Indizes und importiert die Daten mit Upsert-Logik (keine Duplikate).
-
-**Detaillierte Anleitung**: Siehe [DATABASE_SETUP.md](DATABASE_SETUP.md) für:
-- Automatisierte tägliche Updates
-- SQL-Queries für ML-Features
-- Team-Setup & Best Practices
-
-**Wichtig für Teams**: Die `.env` Datei ist in `.gitignore` und wird **nicht** committet. Jedes Team-Mitglied kann selbst entscheiden, ob es Supabase nutzen möchte oder nur CSV.
-
-## 🎛️ Filter konfigurieren
-
-Öffnen Sie [main.py](main.py) und passen Sie die Filter an:
-
-```python
-# Basis-Parameter
-DAYS_BACK = 30              # Wie viele Tage zurück
-MAX_PAGES = 10              # Maximale Anzahl API-Seiten
-MAX_PROJECTS = None         # Maximale Anzahl Projekte (None = alle)
-
-# Filter (Optional)
-PUBLICATION_TYPES = ["tender"]      # Nur Ausschreibungen
-CANTONS = ["ZH", "BE"]              # Nur Zürich und Bern
-LANGUAGES = ["de"]                  # Nur deutschsprachig
-PROCESS_TYPES = ["open"]            # Nur offene Verfahren
+# Nur Awards
+python scripts/load_data.py --type awards
 ```
 
-### Filter-Optionen
+### Web-UI starten
 
-| Filter | Optionen | Beispiel |
-|--------|----------|----------|
-| **Publikationstypen** | `tender` (Ausschreibungen)<br>`award` (Zuschläge)<br>`cancellation` (Stornierungen) | `["tender", "award"]` |
-| **Kantone** | `ZH`, `BE`, `LU`, `GE`, `VD`, `AG`, `SG`, etc. | `["ZH", "BE", "GE"]` |
-| **Sprachen** | `de`, `fr`, `it`, `en` | `["de"]` |
-| **Prozesstypen** | `open`, `selective`, `invitation` | `["open"]` |
-
-## 📊 CSV-Ausgabe
-
-Die CSV-Datei enthält **39 Spalten** mit detaillierten Informationen:
-
-### Basis-Informationen
-- `project_id`, `publication_id`, `publication_date`
-- `title`, `description`, `contracting_authority`
-- `canton`, `city`, `postal_code`, `country`
-
-### Projektdetails
-- `project_number`, `publication_number`
-- `project_type`, `project_subtype`, `publication_type`
-- `order_type`, `construction_type`, `construction_category`
-- `lots_type`, `creation_language`
-
-### Fristen & Preise
-- `submission_deadline`
-- `estimated_amount`, `estimated_currency`
-- `process_type`
-
-### Award-Informationen (bei Zuschlägen)
-- `award_decision_date`, `number_of_submissions`
-- `winner_name`, `winner_city`, `winner_canton`, `winner_postal_code`
-- `award_amount`, `award_currency`, `award_vat_type`
-
-### Klassifizierungen
-- `cpv_code`, `additional_cpv_codes`
-- `bkp_codes`, `ebkph_codes`, `ebkpt_codes`, `npk_codes`
-
-## 📈 Automatische Statistiken
-
-Nach jedem Export sehen Sie automatisch:
-
-```
-============================================================
-EXPORT-STATISTIKEN
-============================================================
-Total Projekte: 200
-
-Publikationstypen:
-  Ausschreibungen     :  120 ( 60.0%)
-  Zuschläge           :   75 ( 37.5%)
-  Stornierungen       :    5 (  2.5%)
-
-Sprachen:
-  Deutsch        :  120 ( 60.0%)
-  Französisch    :   60 ( 30.0%)
-  Italienisch    :   20 ( 10.0%)
-
-Top 5 Kantone:
-  ZH   :   50 ( 25.0%)
-  BE   :   40 ( 20.0%)
-  GE   :   30 ( 15.0%)
-  VD   :   25 ( 12.5%)
-  AG   :   20 ( 10.0%)
-
-Basis-Felder:
-  Titel vorhanden:        194 ( 97.0%)
-  Kanton vorhanden:       133 ( 66.5%)
-  Stadt vorhanden:        130 ( 65.0%)
-  PLZ vorhanden:          134 ( 67.0%)
-
-Award-Informationen (Zuschläge):
-  Zuschlagspreis:          75 ( 37.5%)
-  Gewinner-Name:           83 ( 41.5%)
-  Anzahl Eingaben:         73 ( 36.5%)
-============================================================
+```bash
+cd ui
+python app.py
+# Öffne http://127.0.0.1:5000
+# Login: admin@musterfirma.ch / admin123
 ```
 
-## 📁 Projektstruktur
+## Projektstruktur
 
 ```
 MLOps-HS-25/
-├── Simap/
-│   ├── api.py         # API-Client mit Retry-Logik
-│   ├── extract.py     # Datenextraktion (39 Felder!)
-│   ├── exporter.py    # CSV-Export mit Filtern & Statistiken
-│   └── db_importer.py # Supabase-Import (optional)
+├── .github/workflows/
+│   └── hourly_update.yml    # Stündliche Aktualisierung
+├── simap/                   # SIMAP API Client
+│   ├── api.py              # HTTP Client mit Retry
+│   ├── exporter.py         # CSV Export
+│   └── extract.py          # Datenextraktion
+├── database/                # Datenbank-Module
+│   ├── connection.py       # DB-Verbindung
+│   ├── importer.py         # CSV -> DB Import
+│   └── loader.py           # DB -> DataFrame
+├── ui/                      # Flask Web-UI
+│   ├── app.py              # Flask App
+│   ├── models.py           # Datenmodelle
+│   ├── static/             # CSS
+│   └── templates/          # HTML Templates
+├── ml/                      # Machine Learning
+│   └── classifier.py       # RF Klassifikator
+├── scripts/                 # CLI-Scripts
+│   ├── update_db.py        # Haupt-Update-Script
+│   └── load_data.py        # Daten-Lade-Script
+├── docs/                    # Dokumentation
+│   └── DATABASE_SETUP.md   # DB Setup Guide
 ├── sql/
-│   └── schema.sql     # Datenbank-Schema & Views (optional)
-├── data/              # Exportierte CSV-Dateien (in .gitignore)
-├── main.py            # Hauptprogramm mit Filter-Konfiguration
-├── requirements.txt   # Dependencies
-├── .env.example       # Template für Supabase-Config
-├── README.md          # Diese Datei
-└── DATABASE_SETUP.md  # Detaillierte Supabase-Anleitung (optional)
+│   └── schema.sql          # DB Schema
+├── config.py               # Zentrale Konfiguration
+├── requirements.txt
+└── README.md
 ```
 
-## 🛠️ Erweiterte Nutzung
+## Konfiguration
 
-### Als Python-Modul verwenden
+Alle Einstellungen können in `config.py` oder via Umgebungsvariablen angepasst werden:
 
 ```python
-from Simap.exporter import export_to_csv
+# Kantone
+DEFAULT_CANTONS = ["ZH", "BE", "LU", ...]
 
-# Nur deutschsprachige Ausschreibungen aus Zürich
+# Sprachen
+DEFAULT_LANGUAGES = ["de", "en"]
+
+# Prozesstypen
+DEFAULT_PROCESS_TYPES = ["open", "selective"]
+
+# Zeitraum
+DEFAULT_DAYS_BACK = 30
+```
+
+## GitHub Actions
+
+Der Workflow `.github/workflows/hourly_update.yml` führt stündlich Updates durch:
+
+- **Schedule**: Jede Stunde zur 15. Minute
+- **Manueller Trigger**: Mit konfigurierbarem `days_back` Parameter
+- **Error Handling**: Erstellt GitHub Issue bei Fehlern
+- **Caching**: pip Dependencies werden gecached
+
+### Setup
+
+1. GitHub Secret `DATABASE_URL` setzen:
+   - Repository → Settings → Secrets → New repository secret
+   - Name: `DATABASE_URL`
+   - Value: Supabase Connection String
+
+## API Nutzung
+
+### SIMAP Client
+
+```python
+from simap import SimapClient, export_to_csv
+
+# Client direkt nutzen
+client = SimapClient()
+for project in client.get_projects({"newestPublicationFrom": "2024-01-01"}):
+    print(project['title'])
+
+# CSV exportieren
 export_to_csv(
-    output_file="data/zh_tenders.csv",
+    output_file="data/projects.csv",
     days_back=7,
-    publication_types=["tender"],
-    cantons=["ZH"],
+    cantons=["ZH", "BE"],
     languages=["de"]
 )
 ```
 
-### Nur API-Client nutzen
+### Database Loader
 
 ```python
-from Simap.api import SimapClient
+from database import load_all_data, load_with_filters
 
-client = SimapClient()
+# Alle Daten laden
+df = load_all_data(limit=1000)
 
-# Projekte abrufen
-params = {"newestPublicationFrom": "2024-01-01"}
-for project in client.get_projects(params, max_pages=1):
-    print(project["title"])
-
-    # Details holen
-    details = client.get_project_details(
-        project["id"],
-        project["publicationId"]
-    )
+# Mit Filtern
+df = load_with_filters(
+    cantons=['ZH', 'BE'],
+    publication_types=['tender'],
+    min_amount=100000
+)
 ```
 
-## 💡 Anwendungsfälle
+## Datenbank-Schema
 
-### 1. Marktanalyse
-Filtern Sie nach Zuschlägen, um zu sehen:
-- Welche Firmen gewinnen Aufträge?
-- Zu welchen Preisen?
-- Wie viele Firmen bewerben sich durchschnittlich?
+Die Tabelle `simap_projects` enthält 40+ Felder:
+
+| Kategorie | Felder |
+|-----------|--------|
+| IDs | `project_id`, `publication_id`, `project_number` |
+| Basis | `title`, `description`, `publication_date`, `publication_type` |
+| Ort | `canton`, `city`, `postal_code`, `country` |
+| Preise | `estimated_amount`, `award_amount` |
+| Award | `winner_name`, `award_decision_date`, `number_of_submissions` |
+| Klassifizierung | `cpv_code`, `bkp_codes`, `order_type` |
+
+Siehe [sql/schema.sql](sql/schema.sql) für das vollständige Schema.
+
+## ML-Klassifikator
 
 ```python
-PUBLICATION_TYPES = ["award"]
-CANTONS = ["ZH", "BE"]
+from ml.classifier import predict_project_info
+
+# Klassifikator trainieren
+python ml/classifier.py
+
+# Vorhersagen
+result = predict_project_info(df_new_projects)
+print(result[['order_type_pred', 'size_bucket_pred']])
 ```
 
-### 2. Geschäftsmöglichkeiten finden
-Nur offene Ausschreibungen in Ihrer Region:
+## Troubleshooting
 
+### DATABASE_URL nicht gefunden
+```bash
+# .env Datei erstellen
+echo 'DATABASE_URL="..."' > .env
+```
+
+### psycopg2 nicht installiert
+```bash
+pip install psycopg2-binary
+```
+
+### Rate Limiting
+Der API Client hat eingebaute Retry-Logik. Bei häufigen 429-Fehlern `API_DELAY` erhöhen:
 ```python
-PUBLICATION_TYPES = ["tender"]
-CANTONS = ["ZH"]
-LANGUAGES = ["de"]
-PROCESS_TYPES = ["open"]
+# In config.py
+API_DELAY = 0.5  # Sekunden zwischen Requests
 ```
 
-### 3. Wettbewerbsanalyse
-Alle Projekte eines Kantons:
+## Lizenz
 
-```python
-CANTONS = ["GE"]
-DAYS_BACK = 90
-```
-
-## ⚠️ Hinweise
-
-- **Rate Limiting**: Das Tool respektiert automatisch Rate Limits der API
-- **Pausen**: Zwischen Requests gibt es automatische Pausen (0.25s)
-- **Fehlerbehandlung**: Fehlerhafte Projekte werden übersprungen und geloggt
-- **DSGVO**: Keine persönlichen Kontaktdaten werden gespeichert
-
-## 📝 Lizenz
-
-Dieses Projekt ist für Bildungszwecke erstellt.
-
-## 🤝 Contributing
-
-Pull Requests sind willkommen! Für größere Änderungen bitte zuerst ein Issue öffnen.
+Dieses Projekt ist für Bildungszwecke (FHNW MLOps HS25) erstellt.

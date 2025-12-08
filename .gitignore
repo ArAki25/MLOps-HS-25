@@ -36,7 +36,15 @@ Thumbs.db
 # Data outputs
 data/
 
+# Alte/experimentelle Dateien
 Main_fenlin.py
 jhonny.py
 Dokumentation/Jhonny Test.ipynb
 
+# Logs
+logs/
+*.log
+
+# ML Models
+*.joblib
+*.pkl

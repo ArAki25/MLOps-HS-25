@@ -78,12 +78,12 @@ def load_all_data(limit: Optional[int] = None) -> pd.DataFrame:
     """
     logger.info("Lade alle Daten...")
 
-    query = "SELECT * FROM simap_projects ORDER BY publication_date DESC"
-
-    if limit:
-        query += f" LIMIT {limit}"
-
-    return _execute_query(query)
+    if limit is not None:
+        query = "SELECT * FROM simap_projects ORDER BY publication_date DESC LIMIT %s"
+        return _execute_query(query, (limit,))
+    else:
+        query = "SELECT * FROM simap_projects ORDER BY publication_date DESC"
+        return _execute_query(query)
 
 
 def load_by_canton(canton: str, limit: Optional[int] = None) -> pd.DataFrame:
@@ -103,12 +103,12 @@ def load_by_canton(canton: str, limit: Optional[int] = None) -> pd.DataFrame:
     """
     logger.info(f"Lade Daten für Kanton: {canton}")
 
-    query = "SELECT * FROM simap_projects WHERE canton = %s ORDER BY publication_date DESC"
-
-    if limit:
-        query += f" LIMIT {limit}"
-
-    return _execute_query(query, (canton,))
+    if limit is not None:
+        query = "SELECT * FROM simap_projects WHERE canton = %s ORDER BY publication_date DESC LIMIT %s"
+        return _execute_query(query, (canton, limit))
+    else:
+        query = "SELECT * FROM simap_projects WHERE canton = %s ORDER BY publication_date DESC"
+        return _execute_query(query, (canton,))
 
 
 def load_by_publication_type(pub_type: str, limit: Optional[int] = None) -> pd.DataFrame:
@@ -128,12 +128,12 @@ def load_by_publication_type(pub_type: str, limit: Optional[int] = None) -> pd.D
     """
     logger.info(f"Lade {pub_type} Daten...")
 
-    query = "SELECT * FROM simap_projects WHERE publication_type = %s ORDER BY publication_date DESC"
-
-    if limit:
-        query += f" LIMIT {limit}"
-
-    return _execute_query(query, (pub_type,))
+    if limit is not None:
+        query = "SELECT * FROM simap_projects WHERE publication_type = %s ORDER BY publication_date DESC LIMIT %s"
+        return _execute_query(query, (pub_type, limit))
+    else:
+        query = "SELECT * FROM simap_projects WHERE publication_type = %s ORDER BY publication_date DESC"
+        return _execute_query(query, (pub_type,))
 
 
 def load_by_date_range(
@@ -167,16 +167,21 @@ def load_by_date_range(
 
     logger.info(f"Lade Daten von {start_date.date()} bis {end_date.date()}...")
 
-    query = """
-    SELECT * FROM simap_projects
-    WHERE publication_date >= %s AND publication_date <= %s
-    ORDER BY publication_date DESC
-    """
-
-    if limit:
-        query += f" LIMIT {limit}"
-
-    return _execute_query(query, (start_date, end_date))
+    if limit is not None:
+        query = """
+        SELECT * FROM simap_projects
+        WHERE publication_date >= %s AND publication_date <= %s
+        ORDER BY publication_date DESC
+        LIMIT %s
+        """
+        return _execute_query(query, (start_date, end_date, limit))
+    else:
+        query = """
+        SELECT * FROM simap_projects
+        WHERE publication_date >= %s AND publication_date <= %s
+        ORDER BY publication_date DESC
+        """
+        return _execute_query(query, (start_date, end_date))
 
 
 def load_award_data(limit: Optional[int] = None) -> pd.DataFrame:
@@ -198,16 +203,21 @@ def load_award_data(limit: Optional[int] = None) -> pd.DataFrame:
     """
     logger.info("Lade Award-Daten...")
 
-    query = """
-    SELECT * FROM simap_projects
-    WHERE award_decision_date IS NOT NULL
-    ORDER BY award_decision_date DESC
-    """
-
-    if limit:
-        query += f" LIMIT {limit}"
-
-    return _execute_query(query)
+    if limit is not None:
+        query = """
+        SELECT * FROM simap_projects
+        WHERE award_decision_date IS NOT NULL
+        ORDER BY award_decision_date DESC
+        LIMIT %s
+        """
+        return _execute_query(query, (limit,))
+    else:
+        query = """
+        SELECT * FROM simap_projects
+        WHERE award_decision_date IS NOT NULL
+        ORDER BY award_decision_date DESC
+        """
+        return _execute_query(query)
 
 
 def load_with_filters(
@@ -290,16 +300,23 @@ def load_with_filters(
 
     # SQL zusammenbauen
     where_clause = " AND ".join(conditions) if conditions else "1=1"
-    query = f"""
-    SELECT * FROM simap_projects
-    WHERE {where_clause}
-    ORDER BY publication_date DESC
-    """
+    
+    if limit is not None:
+        query = f"""
+        SELECT * FROM simap_projects
+        WHERE {where_clause}
+        ORDER BY publication_date DESC
+        LIMIT %s
+        """
+        params.append(limit)
+    else:
+        query = f"""
+        SELECT * FROM simap_projects
+        WHERE {where_clause}
+        ORDER BY publication_date DESC
+        """
 
-    if limit:
-        query += f" LIMIT {limit}"
-
-    logger.info(f"Lade Daten mit Filtern...")
+    logger.info("Lade Daten mit Filtern...")
     logger.debug(f"Query: {query}")
 
     return _execute_query(query, tuple(params))
@@ -343,7 +360,7 @@ def get_statistics() -> Dict[str, Any]:
                 elif 'sum' in result:
                     stats[name] = float(result['sum'])
 
-        logger.info(f"✓ Statistiken geladen")
+        logger.info("✓ Statistiken geladen")
         return stats
 
     except psycopg2.Error as e:

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Simap.ch KI-Assistent{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-box">
+        <h1 class="login-title">Simap.ch Login</h1>
+        <form method="POST" action="/login">
+            <div class="form-group">
+                <label class="form-label">E-Mail</label>
+                <input type="email" name="email" class="form-input" required placeholder="ihre-email@firma.ch">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Passwort</label>
+                <input type="password" name="password" class="form-input" required placeholder="Ihr Passwort">
+            </div>
+            <button type="submit" class="btn-login">Anmelden</button>
+        </form>
+        <p style="margin-top: 1rem; text-align: center; font-size: 12px; color: #6b7280;">
+            Demo: admin@musterfirma.ch / admin123
+        </p>
+    </div>
+</div>
+{% endblock %}
+
