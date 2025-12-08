@@ -22,7 +22,15 @@ from .loader import (
     load_by_date_range,
     load_award_data,
     load_with_filters,
+    get_statistics,
 )
+from .importer import (
+    import_csv_to_db,
+    import_records_directly,
+    import_records_to_db,
+    create_table_if_not_exists,
+)
+from .connection import get_db_connection
 
 __all__ = [
     'load_all_data',
@@ -31,4 +39,10 @@ __all__ = [
     'load_by_date_range',
     'load_award_data',
     'load_with_filters',
+    'get_statistics',
+    'import_csv_to_db',
+    'import_records_directly',
+    'import_records_to_db',
+    'create_table_if_not_exists',
+    'get_db_connection',
 ]

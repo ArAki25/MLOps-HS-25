@@ -6,17 +6,13 @@ Supabase PostgreSQL-Datenbank zu laden und in Pandas DataFrames umzuwandeln.
 """
 
 import logging
-import os
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 
 import pandas as pd
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from dotenv import load_dotenv
-
-# Lade .env Datei
-load_dotenv()
+from .connection import get_db_connection
 
 # Logging konfigurieren
 logging.basicConfig(
@@ -24,34 +20,6 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-
-def get_db_connection():
-    """
-    Erstellt eine Datenbankverbindung zu Supabase.
-
-    Returns:
-        psycopg2.connection: Datenbankverbindung
-
-    Raises:
-        ValueError: Wenn DATABASE_URL nicht gesetzt ist
-        psycopg2.Error: Bei Verbindungsfehlern
-    """
-    db_url = os.environ.get("DATABASE_URL")
-
-    if not db_url:
-        raise ValueError(
-            "DATABASE_URL nicht gefunden! "
-            "Bitte setze die Umgebungsvariable oder erstelle eine .env-Datei."
-        )
-
-    try:
-        conn = psycopg2.connect(db_url)
-        logger.debug("✓ Datenbankverbindung hergestellt")
-        return conn
-    except psycopg2.Error as e:
-        logger.error(f"✗ Fehler beim Verbinden: {e}")
-        raise
 
 
 def _execute_query(query: str, params: tuple = ()) -> pd.DataFrame:
