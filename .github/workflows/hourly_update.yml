@@ -31,6 +31,37 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         
+    - name: Check DATABASE_URL Secret
+      run: |
+        if [ -z "${{ secrets.DATABASE_URL }}" ]; then
+          echo "::error::DATABASE_URL Secret ist nicht gesetzt!"
+          echo "Bitte gehe zu: Settings → Secrets and variables → Actions"
+          echo "und füge DATABASE_URL als Secret hinzu."
+          exit 1
+        else
+          echo "✓ DATABASE_URL Secret ist gesetzt"
+          # Zeige maskierte URL (ohne Passwort)
+          DB_URL="${{ secrets.DATABASE_URL }}"
+          if [[ "$DB_URL" == *"@"* ]]; then
+            MASKED_URL=$(echo "$DB_URL" | sed 's/:[^@]*@/:***@/')
+            echo "Connection String (maskiert): $MASKED_URL"
+          fi
+        fi
+        
+    - name: Test Database Connection
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        echo "Teste Datenbankverbindung..."
+        python scripts/test_db_connection.py || {
+          echo "::error::Datenbankverbindung fehlgeschlagen!"
+          echo "Bitte prüfe:"
+          echo "1. Ist das Passwort in DATABASE_URL korrekt?"
+          echo "2. Verwendest du das 'URI' Format (nicht Connection Pooling)?"
+          echo "3. Ist dein Supabase-Projekt aktiv?"
+          exit 1
+        }
+        
     - name: Run SIMAP Update
       id: update
       env:
@@ -38,17 +69,53 @@ jobs:
       run: |
         # Nutze Input vom manuellen Start, sonst Default '2' (für den automatischen Cron-Job)
         DAYS="${{ inputs.days_back || '2' }}"
-        echo "Starte Update für die letzten $DAYS Tage..."
+        echo "=========================================="
+        echo "Starte SIMAP Update für die letzten $DAYS Tage..."
+        echo "=========================================="
         echo "days=$DAYS" >> $GITHUB_OUTPUT
+        
+        # Führe Update aus und speichere Exit-Code
         python scripts/update_db.py --days "$DAYS" 2>&1 | tee update_log.txt
-      continue-on-error: true
+        UPDATE_EXIT_CODE=${PIPESTATUS[0]}
+        
+        # Prüfe ob CSV erstellt wurde
+        if [ -f "data/simap_projects.csv" ]; then
+          CSV_LINES=$(wc -l < data/simap_projects.csv)
+          echo "CSV-Datei erstellt mit $CSV_LINES Zeilen"
+          echo "csv_lines=$CSV_LINES" >> $GITHUB_OUTPUT
+        else
+          echo "::warning::Keine CSV-Datei erstellt!"
+        fi
+        
+        # Exit mit dem Exit-Code des Python-Skripts
+        exit $UPDATE_EXIT_CODE
       
-    - name: Check for errors
-      if: steps.update.outcome == 'failure'
+    - name: Check Update Results
+      if: always()
       run: |
-        echo "::error::SIMAP Update fehlgeschlagen!"
-        echo "Log-Ausgabe:"
-        cat update_log.txt || echo "Keine Log-Datei gefunden"
+        echo "=========================================="
+        echo "UPDATE ERGEBNISSE"
+        echo "=========================================="
+        if [ -f "update_log.txt" ]; then
+          echo "Log-Ausgabe:"
+          cat update_log.txt
+          
+          # Prüfe auf Erfolgs-Indikatoren
+          if grep -q "✓ FERTIG!" update_log.txt; then
+            echo ""
+            echo "✓ Update erfolgreich abgeschlossen!"
+            
+            # Extrahiere Statistiken
+            if grep -q "Projekte importiert" update_log.txt; then
+              grep "Projekte importiert" update_log.txt
+            fi
+          else
+            echo ""
+            echo "::warning::Update könnte fehlgeschlagen sein - prüfe Logs"
+          fi
+        else
+          echo "::warning::Keine Log-Datei gefunden"
+        fi
         
     - name: Upload logs on failure
       if: failure()
@@ -61,7 +128,7 @@ jobs:
         retention-days: 7
         
     - name: Create issue on failure
-      if: steps.update.outcome == 'failure'
+      if: failure()
       uses: actions/github-script@v7
       with:
         script: |
@@ -105,7 +172,12 @@ jobs:
           }
           
     - name: Report success
-      if: steps.update.outcome == 'success'
+      if: success()
       run: |
+        echo "=========================================="
         echo "✓ SIMAP Update erfolgreich abgeschlossen"
+        echo "=========================================="
         echo "Tage zurück: ${{ steps.update.outputs.days || '2' }}"
+        if [ -n "${{ steps.update.outputs.csv_lines }}" ]; then
+          echo "CSV-Zeilen: ${{ steps.update.outputs.csv_lines }}"
+        fi
