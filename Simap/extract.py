@@ -62,7 +62,7 @@ def _get_currency(price_obj: Any) -> Optional[str]:
     return str(currency).upper() if currency else None
 
 
-def extract_project_data(project: Dict[str, Any], details: Dict[str, Any]) -> Dict[str, Any]:
+def extract_project_data(project: Dict[str, Any], details: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Extrahiert wichtigste Felder aus Projekt und Details.
 
@@ -85,20 +85,21 @@ def extract_project_data(project: Dict[str, Any], details: Dict[str, Any]) -> Di
 
     # Zusätzliche Projektdetails
     data["project_number"] = project.get("projectNumber")
-    data["publication_number"] = details.get("base", {}).get("publicationNumber")
+    base_section = details.get("base", {}) if isinstance(details, dict) else {}
+    data["publication_number"] = base_section.get("publicationNumber")
     data["project_subtype"] = project.get("projectSubType")
     data["lots_type"] = project.get("lotsType")
-    data["creation_language"] = details.get("base", {}).get("creationLanguage")
+    data["creation_language"] = base_section.get("creationLanguage")
 
     # Beschreibung aus Details
-    procurement = details.get("procurement", {})
+    procurement = details.get("procurement", {}) if isinstance(details, dict) else {}
     if isinstance(procurement, dict):
         data["description"] = _get_text(procurement.get("orderDescription"))
         data["order_type"] = procurement.get("orderType")
         data["construction_type"] = procurement.get("constructionType")
         data["construction_category"] = procurement.get("constructionCategory")
 
-    if not data["description"]:
+    if not data["description"] and isinstance(details, dict):
         data["description"] = _get_text(details.get("description"))
 
     # Auftraggeber
@@ -139,12 +140,12 @@ def extract_project_data(project: Dict[str, Any], details: Dict[str, Any]) -> Di
             data["npk_codes"] = str(npk_codes)
 
     # Fristen
-    dates = details.get("dates", {})
+    dates = details.get("dates", {}) if isinstance(details, dict) else {}
     if isinstance(dates, dict):
         data["submission_deadline"] = dates.get("offerDeadline")
 
     # Geschätzter Wert
-    terms = details.get("terms", {})
+    terms = details.get("terms", {}) if isinstance(details, dict) else {}
     if isinstance(terms, dict):
         total_price = terms.get("totalPrice")
         data["estimated_amount"] = _get_price(total_price)
@@ -154,7 +155,7 @@ def extract_project_data(project: Dict[str, Any], details: Dict[str, Any]) -> Di
     data["process_type"] = project.get("processType")
 
     # Award/Zuschlag-Informationen (nur bei award-Publikationen)
-    decision = details.get("decision", {})
+    decision = details.get("decision", {}) if isinstance(details, dict) else {}
     if isinstance(decision, dict):
         # Zuschlagsdatum
         data["award_decision_date"] = decision.get("awardDecisionDate")

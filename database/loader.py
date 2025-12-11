@@ -62,6 +62,33 @@ def _execute_query(query: str, params: tuple = ()) -> pd.DataFrame:
             conn.close()
 
 
+def get_last_publication_date() -> Optional[datetime]:
+    """
+    Liefert das jüngste publication_date aus der Tabelle.
+
+    Returns:
+        datetime oder None, falls Tabelle leer.
+    """
+    conn = None
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT MAX(publication_date) FROM simap_projects")
+            result = cur.fetchone()
+            last_date = result[0] if result else None
+            if last_date:
+                logger.info("Letztes publication_date in DB: %s", last_date.date())
+            else:
+                logger.info("Keine vorhandenen publication_date Werte gefunden")
+            return last_date
+    except psycopg2.Error as exc:
+        logger.error("Fehler beim Lesen des letzten publication_date: %s", exc)
+        return None
+    finally:
+        if conn:
+            conn.close()
+
+
 def load_all_data(limit: Optional[int] = None) -> pd.DataFrame:
     """
     Lädt alle Daten aus der simap_projects Tabelle.

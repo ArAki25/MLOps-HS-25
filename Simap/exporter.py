@@ -123,6 +123,7 @@ def export_to_csv(
     cantons: List[str] = None,
     languages: List[str] = None,
     process_types: List[str] = None,
+    fetch_details: bool = True,
     api_delay: float = 0.1
 ) -> None:
     """
@@ -140,6 +141,7 @@ def export_to_csv(
         cantons: Filter für Kantone (z.B. ["ZH", "BE", "GE"])
         languages: Filter für Sprachen (z.B. ["de", "fr", "it"])
         process_types: Filter für Prozesstypen (z.B. ["open", "selective"])
+        fetch_details: Falls False, werden keine Detail-Calls gemacht (schneller, weniger Felder)
         api_delay: Wartezeit zwischen API-Requests in Sekunden (default 0.1)
 
     Beispiele:
@@ -198,11 +200,13 @@ def export_to_csv(
 
     # API-Filter setzen (von SIMAP unterstützt)
     if cantons:
-        # API unterstützt Kantone als Filter
-        params["cantonId"] = ",".join(cantons)
+        # API unterstützt Kantone als Filter – als Liste senden (requests erzeugt mehrfach-Parameter)
+        params["cantonId"] = cantons
 
     logging.info(f"Hole Projekte seit: {params['newestPublicationFrom']}")
     logging.info(f"API Delay: {api_delay}s zwischen Requests")
+    if not fetch_details:
+        logging.info("Fetch Details: deaktiviert (nur Such-Response wird genutzt)")
 
     # Daten sammeln
     records: List[Dict[str, Any]] = []
@@ -242,8 +246,10 @@ def export_to_csv(
                 continue
 
             try:
-                # Details holen
-                details = client.get_project_details(project_id, publication_id)
+                # Details holen (optional)
+                details = None
+                if fetch_details:
+                    details = client.get_project_details(project_id, publication_id)
 
                 # Daten extrahieren
                 record = extract_project_data(project, details)
@@ -259,7 +265,7 @@ def export_to_csv(
 
                 logging.info(f"✓ Projekt {len(records)}: {record['title'][:50] if record.get('title') else 'Ohne Titel'}")
 
-                # Kleine Pause zwischen Requests
+                # Kleine Pause zwischen Requests (Details oder nächster Loop)
                 time.sleep(api_delay)
 
             except SimapApiError as e:

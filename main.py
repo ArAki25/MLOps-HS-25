@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 from database.importer import import_csv_to_db
+from database.loader import get_last_publication_date
 from Simap.exporter import export_to_csv
 
 load_dotenv()
@@ -67,22 +68,31 @@ def main():
     parser.add_argument(
         "--start", type=str, help="Startdatum YYYY-MM-DD (überschreibt --days)"
     )
+    parser.add_argument(
+        "--no-details",
+        action="store_true",
+        help="Überspringe Detail-Requests (schneller, weniger Felder)",
+    )
     args = parser.parse_args()
 
     # Datum bestimmen
-    start_date = DEFAULT_START_DATE
-    days_back = None
-
+    start_date = None
     if args.start:
         start_date = args.start
         logging.info(f"Argument: Startdatum gesetzt auf {start_date}")
     elif args.days is not None:
-        # Berechne Datum aus Tagen
         since = datetime.now() - timedelta(days=args.days)
         start_date = since.strftime("%Y-%m-%d")
         logging.info(f"Argument: {args.days} Tage zurück -> Startdatum {start_date}")
     else:
-        logging.info(f"Keine Argumente: Nutze Standard-Startdatum {start_date}")
+        # Delta-Logik: nutze letztes publication_date aus der DB, falls vorhanden
+        last_pub_date = get_last_publication_date()
+        if last_pub_date:
+            start_date = (last_pub_date - timedelta(days=1)).strftime("%Y-%m-%d")
+            logging.info(f"Delta-Sync: Nutze letztes publication_date-1 Tag: {start_date}")
+        else:
+            start_date = DEFAULT_START_DATE
+            logging.info(f"Keine DB-Historie gefunden, nutze Standard-Startdatum {start_date}")
 
     # ========================================================================
     # Intern
@@ -105,6 +115,7 @@ def main():
         cantons=CANTONS,
         languages=LANGUAGES,
         process_types=PROCESS_TYPES,
+        fetch_details=not args.no_details,
         api_delay=0.1,
     )
 

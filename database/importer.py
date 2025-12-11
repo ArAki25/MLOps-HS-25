@@ -85,7 +85,7 @@ def create_table_if_not_exists(conn) -> None:
 def import_records_to_db(
     records: List[Dict[str, Any]],
     conn,
-    batch_size: int = 100,
+    batch_size: int = 1000,
 ) -> Dict[str, int]:
     """Importiert Records mit Upsert-Logik in Batches."""
     if not records:
@@ -160,7 +160,7 @@ def import_records_to_db(
     return stats
 
 
-def import_csv_to_db(csv_file: str, batch_size: int = 100) -> Dict[str, int]:
+def import_csv_to_db(csv_file: str, batch_size: int = 1000) -> Dict[str, int]:
     """Importiert eine CSV-Datei in die Datenbank."""
     csv_path = Path(csv_file)
 
@@ -197,7 +197,7 @@ def import_csv_to_db(csv_file: str, batch_size: int = 100) -> Dict[str, int]:
 
 def import_records_directly(
     records: List[Dict[str, Any]],
-    batch_size: int = 100,
+    batch_size: int = 1000,
 ) -> Dict[str, int]:
     """Importiert Records direkt aus Python ohne CSV-Zwischenschritt."""
     if not records:

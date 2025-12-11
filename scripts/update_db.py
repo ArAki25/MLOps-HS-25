@@ -6,6 +6,9 @@ Nutzung:
     python scripts/update_db.py                  # Nutzt Standard-Konfiguration
     python scripts/update_db.py --days 2         # Lädt Daten der letzten 2 Tage
     python scripts/update_db.py --start 2024-01-01 # Lädt ab spezifischem Datum
+    python scripts/update_db.py --all-types      # Alle Publikationstypen (tender, award, etc.)
+    python scripts/update_db.py --german-cantons  # Nur deutschsprachige Kantone
+    python scripts/update_db.py --all-types --german-cantons --start 2024-01-01
     
 Für GitHub Actions:
     python scripts/update_db.py --days 2
@@ -37,6 +40,30 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+# Deutsche Kantone (deutschsprachige Kantone der Schweiz)
+GERMAN_CANTONS = [
+    "ZH",  # Zürich
+    "BE",  # Bern
+    "LU",  # Luzern
+    "UR",  # Uri
+    "SZ",  # Schwyz
+    "OW",  # Obwalden
+    "NW",  # Nidwalden
+    "GL",  # Glarus
+    "ZG",  # Zug
+    "FR",  # Freiburg (teilweise deutsch)
+    "SO",  # Solothurn
+    "BS",  # Basel-Stadt
+    "BL",  # Basel-Landschaft
+    "SH",  # Schaffhausen
+    "AR",  # Appenzell Ausserrhoden
+    "AI",  # Appenzell Innerrhoden
+    "SG",  # St. Gallen
+    "GR",  # Graubünden (teilweise deutsch)
+    "AG",  # Aargau
+    "TG",  # Thurgau
+]
+
 
 def main():
     """Exportiert SIMAP-Daten und importiert sie in Supabase."""
@@ -62,7 +89,24 @@ def main():
     # ========================================================================
     # Argument Parser
     # ========================================================================
-    parser = argparse.ArgumentParser(description="SIMAP Downloader & Importer")
+    parser = argparse.ArgumentParser(
+        description="SIMAP Downloader & Importer",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Beispiele:
+  # Alle Auftragstypen seit 2024-01-01
+  python scripts/update_db.py --all-types --start 2024-01-01
+  
+  # Nur deutsche Kantone, letzte 7 Tage
+  python scripts/update_db.py --german-cantons --days 7
+  
+  # Alle Typen + deutsche Kantone
+  python scripts/update_db.py --all-types --german-cantons --start 2024-01-01
+  
+  # Spezifische Publikationstypen
+  python scripts/update_db.py --publication-types tender award --days 2
+        """
+    )
     parser.add_argument(
         "--days", type=int, help="Anzahl Tage zurück (z.B. 1 für heute/gestern)"
     )
@@ -72,7 +116,55 @@ def main():
     parser.add_argument(
         "--dry-run", action="store_true", help="Nur exportieren, nicht in DB importieren"
     )
+    parser.add_argument(
+        "--all-types", 
+        action="store_true",
+        help="Alle Publikationstypen holen (tender, award, cancellation, change)"
+    )
+    parser.add_argument(
+        "--publication-types",
+        nargs="+",
+        choices=["tender", "award", "cancellation", "change"],
+        help="Spezifische Publikationstypen auswählen (z.B. --publication-types tender award)"
+    )
+    parser.add_argument(
+        "--german-cantons",
+        action="store_true",
+        help="Nur deutschsprachige Kantone verwenden"
+    )
+    parser.add_argument(
+        "--cantons",
+        nargs="+",
+        help="Spezifische Kantone auswählen (z.B. --cantons ZH BE GE)"
+    )
     args = parser.parse_args()
+
+    # ========================================================================
+    # Filter-Logik
+    # ========================================================================
+    
+    # Publikationstypen bestimmen
+    if args.all_types:
+        PUBLICATION_TYPES = None  # None = alle Typen
+        logging.info("Filter: Alle Publikationstypen (tender, award, cancellation, change)")
+    elif args.publication_types:
+        PUBLICATION_TYPES = args.publication_types
+        logging.info(f"Filter: Publikationstypen = {', '.join(PUBLICATION_TYPES)}")
+    else:
+        # Standard bleibt "tender"
+        logging.info(f"Filter: Publikationstyp = {PUBLICATION_TYPES}")
+
+    # Kantone bestimmen
+    if args.cantons:
+        CANTONS = args.cantons
+        logging.info(f"Filter: Spezifische Kantone = {', '.join(CANTONS)}")
+    elif args.german_cantons:
+        CANTONS = GERMAN_CANTONS
+        logging.info(f"Filter: Deutsche Kantone ({len(GERMAN_CANTONS)} Kantone)")
+        logging.info(f"  Kantone: {', '.join(GERMAN_CANTONS)}")
+    else:
+        # Standard-Kantone aus Config
+        logging.info(f"Filter: Standard-Kantone ({len(CANTONS)} Kantone)")
 
     # Datum bestimmen
     start_date = default_start
@@ -87,6 +179,21 @@ def main():
         logging.info(f"Argument: {args.days} Tage zurück -> Startdatum {start_date}")
     else:
         logging.info(f"Keine Argumente: Nutze Standard-Startdatum {start_date}")
+
+    # ========================================================================
+    # Zusammenfassung der Filter
+    # ========================================================================
+    logging.info("")
+    logging.info("=" * 60)
+    logging.info("FILTER-KONFIGURATION")
+    logging.info("=" * 60)
+    logging.info(f"Startdatum: {start_date}")
+    logging.info(f"Publikationstypen: {PUBLICATION_TYPES if PUBLICATION_TYPES else 'Alle'}")
+    logging.info(f"Kantone: {len(CANTONS)} Kantone ({', '.join(CANTONS[:5])}{'...' if len(CANTONS) > 5 else ''})")
+    logging.info(f"Sprachen: {', '.join(LANGUAGES)}")
+    logging.info(f"Prozesstypen: {', '.join(PROCESS_TYPES)}")
+    logging.info("=" * 60)
+    logging.info("")
 
     # ========================================================================
     # Intern
