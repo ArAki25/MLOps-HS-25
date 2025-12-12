@@ -30,3 +30,12 @@ Werkzeug>=3.0.0
 # Flask-Login>=0.6.3      # Benutzer-Session-Management
 # Flask-Bcrypt>=1.0.1     # Passwort-Hashing
 # Flask-CORS>=4.0.0       # CORS für API
+pydantic>=2.0.0
+
+Flask
+python-dotenv
+supabase
+requests
+pandas
+scikit-learn
+numpy
