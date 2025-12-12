@@ -216,7 +216,7 @@ function parseSearchEntry(entry: any): ParsedProject {
   
   return {
     simap_project_id: entry.id,
-    simap_publication_id: entry.publicationId,
+    simap_publication_id: entry.publicationId || null,
     project_number: entry.projectNumber || null,
     publication_number: publicationNumber,
     title_de: title.de || null,
@@ -512,6 +512,12 @@ async function fetchProjectDetail(projectId: string, publicationId: string): Pro
 // DATABASE HELPERS
 // ============================================================================
 
+function createProjectKey(projectId: string, publicationId: string | null | undefined): string {
+  // Normalize null/undefined to null, then convert to string for key
+  const pubId = publicationId ?? null
+  return `${projectId}:${pubId === null ? 'null' : pubId}`
+}
+
 async function getLastPublicationDate(supabase: any): Promise<string | null> {
   const { data, error } = await supabase
     .from('projects')
@@ -556,14 +562,18 @@ async function getExistingProjectIds(supabase: any, projectIds: string[]): Promi
   
   for (let i = 0; i < projectIds.length; i += batchSize) {
     const batch = projectIds.slice(i, i + batchSize)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('projects')
       .select('simap_project_id, simap_publication_id, detail_fetched_at')
       .in('simap_project_id', batch)
     
+    if (error) {
+      console.warn(`[DEBUG] Query error for batch:`, error.message)
+    }
+    
     if (data) {
       for (const row of data) {
-        const key = `${row.simap_project_id}:${row.simap_publication_id}`
+        const key = createProjectKey(row.simap_project_id, row.simap_publication_id)
         existing.set(key, { hasDetail: row.detail_fetched_at !== null })
       }
     }
@@ -632,6 +642,7 @@ serve(async (req) => {
     // Check which projects exist and have details
     const projectIds = rawProjects.map(p => p.id)
     const existingMap = await getExistingProjectIds(supabase, projectIds)
+    console.log(`[DEBUG] Found ${existingMap.size} existing projects in DB`)
     
     // Parse all projects
     const projects: ParsedProject[] = rawProjects.map(parseSearchEntry)
@@ -641,8 +652,19 @@ serve(async (req) => {
     const existingProjects: ParsedProject[] = []
     const needsDetail: ParsedProject[] = []
     
+    // Debug: Sample some keys to see what we're comparing
+    if (projects.length > 0) {
+      const sample = projects.slice(0, 3)
+      console.log(`[DEBUG] Sample project keys:`)
+      for (const p of sample) {
+        const key = createProjectKey(p.simap_project_id, p.simap_publication_id)
+        const exists = existingMap.has(key)
+        console.log(`  ${key} -> exists: ${exists}, pub_id: ${p.simap_publication_id}`)
+      }
+    }
+    
     for (const project of projects) {
-      const key = `${project.simap_project_id}:${project.simap_publication_id}`
+      const key = createProjectKey(project.simap_project_id, project.simap_publication_id)
       const existing = existingMap.get(key)
       
       if (!existing) {
@@ -708,25 +730,41 @@ serve(async (req) => {
     
     // ========== PHASE 3: UPSERT ==========
     console.log(`[PHASE 3] Upserting to database...`)
+    console.log(`[DEBUG] Upserting ${projects.length} projects (${newProjects.length} new, ${existingProjects.length} existing)`)
     const batchSize = 200
     
+    let upsertedCount = 0
     for (let i = 0; i < projects.length; i += batchSize) {
       const batch = projects.slice(i, i + batchSize)
+      const batchNum = Math.floor(i/batchSize) + 1
       
-      const { error } = await supabase
+      // Debug: Show sample of what we're upserting
+      if (batchNum === 1 && batch.length > 0) {
+        const sample = batch[0]
+        console.log(`[DEBUG] Sample upsert: project_id=${sample.simap_project_id}, publication_id=${sample.simap_publication_id ?? 'null'}`)
+      }
+      
+      const { data, error } = await supabase
         .from('projects')
         .upsert(batch, { 
           onConflict: 'simap_project_id,simap_publication_id',
           ignoreDuplicates: false
         })
+        .select('simap_project_id')
       
       if (error) {
-        console.error(`[ERROR] Batch ${Math.floor(i/batchSize) + 1} failed:`, error.message)
+        console.error(`[ERROR] Batch ${batchNum} failed:`, error.message)
         throw error
+      }
+      
+      if (data) {
+        upsertedCount += data.length
+      } else {
+        upsertedCount += batch.length // Fallback: assume all were upserted
       }
     }
     
-    console.log(`[PHASE 3] Upserted ${projects.length} projects`)
+    console.log(`[PHASE 3] Upserted ${upsertedCount} projects`)
     
     stats.duration_seconds = (Date.now() - startTime) / 1000
     
