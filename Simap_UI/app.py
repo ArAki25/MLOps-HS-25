@@ -445,4 +445,6 @@ if __name__ == '__main__':
     print("    POST   /webhook/daily-update")
     print("=" * 60)
 
-    app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
+    if __name__ == '__main__':
+        app.run()
+    # app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
