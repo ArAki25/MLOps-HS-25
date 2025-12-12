@@ -32,7 +32,20 @@ from Simap_UI.ml_integration import (
     predict_ausschreibung,
     calculate_relevanz
 )
+import os
+import sys
 
+# Füge Simap_UI zum Path hinzu
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'Simap_UI'))
+
+# Setze Template/Static Ordner
+template_dir = os.path.join(os.path.dirname(__file__), 'Simap_UI', 'templates')
+static_dir = os.path.join(os.path.dirname(__file__), 'Simap_UI', 'static')
+
+from flask import Flask
+app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
+
+# ... rest deines Codes
 load_dotenv()
 
 
