@@ -1,0 +1,53 @@
+# requirements.txt - Python Dependencies für Simap.ch KI-Assistent
+
+# Flask Framework
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# Umgebungsvariablen
+python-dotenv==1.0.0
+
+# Datenbank (wähle eine aus)
+# SQLite ist standardmässig in Python enthalten
+# Für PostgreSQL:
+# psycopg2-binary==2.9.9
+# Für MySQL:
+# PyMySQL==1.1.0
+
+# Für zukünftige Features:
+# Flask-SQLAlchemy==3.1.1  # ORM für Datenbank
+# Flask-Login==0.6.3       # Benutzer-Session-Management
+# Flask-Bcrypt==1.0.1      # Passwort-Hashing
+# Flask-CORS==4.0.0        # CORS für API
+
+# Für KI-Modell Integration (falls benötigt):
+# numpy==1.26.2
+# pandas==2.1.4
+# scikit-learn==1.3.2
+# tensorflow==2.15.0       # Falls Deep Learning verwendet wird
+# torch==2.1.2             # Alternative zu TensorFlow
+
+# Für API und Datenverarbeitung:
+# requests==2.31.0
+# beautifulsoup4==4.12.2   # Falls Web Scraping nötig ist
+
+# requirements.txt - Finale Dependencies
+
+
+# Supabase Datenbank
+supabase==2.3.0
+
+# KI/Machine Learning
+scikit-learn==1.3.2
+numpy==1.26.2
+pandas==2.1.4
+
+# Optional für fortgeschrittene KI:
+# tensorflow==2.15.0
+# torch==2.1.2
+
+# Weitere nützliche Pakete:
+# Flask-Login==0.6.3       # Benutzer-Session-Management
+# Flask-Bcrypt==1.0.1      # Passwort-Hashing
+# Flask-CORS==4.0.0        # CORS für API
+# requests==2.31.0         # HTTP Requests
