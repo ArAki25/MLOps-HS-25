@@ -8,7 +8,7 @@ import os
 from dotenv import load_dotenv
 
 # Supabase Datenbank
-from database.supabase_database import (
+from Simap_UI.supabase_database import (
     init_supabase,
     get_user_by_email,
     get_all_ausschreibungen,
@@ -27,7 +27,7 @@ from database.supabase_database import (
 )
 
 # ML-Modell
-from ml.ml_integration import (
+from Simap_UI.ml_integration import (
     initialize_ml_system,
     predict_ausschreibung,
     calculate_relevanz
@@ -405,7 +405,7 @@ def admin_retrain():
         return jsonify({'error': 'Keine Berechtigung'}), 403
 
     try:
-        from ml.ml_integration import train_models, save_models
+        from Simap_UI.ml_integration import train_models, save_models
 
         success = train_models()
         if success:

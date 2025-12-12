@@ -17,7 +17,7 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
-from typing import Dict, List
+from typing import Dict
 
 # Globale Klassifikatoren
 _order_type_classifier = None
@@ -41,7 +41,7 @@ def parse_value(x):
 def load_training_data_from_supabase() -> pd.DataFrame:
     """Lädt Trainingsdaten aus Supabase"""
     try:
-        from database.supabase_database import supabase, get_all_ausschreibungen
+        from Simap_UI.supabase_database import supabase, get_all_ausschreibungen
 
         print("Lade Daten aus Supabase...")
         data = get_all_ausschreibungen(limit=10000)
