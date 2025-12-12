@@ -8,11 +8,18 @@ from sentence_transformers import SentenceTransformer
 import joblib
 import os
 import warnings
+import sys
+from pathlib import Path
+
+# Füge den ml/algorithm Pfad hinzu
+sys.path.append(str(Path(__file__).parent / "algorithm"))
+from supabase_api_loader import SupabaseAPILoader, lade_aus_supabase_api, teste_supabase_api
+from supabase_storage_handler import SupabaseStorageHandler, lade_modell_von_storage, speichere_modell_zu_storage
 warnings.filterwarnings('ignore')
 
 
 class ProjektKlassifikator:
-    
+
 
     def __init__(self):
         print("Lade Embedding-Modell")
@@ -117,7 +124,7 @@ class ProjektKlassifikator:
         return min(score / len(keywords), 3.0)
 
     def erstelle_features(self, df, fit=True):
-        """Erstellt komplette Feature-Matrix mit Keyword-Features"""
+        """Erstellt komplette Feature-Matrix mit starker Gewichtung auf Keywords und CPV"""
         embeddings = self.erstelle_embeddings(df['combined_text'].tolist())
         categorical = self.encodiere_kategorien(df, fit=fit)
 
@@ -126,7 +133,7 @@ class ProjektKlassifikator:
 
         if self.kriterien_config.get('keywords'):
             print("Berechne Keyword-Matching-Scores...")
-            for i, row in df.iterrows():
+            for i, (idx, row) in enumerate(df.iterrows()):
                 title_score = self.berechne_keyword_score(
                     str(row.get('title', '')),
                     self.kriterien_config['keywords']
@@ -137,39 +144,97 @@ class ProjektKlassifikator:
                 )
                 keyword_features[i] = [title_score, desc_score]
 
+        # WICHTIG: Gewichte die Features unterschiedlich!
+        # Embeddings (semantisches Verständnis) - Gewicht: 0.3
+        embeddings_weighted = embeddings * 0.3
+
+        # Kategoriale Features (CPV-Codes, Kantone, etc.) - Gewicht: 2.0 (sehr wichtig!)
+        if categorical.shape[1] > 0:
+            categorical_weighted = categorical * 2.0
+        else:
+            categorical_weighted = categorical
+
+        # Keywords - Gewicht: 5.0 (am wichtigsten!)
+        keyword_features_weighted = keyword_features * 5.0
+
         # Kombiniere alle Features
         if categorical.shape[1] > 0:
-            features = np.hstack([embeddings, categorical, keyword_features])
+            features = np.hstack([embeddings_weighted, categorical_weighted, keyword_features_weighted])
         else:
-            features = np.hstack([embeddings, keyword_features])
+            features = np.hstack([embeddings_weighted, keyword_features_weighted])
 
         print(f"Feature-Matrix: {features.shape}")
+        print(f"  Embeddings (30% Gewicht), Kategorien (200% Gewicht), Keywords (500% Gewicht)")
         return features
+
+    def wende_harte_filter_an(self, df, kriterien):
+        """
+        STUFE 1: Harte Filter - Eliminiert Projekte die DEFINITIV nicht passen
+        Returns: Gefiltertes DataFrame
+        """
+        print("\n" + "="*70)
+        print("STUFE 1: HARTE FILTER")
+        print("="*70)
+
+        filtered = df.copy()
+        original_count = len(filtered)
+
+        # FILTER 1: Kantone (HART)
+        if kriterien.get('kantone') and 'canton' in df.columns:
+            filtered = filtered[filtered['canton'].isin(kriterien['kantone'])]
+            print(f"✓ Kanton-Filter: {len(filtered)}/{original_count} Projekte übrig")
+
+        # FILTER 2: Projekttypen (HART) - z.B. nur "tender"
+        if kriterien.get('projekt_typen') and 'project_type' in df.columns:
+            filtered = filtered[filtered['project_type'].isin(kriterien['projekt_typen'])]
+            print(f"✓ Projekttyp-Filter: {len(filtered)}/{original_count} Projekte übrig")
+
+        # FILTER 3: Auftragsarten (HART) - z.B. nur "service"
+        if kriterien.get('auftrags_arten') and 'order_type' in df.columns:
+            filtered = filtered[filtered['order_type'].isin(kriterien['auftrags_arten'])]
+            print(f"✓ Auftragsart-Filter: {len(filtered)}/{original_count} Projekte übrig")
+
+        # FILTER 4: CPV-Codes (HART) - z.B. nur "79"
+        if kriterien.get('cpv_codes') and 'cpv_code' in df.columns:
+            cpv_mask = pd.Series([False] * len(filtered), index=filtered.index)
+            for code in kriterien['cpv_codes']:
+                # Prüfe ob cpv_code ein Dictionary ist (nested structure)
+                if filtered['cpv_code'].dtype == 'object':
+                    # Versuche als String oder Dictionary zu behandeln
+                    cpv_mask |= filtered['cpv_code'].astype(str).str.contains(str(code), na=False)
+                else:
+                    cpv_mask |= filtered['cpv_code'].astype(str).str.startswith(str(code), na=False)
+            filtered = filtered[cpv_mask]
+            print(f"✓ CPV-Code-Filter: {len(filtered)}/{original_count} Projekte übrig")
+
+        # FILTER 5: Budget (HART)
+        if 'estimated_amount' in df.columns:
+            if kriterien.get('min_budget'):
+                filtered = filtered[filtered['estimated_amount'] >= kriterien['min_budget']]
+                print(f"✓ Min-Budget-Filter: {len(filtered)}/{original_count} Projekte übrig")
+            if kriterien.get('max_budget'):
+                filtered = filtered[(filtered['estimated_amount'] <= kriterien['max_budget']) 
+                                  (filtered['estimated_amount'] > 0)]
+                print(f"✓ Max-Budget-Filter: {len(filtered)}/{original_count} Projekte übrig")
+
+        print(f"\n→ {len(filtered)}/{original_count} Projekte nach harten Filtern")
+        return filtered
 
     def erstelle_labels_aus_kriterien(self, df, kriterien):
         """
-        Erstellt Labels basierend auf Kriterien-Dictionary
-        Keywords bekommen höhere Gewichtung!
+        STUFE 2: ML-Labels - NUR für Keywords/Text-Matching
+        Wird auf BEREITS GEFILTERTE Daten angewendet!
         """
         labels = np.zeros(len(df), dtype=int)
-        keyword_bonus = np.zeros(len(df), dtype=float)
 
-        # Kantone
-        if kriterien.get('kantone') and 'canton' in df.columns:
-            labels[df['canton'].isin(kriterien['kantone'])] = 1
-
-        # Projekttypen
-        if kriterien.get('projekt_typen') and 'project_type' in df.columns:
-            labels[df['project_type'].isin(kriterien['projekt_typen'])] = 1
-
-        # Auftragsarten
-        if kriterien.get('auftrags_arten') and 'order_type' in df.columns:
-            labels[df['order_type'].isin(kriterien['auftrags_arten'])] = 1
-
-        # Schlüsselwörter - MIT HÖHERER GEWICHTUNG!
+        # NUR Keywords für ML-Bewertung - Rest wurde schon hart gefiltert!
         if kriterien.get('keywords'):
-            print("\nAnalysiere Keyword-Matches...")
-            for idx, row in df.iterrows():
+            print("\n" + "="*70)
+            print("STUFE 2: ML-BEWERTUNG (Keywords in Titel/Beschreibung)")
+            print("="*70)
+
+            keyword_scores = []
+            for i, (idx, row) in enumerate(df.iterrows()):
                 title_score = self.berechne_keyword_score(
                     str(row.get('title', '')),
                     kriterien['keywords']
@@ -179,31 +244,20 @@ class ProjektKlassifikator:
                     kriterien['keywords']
                 )
 
-                total_score = title_score * 2.0 + desc_score  # Titel doppelt gewichtet
-                keyword_bonus[idx] = total_score
+                total_score = title_score * 2.0 + desc_score
+                keyword_scores.append(total_score)
 
-                # Wenn guter Match (Score > 1.0), als interessant markieren
-                if total_score > 1.0:
-                    labels[idx] = 1
+                # Wenn guter Keyword-Match, als interessant markieren
+                if total_score > 0.5:  # Schwelle gesenkt - Rest wurde ja schon gefiltert
+                    labels[i] = 1  # Verwende i (0-basierter Index) statt idx (DataFrame-Index)
 
-            # Zeige Statistik
-            high_matches = np.sum(keyword_bonus > 2.0)
-            medium_matches = np.sum((keyword_bonus > 1.0) & (keyword_bonus <= 2.0))
-            print(f"  Starke Keyword-Matches: {high_matches}")
-            print(f"  Mittlere Keyword-Matches: {medium_matches}")
-
-        # Budget
-        if 'estimated_amount' in df.columns:
-            if kriterien.get('min_budget'):
-                labels[df['estimated_amount'] >= kriterien['min_budget']] = 1
-            if kriterien.get('max_budget'):
-                labels[(df['estimated_amount'] <= kriterien['max_budget']) &
-                       (df['estimated_amount'] > 0)] = 1
-
-        # CPV-Codes
-        if kriterien.get('cpv_codes') and 'cpv_code' in df.columns:
-            for code in kriterien['cpv_codes']:
-                labels[df['cpv_code'].astype(str).str.startswith(str(code), na=False)] = 1
+            # Statistik
+            n_matched = np.sum(labels == 1)
+            n_total = len(labels)
+            print(f"  Keywords gefunden in: {n_matched}/{n_total} Projekten ({n_matched/n_total*100:.1f}%)")
+        else:
+            # Keine Keywords? Dann alles als interessant markieren (wurde ja hart gefiltert)
+            labels = np.ones(len(df), dtype=int)
 
         return labels
 
@@ -244,9 +298,16 @@ class ProjektKlassifikator:
         print("TRAINING ABGESCHLOSSEN")
         print("="*70)
         print(f"\nAccuracy: {accuracy:.2%}")
-        print("\nClassification Report:")
-        print(classification_report(y_test, y_pred,
-                                   target_names=['Nicht interessant', 'Interessant']))
+
+        # Classification Report nur wenn beide Klassen vorhanden
+        unique_classes = np.unique(np.concatenate([y_test, y_pred]))
+        if len(unique_classes) >= 2:
+            print("\nClassification Report:")
+            print(classification_report(y_test, y_pred,
+                                       target_names=['Nicht interessant', 'Interessant']))
+        else:
+            print("\n⚠️  Nur eine Klasse im Test-Set - Classification Report übersprungen")
+            print(f"   Vorhandene Klasse: {'Interessant' if unique_classes[0] == 1 else 'Nicht interessant'}")
 
         return accuracy
 
@@ -258,14 +319,42 @@ class ProjektKlassifikator:
         df = self.daten_vorbereiten(df)
         X = self.erstelle_features(df, fit=False)
         predictions = self.rf_classifier.predict(X)
-        probabilities = self.rf_classifier.predict_proba(X)[:, 1]
+
+        # Prüfe ob beide Klassen vorhanden sind
+        proba = self.rf_classifier.predict_proba(X)
+        if proba.shape[1] == 2:
+            # Normal: beide Klassen (0 und 1)
+            probabilities = proba[:, 1]
+        else:
+            # Nur eine Klasse trainiert - verwende diese Wahrscheinlichkeit
+            probabilities = proba[:, 0]
+            print("\n⚠️  Warnung: Modell kennt nur eine Klasse!")
+            print("    Empfehlung: Trainiere das Modell neu mit spezifischeren Kriterien.")
+
         return predictions, probabilities
 
     def finde_interessante(self, df, min_prob=0.7, top_n=None):
-        """Findet interessante Projekte"""
-        predictions, probabilities = self.vorhersagen(df)
+        """
+        Findet interessante Projekte mit 2-Stufen-Filterung:
+        1. Harte Filter (CPV, Kanton, Typ, etc.)
+        2. ML-Vorhersage (Keywords/Text-Match)
+        """
+        print("\n[STUFE 1] Wende harte Filter an...")
+        if self.kriterien_config:
+            df_gefiltert = self.wende_harte_filter_an(df, self.kriterien_config)
+            print(f"  {len(df)} → {len(df_gefiltert)} Projekte (nach harten Filtern)")
+        else:
+            df_gefiltert = df
+            print("  (Keine Kriterien gespeichert - überspringe harte Filter)")
 
-        result_df = df.copy()
+        if len(df_gefiltert) == 0:
+            print("  ⚠️  Keine Projekte nach harten Filtern - Kriterien zu streng!")
+            return pd.DataFrame()
+
+        print("\n[STUFE 2] Führe ML-Vorhersage durch...")
+        predictions, probabilities = self.vorhersagen(df_gefiltert)
+
+        result_df = df_gefiltert.copy()
         result_df['interessant_vorhersage'] = predictions
         result_df['interessant_wahrscheinlichkeit'] = probabilities
 
@@ -293,8 +382,15 @@ class ProjektKlassifikator:
 
         return interesting
 
-    def speichern(self, pfad):
-        """Speichert das Modell"""
+    def speichern(self, pfad, zu_supabase=False, bucket_name="models"):
+        """
+        Speichert das Modell lokal oder zu Supabase Storage
+
+        Args:
+            pfad: Lokaler Pfad oder Remote-Pfad (z.B. "production/model_v1.pkl")
+            zu_supabase: True = zu Supabase Storage hochladen, False = lokal speichern
+            bucket_name: Supabase Bucket Name (default: "models")
+        """
         if self.rf_classifier is None:
             raise ValueError("Kein Modell zum Speichern!")
 
@@ -303,16 +399,64 @@ class ProjektKlassifikator:
             'label_encoders': self.label_encoders,
             'kriterien_config': self.kriterien_config
         }
-        joblib.dump(model_data, pfad)
-        print(f"✓ Modell gespeichert: {pfad}")
 
-    def laden(self, pfad):
-        """Lädt ein gespeichertes Modell"""
-        model_data = joblib.load(pfad)
+        if zu_supabase:
+            # Speichere direkt zu Supabase Storage
+            if speichere_modell_zu_storage(model_data, pfad, bucket_name):
+                print(f"✓ Modell zu Supabase Storage gespeichert: {bucket_name}/{pfad}")
+            else:
+                raise Exception("Fehler beim Speichern zu Supabase Storage")
+        else:
+            # Speichere lokal
+            joblib.dump(model_data, pfad)
+            print(f"✓ Modell lokal gespeichert: {pfad}")
+
+    def laden(self, pfad, von_supabase=False, bucket_name="models"):
+        """
+        Lädt ein gespeichertes Modell von lokal oder Supabase Storage
+
+        Args:
+            pfad: Lokaler Pfad oder Remote-Pfad (z.B. "production/model_v1.pkl")
+            von_supabase: True = von Supabase Storage laden, False = lokal laden
+            bucket_name: Supabase Bucket Name (default: "models")
+        """
+        if von_supabase:
+            # Lade von Supabase Storage
+            model_data = lade_modell_von_storage(pfad, bucket_name)
+            if model_data is None:
+                raise Exception("Fehler beim Laden von Supabase Storage")
+            print(f"✓ Modell von Supabase Storage geladen: {bucket_name}/{pfad}")
+        else:
+            # Lade lokal
+            model_data = joblib.load(pfad)
+            print(f"✓ Modell lokal geladen: {pfad}")
+
         self.rf_classifier = model_data['rf_classifier']
         self.label_encoders = model_data['label_encoders']
         self.kriterien_config = model_data.get('kriterien_config', {})
-        print(f"✓ Modell geladen: {pfad}")
+
+    def lade_daten_von_supabase(self, tage_zurueck=10, kantone=None, projekt_typen=None, auftrags_arten=None):
+        """Lädt Daten direkt aus Supabase"""
+        print(f"\nLade Daten aus Supabase (letzte {tage_zurueck} Tage)...")
+
+        try:
+            loader = SupabaseAPILoader()
+            df = loader.lade_projekte(
+                tage_zurueck=tage_zurueck,
+                kantone=kantone,
+                projekt_typen=projekt_typen,
+                auftrags_arten=auftrags_arten
+            )
+
+            if len(df) > 0:
+                print(f"✓ {len(df)} Projekte aus Supabase geladen")
+            else:
+                print("⚠ Keine Projekte gefunden")
+
+            return df
+        except Exception as e:
+            print(f"❌ Fehler beim Laden aus Supabase: {e}")
+            return pd.DataFrame()
 
 
 def interaktive_kriterien_eingabe():
@@ -555,10 +699,10 @@ def zeige_ergebnisse(df, max_anzahl=10):
 def main():
     """Hauptprogramm"""
     print("="*70)
-    print("PROJEKT-KLASSIFIKATOR - KOMBI-VERSION V2")
+    print("PROJEKT-KLASSIFIKATOR - SUPABASE-VERSION")
     print("="*70)
     print("ML-basierte Identifikation interessanter Ausschreibungen")
-    print("🎯 NEU: Verbesserte Keyword-Gewichtung für ganze Titel!")
+    print("🎯 Direkte Anbindung an Supabase-Datenbank!")
     print()
 
     # ========================================================================
@@ -578,29 +722,30 @@ def main():
         return
 
     # ========================================================================
-    # CSV-DATEI LADEN
+    # DATEN AUS SUPABASE LADEN
     # ========================================================================
     print("\n" + "="*70)
-    print("CSV-DATEI LADEN")
+    print("DATEN AUS SUPABASE LADEN")
     print("="*70)
 
-    csv_pfad = input("/content/simap_last10d.csv").strip()
-    if not csv_pfad:
-        csv_pfad = "/content/simap_last10d.csv"
-
-    if not os.path.exists(csv_pfad):
-        print(f"\n❌ FEHLER: Datei nicht gefunden: {csv_pfad}")
+    # Teste Verbindung
+    print("\nTeste Supabase-Verbindung...")
+    if not teste_supabase_api():
+        print("❌ Supabase-Verbindung fehlgeschlagen!")
+        print("Bitte prüfe deine .env Datei:")
+        print("  SUPABASE_URL=https://xxx.supabase.co")
+        print("  SUPABASE_KEY=dein-anon-key")
         return
 
-    print("\nLade Daten...")
-    try:
-        # Versuche verschiedene Trennzeichen
-        try:
-            df = pd.read_csv(csv_pfad, sep='\t')
-        except:
-            df = pd.read_csv(csv_pfad, sep=',')
-    except Exception as e:
-        print(f"\n❌ FEHLER beim Laden: {e}")
+    tage = input("\nWie viele Tage zurück laden? (default: 10): ").strip()
+    tage_zurueck = int(tage) if tage else 10
+
+    # Temporärer Klassifikator zum Laden
+    temp_klassifikator = ProjektKlassifikator()
+    df = temp_klassifikator.lade_daten_von_supabase(tage_zurueck=tage_zurueck)
+
+    if len(df) == 0:
+        print("\n❌ FEHLER: Keine Daten aus Supabase geladen")
         return
 
     print(f"✓ {len(df)} Projekte geladen")
@@ -616,18 +761,42 @@ def main():
         kriterien = interaktive_kriterien_eingabe()
         klassifikator.kriterien_config = kriterien
 
-        # Labels erstellen
+        # ====================================================================
+        # STUFE 1: HARTE FILTER ANWENDEN
+        # ====================================================================
         print("\n" + "="*70)
-        print("LABELS ERSTELLEN")
+        print("STUFE 1: HARTE FILTER ANWENDEN")
         print("="*70)
+        print("Filtere nach: Kanton, Projekttyp, Auftragsart, CPV-Code, Budget")
 
-        labels = klassifikator.erstelle_labels_aus_kriterien(df, kriterien)
+        df_gefiltert = klassifikator.wende_harte_filter_an(df, kriterien)
+
+        print(f"\n✓ Originale Projekte: {len(df)}")
+        print(f"✓ Nach harten Filtern: {len(df_gefiltert)}")
+        print(f"✓ Reduziert um: {len(df) - len(df_gefiltert)} Projekte ({(1 - len(df_gefiltert)/len(df))*100:.1f}%)")
+
+        if len(df_gefiltert) < 50:
+            print("\n⚠️  WARNUNG: Sehr wenige Projekte nach Filterung!")
+            print("Die harten Filter sind sehr streng - das Modell hat wenig Trainingsdaten.")
+            print("\nMöchten Sie die Kriterien lockern? (j/n)")
+            if input("> ").strip().lower() in ['j', 'ja', 'y', 'yes']:
+                return
+
+        # ====================================================================
+        # STUFE 2: ML-LABELS ERSTELLEN (nur für Keywords)
+        # ====================================================================
+        print("\n" + "="*70)
+        print("STUFE 2: ML-LABELS ERSTELLEN")
+        print("="*70)
+        print("Bewerte Titel/Beschreibung anhand von Keywords")
+
+        labels = klassifikator.erstelle_labels_aus_kriterien(df_gefiltert, kriterien)
 
         n_interessant = np.sum(labels == 1)
         n_nicht = np.sum(labels == 0)
 
-        print(f"\n✓ Interessant: {n_interessant} ({n_interessant/len(labels)*100:.1f}%)")
-        print(f"✓ Nicht interessant: {n_nicht} ({n_nicht/len(labels)*100:.1f}%)")
+        print(f"\n✓ Interessant (Keywords passen): {n_interessant} ({n_interessant/len(labels)*100:.1f}%)")
+        print(f"✓ Nicht interessant (Keywords fehlen): {n_nicht} ({n_nicht/len(labels)*100:.1f}%)")
 
         if n_interessant < 20:
             print("\n⚠️  WARNUNG: Sehr wenige interessante Projekte!")
@@ -636,8 +805,20 @@ def main():
             if input("> ").strip().lower() not in ['j', 'ja', 'y', 'yes']:
                 return
 
-        # Training
-        klassifikator.trainieren(df, labels)
+        if n_nicht < 10:
+            print("\n⚠️  WARNUNG: Zu wenige NICHT-interessante Projekte!")
+            print("Das Modell braucht beide Klassen zum Trainieren.")
+            print("Problem: Deine Keywords sind zu breit - fast alles passt.")
+            print("\nTipps:")
+            print("- Verwende spezifischere Keywords")
+            print("- Kombiniere mehrere Keywords mit UND-Logik")
+            print("\nMöchten Sie die Kriterien neu eingeben? (j/n)")
+            if input("> ").strip().lower() in ['j', 'ja', 'y', 'yes']:
+                return
+            print("\nFahre trotzdem fort (kann zu schlechten Ergebnissen führen)...")
+
+        # Training mit gefilterten Daten
+        klassifikator.trainieren(df_gefiltert, labels)
 
         # Modell speichern
         print("\n" + "="*70)

@@ -14,8 +14,9 @@ from dotenv import load_dotenv
 # Fix Windows Console Encoding
 if sys.platform == 'win32':
     import codecs
-    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
-    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+    if hasattr(sys.stdout, 'buffer'):
+        sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+        sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
 load_dotenv()
 
@@ -75,11 +76,9 @@ class SupabaseAPILoader:
             # Basis-URL
             url = f"{self.base_url}/rest/v1/projects"
 
-            # Query-Parameter
+            # Query-Parameter (ohne Datumsfilter, da 4815 Einträge vorhanden)
             params = {
                 'select': '*',
-                'publication_date': f'gte.{start_datum}',
-                'order': 'publication_date.desc',
                 'limit': limit
             }
 

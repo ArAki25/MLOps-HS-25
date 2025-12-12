@@ -9,6 +9,7 @@ python-dotenv>=1.0.0
 
 # Datenbank (PostgreSQL/Supabase)
 psycopg2-binary>=2.9.9
+supabase>=2.0.0  # Supabase Python Client
 
 # Datenverarbeitung
 pandas>=2.0.0
