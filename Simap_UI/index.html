@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAJF Strategies - Public Tenders</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --secondary: #16213e;
+            --accent: #0f3460;
+            --highlight: #e94560;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav a:hover, .nav a.active {
+            color: var(--primary);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Search & Filter Section */
+        .search-section {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .search-section h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 3rem;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .filter-chip:hover {
+            border-color: var(--accent);
+        }
+
+        .filter-chip.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .filter-chip input {
+            display: none;
+        }
+
+        .canton-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: var(--background);
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        /* Tenders List */
+        .tenders-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .tenders-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .tenders-title small {
+            font-weight: 400;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .tenders-source {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .tenders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Tender Card */
+        .tender-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .tender-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .tender-card.expanded {
+            border-color: var(--accent);
+        }
+
+        .tender-card.new {
+            border-left: 4px solid var(--success);
+        }
+
+        .tender-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .tender-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .tender-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .tender-badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-new {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-open {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-selective {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-awarded {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .tender-meta {
+            display: flex;
+            gap: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            flex-wrap: wrap;
+        }
+
+        .tender-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .time-ago {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        /* Tender Details (expanded) */
+        .tender-details {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .tender-card.expanded .tender-details {
+            display: block;
+        }
+
+        .tender-description {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .tender-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .tender-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .tender-info-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .tender-info-value {
+            font-weight: 500;
+        }
+
+        .simap-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .simap-link:hover {
+            background: var(--primary);
+        }
+
+        /* Disclaimer */
+        .disclaimer {
+            margin-top: 3rem;
+            padding: 1rem 1.5rem;
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: #92400e;
+            text-align: center;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav {
+                gap: 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .filter-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .tender-header {
+                flex-direction: column;
+            }
+
+            .tender-badges {
+                order: -1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <div>
+                    <div class="logo-text">SAJF</div>
+                    <div class="logo-subtitle">Strategies</div>
+                </div>
+            </a>
+            <nav class="nav">
+                <a href="/" class="active">Tenders</a>
+                <a href="#" onclick="showStats()">Statistics</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div>
+                    <div class="stat-value" id="stat-total">-</div>
+                    <div class="stat-label">Total Tenders</div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div>
+                    <div class="stat-value" id="stat-today">-</div>
+                    <div class="stat-label">New Today</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search & Filter -->
+        <section class="search-section">
+            <h2>Advanced Tender Search</h2>
+
+            <div class="search-box">
+                <svg class="search-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" class="search-input" id="search-input" placeholder="Search by Keyword or Simap ID...">
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-group">
+                    <span class="filter-label">Canton</span>
+                    <select class="canton-select" id="canton-filter">
+                        <option value="">All Cantons</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <span class="filter-label">Procedure Type</span>
+                    <div class="filter-options">
+                        <label class="filter-chip" data-filter="process_type" data-value="open">
+                            <input type="checkbox"> Open
+                        </label>
+                        <label class="filter-chip" data-filter="process_type" data-value="selective">
+                            <input type="checkbox"> Selective
+                        </label>
+                        <label class="filter-chip" data-filter="process_type" data-value="invitation">
+                            <input type="checkbox"> Invitation
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <span class="filter-label">Order Type</span>
+                    <div class="filter-options">
+                        <label class="filter-chip" data-filter="order_type" data-value="service">
+                            <input type="checkbox"> Service
+                        </label>
+                        <label class="filter-chip" data-filter="order_type" data-value="construction">
+                            <input type="checkbox"> Construction
+                        </label>
+                        <label class="filter-chip" data-filter="order_type" data-value="supply">
+                            <input type="checkbox"> Supply
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tenders List -->
+        <div class="tenders-header">
+            <h2 class="tenders-title">
+                PUBLIC TENDERS (Aufträge/Tenders)
+                <small id="results-count"></small>
+            </h2>
+            <span class="tenders-source">simap.ch</span>
+        </div>
+
+        <div class="tenders-list" id="tenders-list">
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading tenders...
+            </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="disclaimer">
+            ⚠️ Dies ist keine amtliche Veröffentlichung. Massgebend sind die auf der Plattform
+            <a href="https://www.simap.ch" target="_blank" rel="noopener">www.simap.ch</a> veröffentlichten Daten.
+        </div>
+    </main>
+
+    <script>
+        // State
+        let allProjects = [];
+        let filteredProjects = [];
+        let activeFilters = {
+            search: '',
+            canton: '',
+            process_type: [],
+            order_type: []
+        };
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProjects();
+            loadCantons();
+            loadStatistics();
+            setupEventListeners();
+
+            // Auto-refresh every 5 minutes
+            setInterval(loadProjects, 5 * 60 * 1000);
+        });
+
+        // Load all projects
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/projects?limit=100');
+                allProjects = await response.json();
+                applyFilters();
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                document.getElementById('tenders-list').innerHTML =
+                    '<div class="empty-state">Error loading tenders. Please try again.</div>';
+            }
+        }
+
+        // Load cantons for filter
+        async function loadCantons() {
+            try {
+                const response = await fetch('/api/cantons');
+                const cantons = await response.json();
+
+                const select = document.getElementById('canton-filter');
+                cantons.forEach(canton => {
+                    const option = document.createElement('option');
+                    option.value = canton.code;
+                    option.textContent = `${canton.code} (${canton.count})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading cantons:', error);
+            }
+        }
+
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/statistics');
+                const stats = await response.json();
+
+                document.getElementById('stat-total').textContent = stats.total || 0;
+                document.getElementById('stat-today').textContent = stats.today || 0;
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search
+            const searchInput = document.getElementById('search-input');
+            let searchTimeout;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    activeFilters.search = e.target.value;
+                    applyFilters();
+                }, 300);
+            });
+
+            // Canton filter
+            document.getElementById('canton-filter').addEventListener('change', (e) => {
+                activeFilters.canton = e.target.value;
+                applyFilters();
+            });
+
+            // Filter chips
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const filterType = chip.dataset.filter;
+                    const value = chip.dataset.value;
+
+                    chip.classList.toggle('active');
+
+                    if (chip.classList.contains('active')) {
+                        if (!activeFilters[filterType].includes(value)) {
+                            activeFilters[filterType].push(value);
+                        }
+                    } else {
+                        activeFilters[filterType] = activeFilters[filterType].filter(v => v !== value);
+                    }
+
+                    applyFilters();
+                });
+            });
+        }
+
+        // Apply filters
+        function applyFilters() {
+            filteredProjects = allProjects.filter(project => {
+                // Search filter
+                if (activeFilters.search) {
+                    const searchLower = activeFilters.search.toLowerCase();
+                    const matchesSearch =
+                        (project.title || '').toLowerCase().includes(searchLower) ||
+                        (project.description || '').toLowerCase().includes(searchLower) ||
+                        (project.organization || '').toLowerCase().includes(searchLower) ||
+                        (project.project_number || '').toLowerCase().includes(searchLower);
+                    if (!matchesSearch) return false;
+                }
+
+                // Canton filter
+                if (activeFilters.canton && project.canton !== activeFilters.canton) {
+                    return false;
+                }
+
+                // Process type filter
+                if (activeFilters.process_type.length > 0) {
+                    if (!activeFilters.process_type.includes(project.process_type)) {
+                        return false;
+                    }
+                }
+
+                // Order type filter
+                if (activeFilters.order_type.length > 0) {
+                    if (!activeFilters.order_type.includes(project.order_type)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            renderProjects();
+        }
+
+        // Render projects
+        function renderProjects() {
+            const container = document.getElementById('tenders-list');
+            const countEl = document.getElementById('results-count');
+
+            countEl.textContent = `(${filteredProjects.length} results)`;
+
+            if (filteredProjects.length === 0) {
+                container.innerHTML = '<div class="empty-state">No tenders found matching your criteria.</div>';
+                return;
+            }
+
+            container.innerHTML = filteredProjects.map(project => createTenderCard(project)).join('');
+
+            // Add click handlers
+            container.querySelectorAll('.tender-card').forEach(card => {
+                card.addEventListener('click', () => toggleCard(card));
+            });
+        }
+
+        // Create tender card HTML
+        function createTenderCard(project) {
+            const isNew = isNewProject(project.publication_date);
+            const processTypeBadge = getProcessTypeBadge(project.process_type);
+
+            return `
+                <div class="tender-card ${isNew ? 'new' : ''}" data-id="${project.id}">
+                    <div class="tender-header">
+                        <div>
+                            <div class="tender-label">TENDER TITLE</div>
+                            <div class="tender-title">${escapeHtml(project.title)}</div>
+                        </div>
+                        <div class="tender-badges">
+                            ${isNew ? '<span class="badge badge-new">NEW</span>' : ''}
+                            ${processTypeBadge}
+                        </div>
+                    </div>
+                    <div class="tender-meta">
+                        <span class="tender-meta-item">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            ${project.city || ''} ${project.canton ? ', ' + project.canton : ''}
+                        </span>
+                        <span class="tender-meta-item">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                            ${escapeHtml(project.organization)}
+                        </span>
+                        <span class="time-ago">${project.time_ago || ''}</span>
+                    </div>
+
+                    <div class="tender-details">
+                        <p class="tender-description">${escapeHtml(project.description)}</p>
+
+                        <div class="tender-info-grid">
+                            <div class="tender-info-item">
+                                <span class="tender-info-label">Project Number</span>
+                                <span class="tender-info-value">${project.project_number || '-'}</span>
+                            </div>
+                            <div class="tender-info-item">
+                                <span class="tender-info-label">Order Type</span>
+                                <span class="tender-info-value">${capitalize(project.order_type) || '-'}</span>
+                            </div>
+                            <div class="tender-info-item">
+                                <span class="tender-info-label">Procedure</span>
+                                <span class="tender-info-value">${capitalize(project.process_type) || '-'}</span>
+                            </div>
+                            <div class="tender-info-item">
+                                <span class="tender-info-label">Deadline</span>
+                                <span class="tender-info-value">${formatDate(project.deadline) || '-'}</span>
+                            </div>
+                        </div>
+
+                        <a href="${project.simap_url}" target="_blank" rel="noopener" class="simap-link" onclick="event.stopPropagation()">
+                            View on simap.ch
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Toggle card expansion
+        function toggleCard(card) {
+            const wasExpanded = card.classList.contains('expanded');
+
+            // Close all other cards
+            document.querySelectorAll('.tender-card.expanded').forEach(c => {
+                c.classList.remove('expanded');
+            });
+
+            // Toggle this card
+            if (!wasExpanded) {
+                card.classList.add('expanded');
+            }
+        }
+
+        // Helper functions
+        function isNewProject(dateStr) {
+            if (!dateStr) return false;
+            const pubDate = new Date(dateStr);
+            const now = new Date();
+            const diffHours = (now - pubDate) / (1000 * 60 * 60);
+            return diffHours < 24;
+        }
+
+        function getProcessTypeBadge(type) {
+            const badges = {
+                'open': '<span class="badge badge-open">Open</span>',
+                'selective': '<span class="badge badge-selective">Selective</span>',
+                'invitation': '<span class="badge badge-awarded">Invitation</span>'
+            };
+            return badges[type] || '';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return null;
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('de-CH');
+            } catch {
+                return dateStr;
+            }
+        }
+
+        function capitalize(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showStats() {
+            alert('Statistics view coming soon!');
+        }
+    </script>
+</body>
+</html>
