@@ -1,8 +1,6 @@
 """
 ml_integration.py - Integration des SIMAP ML-Klassifikators
-Basiert auf dem Code deines KI-Kollegen
-
-Angepasst für die Web-Integration
+Angepasst für projects_website Tabelle
 """
 
 import os
@@ -10,14 +8,22 @@ import re
 import pickle
 import numpy as np
 import pandas as pd
-from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import classification_report
-from sklearn.model_selection import train_test_split
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder
 from typing import Dict
+
+# Versuche sklearn zu importieren, falls nicht verfügbar nutze Fallback
+try:
+    from sklearn.compose import ColumnTransformer
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics import classification_report
+    from sklearn.model_selection import train_test_split
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import OneHotEncoder
+
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    print("⚠️  sklearn nicht verfügbar - verwende Fallback-Modell")
 
 # Globale Klassifikatoren
 _order_type_classifier = None
@@ -39,18 +45,25 @@ def parse_value(x):
 
 
 def load_training_data_from_supabase() -> pd.DataFrame:
-    """Lädt Trainingsdaten aus Supabase"""
+    """Lädt Trainingsdaten aus Supabase (projects_website)"""
     try:
-        from Simap_UI.supabase_database import supabase, get_all_ausschreibungen
+        from supabase_database import supabase
 
-        print("Lade Daten aus Supabase...")
-        data = get_all_ausschreibungen(limit=10000)
+        if not supabase:
+            print("Supabase nicht initialisiert!")
+            return pd.DataFrame()
 
-        if not data:
+        print("Lade Daten aus Supabase (projects_website)...")
+        response = supabase.table('projects_website') \
+            .select('*') \
+            .limit(10000) \
+            .execute()
+
+        if not response.data:
             print("Keine Daten in Supabase gefunden!")
             return pd.DataFrame()
 
-        df = pd.DataFrame(data)
+        df = pd.DataFrame(response.data)
         print(f"✅ {len(df)} Datensätze aus Supabase geladen")
         return df
 
@@ -60,13 +73,13 @@ def load_training_data_from_supabase() -> pd.DataFrame:
 
 
 def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Bereitet Features für das Training vor."""
+    """Bereitet Features für das Training vor (angepasst für projects_website)."""
     df = df.copy()
 
-    # Text-Feature erstellen
-    df["text_attribute"] = (
-            df["titel"].fillna("") + " " + df["beschreibung"].fillna("")
-    ).str.lower()
+    # Text-Feature erstellen aus title_de und description_de
+    title = df.get("title_de", pd.Series([""] * len(df))).fillna("")
+    description = df.get("description_de", pd.Series([""] * len(df))).fillna("")
+    df["text_attribute"] = (title + " " + description).str.lower()
 
     # Fehlende Spalten mit Defaults füllen
     if "country" not in df.columns:
@@ -76,19 +89,17 @@ def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
     if "process_type" not in df.columns:
         df["process_type"] = "open"
     if "project_type" not in df.columns:
-        df["project_type"] = df["kategorie"].fillna("unknown")
+        df["project_type"] = "unknown"
 
-    # order_type bereinigen (falls vorhanden)
+    # order_type bereinigen
     if "order_type" in df.columns:
-        df = df.dropna(subset=["order_type"])
-        df = df[df["order_type"] != "unknown"]
+        df["order_type"] = df["order_type"].fillna("unknown")
     else:
-        # Erstelle order_type basierend auf Kategorie
-        df["order_type"] = "service"  # Default
+        df["order_type"] = "service"
 
-    # Projekt-Wert extrahieren
-    if "wert" in df.columns:
-        df["project_value_chf"] = df["wert"].apply(parse_value)
+    # Projekt-Wert extrahieren (award_amount)
+    if "award_amount" in df.columns:
+        df["project_value_chf"] = pd.to_numeric(df["award_amount"], errors='coerce')
     else:
         df["project_value_chf"] = np.nan
 
@@ -99,18 +110,25 @@ def train_order_type_classifier(df: pd.DataFrame):
     """Trainiert den Order-Type Klassifikator."""
     global _order_type_classifier
 
+    if not SKLEARN_AVAILABLE:
+        print("⚠️  sklearn nicht verfügbar - überspringe Training")
+        return None
+
     print("\n--- Training Order-Type Klassifikator ---")
 
     if "order_type" not in df.columns or df["order_type"].isna().all():
         print("⚠️  Keine order_type Daten verfügbar - überspringe Training")
         return None
 
-    y = df["order_type"]
-    X = df[["text_attribute", "country", "canton", "process_type", "project_type"]].fillna("")
+    # Filtere valide Daten
+    df_valid = df[df["order_type"].notna() & (df["order_type"] != "unknown")]
 
-    if len(y) < 10:
+    if len(df_valid) < 10:
         print("⚠️  Zu wenig Daten für Order-Type Training")
         return None
+
+    y = df_valid["order_type"]
+    X = df_valid[["text_attribute", "country", "canton", "process_type", "project_type"]].fillna("")
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.15, random_state=42
@@ -146,9 +164,12 @@ def train_size_classifier(df: pd.DataFrame):
     """Trainiert den Projektgrössen-Klassifikator."""
     global _size_classifier
 
+    if not SKLEARN_AVAILABLE:
+        print("⚠️  sklearn nicht verfügbar - überspringe Training")
+        return None
+
     print("\n--- Training Size-Bucket Klassifikator ---")
 
-    # Size-Buckets erstellen
     valid_values = df["project_value_chf"].dropna()
 
     if len(valid_values) < 10:
@@ -169,7 +190,6 @@ def train_size_classifier(df: pd.DataFrame):
     df["size_bucket"] = df["project_value_chf"].apply(size_class)
     print(f"Size-Bucket Verteilung:\n{df['size_bucket'].value_counts()}")
 
-    # Nur bekannte Grössen
     df_size = df[df["size_bucket"] != "unknown"]
 
     if len(df_size) < 10:
@@ -213,11 +233,15 @@ def train_models():
     """Trainiert beide Modelle mit Supabase-Daten"""
     global _model_trained
 
+    if not SKLEARN_AVAILABLE:
+        print("⚠️  sklearn nicht verfügbar - verwende Fallback")
+        _model_trained = False
+        return False
+
     print("=" * 60)
     print("SIMAP ML-Modell Training")
     print("=" * 60)
 
-    # Daten aus Supabase laden
     df = load_training_data_from_supabase()
 
     if df.empty:
@@ -226,11 +250,9 @@ def train_models():
         _model_trained = False
         return False
 
-    # Features vorbereiten
     df = prepare_features(df)
     print(f"\nVorbereitete Daten: {df.shape}")
 
-    # Modelle trainieren
     train_order_type_classifier(df)
     train_size_classifier(df)
 
@@ -263,6 +285,9 @@ def load_models(path: str = "models/"):
     """Lade gespeicherte Modelle"""
     global _order_type_classifier, _size_classifier, _model_trained
 
+    if not SKLEARN_AVAILABLE:
+        return False
+
     try:
         order_path = f"{path}order_type_model.pkl"
         size_path = f"{path}size_model.pkl"
@@ -288,50 +313,40 @@ def load_models(path: str = "models/"):
 def predict_ausschreibung(data: Dict) -> Dict:
     """
     Vorhersage für eine einzelne Ausschreibung
-
-    Args:
-        data: Dictionary mit:
-            - titel: String
-            - beschreibung: String
-            - kategorie: String (optional)
-            - wert: String (optional)
-
-    Returns:
-        Dictionary mit predictions
+    Funktioniert mit beiden Datenformaten (Frontend und DB)
     """
     # Erstelle DataFrame mit einem Eintrag
     df = pd.DataFrame([{
-        "titel": data.get("titel", ""),
-        "beschreibung": data.get("beschreibung", ""),
-        "kategorie": data.get("kategorie", ""),
-        "country": "CH",
-        "canton": "unknown",
-        "process_type": "open",
-        "project_type": data.get("kategorie", "unknown")
+        "title_de": data.get("titel") or data.get("title_de", ""),
+        "description_de": data.get("beschreibung") or data.get("description_de", ""),
+        "country": data.get("country", "CH"),
+        "canton": data.get("canton", "unknown"),
+        "process_type": data.get("process_type", "open"),
+        "project_type": data.get("kategorie") or data.get("project_type", "unknown")
     }])
 
     df = prepare_features(df)
 
     result = {
         "relevanz": calculate_relevanz(data),
-        "order_type": "service",
+        "order_type": data.get("order_type", "service"),
         "size_bucket": "mittel"
     }
 
     # Vorhersagen mit ML-Modellen (falls trainiert)
-    if _model_trained and _order_type_classifier:
+    if _model_trained and _order_type_classifier and SKLEARN_AVAILABLE:
         try:
             features = df[["text_attribute", "country", "canton", "process_type", "project_type"]].fillna("")
             result["order_type"] = _order_type_classifier.predict(features)[0]
-        except:
-            pass
+        except Exception as e:
+            print(f"Order-Type Prediction Fehler: {e}")
 
-    if _model_trained and _size_classifier:
+    if _model_trained and _size_classifier and SKLEARN_AVAILABLE:
         try:
             features = df[["text_attribute", "country", "canton", "process_type", "project_type"]].fillna("")
             result["size_bucket"] = _size_classifier.predict(features)[0]
-        except:
-            pass
+        except Exception as e:
+            print(f"Size Prediction Fehler: {e}")
 
     return result
 
@@ -339,30 +354,44 @@ def predict_ausschreibung(data: Dict) -> Dict:
 def calculate_relevanz(data: Dict) -> int:
     """
     Berechnet Relevanz-Score (0-100) für eine Ausschreibung
-
-    Verwendet regel-basierte Logik + ML wenn verfügbar
+    Funktioniert mit beiden Datenformaten
     """
     score = 50  # Basis
 
     # Text-basierte Scores
-    titel = data.get("titel", "").lower()
-    beschreibung = data.get("beschreibung", "").lower()
-    kategorie = data.get("kategorie", "").lower()
+    titel = (data.get("titel") or data.get("title_de") or "").lower()
+    beschreibung = (data.get("beschreibung") or data.get("description_de") or "").lower()
+    kategorie = (data.get("kategorie") or data.get("project_type") or "").lower()
+    order_type = (data.get("order_type") or "").lower()
 
     # IT/Software Keywords
-    it_keywords = ["it", "software", "digital", "entwicklung", "cloud", "system", "crm", "erp"]
+    it_keywords = ["it", "software", "digital", "entwicklung", "cloud", "system", "crm", "erp", "daten", "informatik"]
     for keyword in it_keywords:
         if keyword in titel:
             score += 15
         elif keyword in beschreibung:
             score += 5
 
+    # Bau Keywords
+    bau_keywords = ["bau", "sanierung", "renovation", "umbau", "neubau", "architektur", "planung"]
+    for keyword in bau_keywords:
+        if keyword in titel:
+            score += 10
+        elif keyword in beschreibung:
+            score += 3
+
+    # Order-Type Bonus
+    if order_type == "service":
+        score += 5
+    elif order_type == "construction":
+        score += 3
+
     # Kategorie-Bonus
-    if any(k in kategorie for k in ["it", "software", "cloud"]):
-        score += 20
+    if "tender" in kategorie:
+        score += 5
 
     # Projektgrösse (falls vorhanden)
-    wert = data.get("wert", "")
+    wert = data.get("wert") or data.get("award_amount") or ""
     if wert:
         value = parse_value(wert)
         if not np.isnan(value):
@@ -387,21 +416,26 @@ def initialize_ml_system():
     print("Initialisiere ML-System...")
     print("=" * 60)
 
+    if not SKLEARN_AVAILABLE:
+        print("⚠️  sklearn nicht installiert - verwende Fallback-Relevanzberechnung")
+        return False
+
     # Versuche Modelle zu laden
     if load_models():
         print("✅ Modelle erfolgreich geladen!")
         return True
 
-    # Falls keine Modelle vorhanden, trainiere neue
-    print("\nKeine gespeicherten Modelle gefunden. Starte Training...")
-    success = train_models()
+    # Falls keine Modelle vorhanden, verwende Fallback
+    print("\nKeine gespeicherten Modelle gefunden.")
+    print("Verwende regelbasierte Relevanzberechnung als Fallback.")
 
-    if success:
-        save_models()
+    # Optional: Training starten (kann lange dauern)
+    # success = train_models()
+    # if success:
+    #     save_models()
 
-    return success
+    return False
 
 
 if __name__ == "__main__":
-    # Training starten
     initialize_ml_system()
