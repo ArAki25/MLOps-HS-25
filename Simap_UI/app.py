@@ -5,10 +5,14 @@ Mit Supabase Datenbank & ML-Modell Integration
 
 from flask import Flask, render_template, jsonify, request, session, redirect, url_for
 import os
+import sys
 from dotenv import load_dotenv
 
-# Supabase Datenbank
-from Simap_UI.supabase_database import (
+# Lade .env Datei
+load_dotenv()
+
+# Supabase Datenbank - RELATIVE IMPORTS (ohne Simap_UI.)
+from supabase_database import (
     init_supabase,
     get_user_by_email,
     get_all_ausschreibungen,
@@ -26,28 +30,12 @@ from Simap_UI.supabase_database import (
     add_example_data
 )
 
-# ML-Modell
-from Simap_UI.ml_integration import (
+# ML-Modell - RELATIVE IMPORTS (ohne Simap_UI.)
+from ml_integration import (
     initialize_ml_system,
     predict_ausschreibung,
     calculate_relevanz
 )
-import os
-import sys
-
-# Füge Simap_UI zum Path hinzu
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'Simap_UI'))
-
-# Setze Template/Static Ordner
-template_dir = os.path.join(os.path.dirname(__file__), 'Simap_UI', 'templates')
-static_dir = os.path.join(os.path.dirname(__file__), 'Simap_UI', 'static')
-
-from flask import Flask
-app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
-
-# ... rest deines Codes
-load_dotenv()
-
 
 # TEST: Zeige ob .env geladen wurde
 print("DEBUG: SUPABASE_URL =", os.getenv('SUPABASE_URL'))
@@ -418,7 +406,8 @@ def admin_retrain():
         return jsonify({'error': 'Keine Berechtigung'}), 403
 
     try:
-        from Simap_UI.ml_integration import train_models, save_models
+        # RELATIVE IMPORT (ohne Simap_UI.)
+        from ml_integration import train_models, save_models
 
         success = train_models()
         if success:
@@ -458,6 +447,6 @@ if __name__ == '__main__':
     print("    POST   /webhook/daily-update")
     print("=" * 60)
 
-    # if __name__ == '__main__':
-    #     app.run()
-    app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
+    # Für Render: Host 0.0.0.0 und Port aus Environment
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
