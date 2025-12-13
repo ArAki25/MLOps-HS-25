@@ -36,7 +36,7 @@ def get_all_projects(limit: int = 50) -> List[Dict]:
         return []
 
     try:
-        response = supabase.table('projects') \
+        response =  supabase.table('projects_website')\
             .select('*') \
             .order('publication_date', desc=True) \
             .limit(limit) \
@@ -54,7 +54,7 @@ def get_project_by_id(project_id: str) -> Optional[Dict]:
         return None
 
     try:
-        response = supabase.table('projects') \
+        response = supabase.table('projects_website') \
             .select('*') \
             .eq('id', project_id) \
             .execute()
@@ -73,7 +73,7 @@ def search_projects(query: str, limit: int = 50) -> List[Dict]:
         return []
 
     try:
-        response = supabase.table('projects') \
+        response = supabase.table('projects_website') \
             .select('*') \
             .or_(
             f'title_de.ilike.%{query}%,description_de.ilike.%{query}%,project_number.ilike.%{query}%,proc_office_name_de.ilike.%{query}%') \
@@ -98,7 +98,7 @@ def filter_projects(
         return []
 
     try:
-        query = supabase.table('projects').select('*')
+        query = supabase.table('projects_website').select('*')
 
         if canton:
             query = query.eq('canton', canton)
@@ -120,7 +120,7 @@ def get_cantons() -> List[Dict]:
         return []
 
     try:
-        response = supabase.table('projects') \
+        response = supabase.table('projects_website') \
             .select('canton') \
             .execute()
 
@@ -145,12 +145,12 @@ def get_statistics() -> Dict:
         return {'total': 0, 'today': 0}
 
     try:
-        total = supabase.table('projects') \
+        total = supabase.table('projects_website') \
             .select('id', count='exact') \
             .execute()
 
         today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-        today_count = supabase.table('projects') \
+        today_count = supabase.table('projects_website') \
             .select('id', count='exact') \
             .eq('publication_date', today) \
             .execute()
