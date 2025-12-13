@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Support - SAJF Strategies{% endblock %}
+
+{% block extra_css %}
+<style>
+    .support-hero {
+        background: linear-gradient(135deg, var(--accent), var(--secondary));
+        color: white;
+        padding: 4rem 2rem;
+        text-align: center;
+        margin: -2rem -2rem 2rem -2rem;
+    }
+
+    .support-hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .support-hero p {
+        font-size: 1.125rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .support-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .support-card {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: var(--shadow);
+        text-align: center;
+    }
+
+    .support-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .support-card h3 {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+        color: var(--primary);
+    }
+
+    .support-card p {
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .support-link {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    /* FAQ */
+    .faq-section {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 3rem;
+        box-shadow: var(--shadow);
+    }
+
+    .faq-section h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: var(--primary);
+    }
+
+    .faq-item {
+        border-bottom: 1px solid var(--border);
+        padding: 1rem 0;
+    }
+
+    .faq-question {
+        font-weight: 600;
+        color: var(--text-primary);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .faq-question::after {
+        content: '+';
+        font-size: 1.5rem;
+        color: var(--accent);
+    }
+
+    .faq-item.open .faq-question::after {
+        content: '−';
+    }
+
+    .faq-answer {
+        display: none;
+        padding-top: 1rem;
+        color: var(--text-secondary);
+    }
+
+    .faq-item.open .faq-answer {
+        display: block;
+    }
+
+    /* Contact Form */
+    .contact-section {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: var(--shadow);
+    }
+
+    .contact-section h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: var(--primary);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+
+    .form-textarea {
+        min-height: 150px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .btn-submit {
+        background: var(--accent);
+        color: white;
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-submit:hover {
+        background: var(--primary);
+    }
+
+    .success-message {
+        display: none;
+        background: #dcfce7;
+        color: #166534;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+
+    @media (max-width: 600px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="support-hero">
+        <h1>Support</h1>
+        <p>Wir sind für Sie da. Finden Sie Antworten oder kontaktieren Sie uns direkt.</p>
+    </div>
+
+    <div class="support-grid">
+        <div class="support-card">
+            <div class="support-icon">📧</div>
+            <h3>E-Mail Support</h3>
+            <p>Schreiben Sie uns - wir antworten innerhalb von 24 Stunden.</p>
+            <a href="mailto:support@sajf-strategies.ch" class="support-link">support@sajf-strategies.ch</a>
+        </div>
+
+        <div class="support-card">
+            <div class="support-icon">📖</div>
+            <h3>Dokumentation</h3>
+            <p>Finden Sie Anleitungen und Tipps zur Nutzung unserer Plattform.</p>
+            <a href="#faq" class="support-link">FAQ lesen →</a>
+        </div>
+
+        <div class="support-card">
+            <div class="support-icon">💬</div>
+            <h3>Feedback</h3>
+            <p>Ihre Meinung zählt! Helfen Sie uns, besser zu werden.</p>
+            <a href="#contact" class="support-link">Feedback geben →</a>
+        </div>
+    </div>
+
+    <section class="faq-section" id="faq">
+        <h2>Häufig gestellte Fragen</h2>
+        
+        <div class="faq-item">
+            <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+                Woher stammen die Ausschreibungen?
+            </div>
+            <div class="faq-answer">
+                Alle Ausschreibungen stammen von simap.ch, der offiziellen Plattform für öffentliche 
+                Beschaffungen in der Schweiz. Wir aktualisieren die Daten stündlich.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+                Ist die Nutzung kostenlos?
+            </div>
+            <div class="faq-answer">
+                Ja, die Basis-Version ist komplett kostenlos. Für erweiterte Funktionen 
+                bieten wir bald SAJF Pro an.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+                Wie oft werden die Daten aktualisiert?
+            </div>
+            <div class="faq-answer">
+                Unsere Datenbank wird stündlich mit simap.ch synchronisiert.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+                Sind die Daten rechtlich verbindlich?
+            </div>
+            <div class="faq-answer">
+                Nein, dies ist keine amtliche Veröffentlichung. Massgebend sind ausschliesslich 
+                die auf www.simap.ch veröffentlichten Daten.
+            </div>
+        </div>
+    </section>
+
+    <section class="contact-section" id="contact">
+        <h2>Kontaktieren Sie uns</h2>
+        
+        <form id="contact-form" onsubmit="submitContact(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Name *</label>
+                    <input type="text" class="form-input" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">E-Mail *</label>
+                    <input type="email" class="form-input" name="email" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Betreff</label>
+                <select class="form-select" name="subject">
+                    <option value="general">Allgemeine Anfrage</option>
+                    <option value="technical">Technisches Problem</option>
+                    <option value="feedback">Feedback</option>
+                    <option value="pro">Frage zu SAJF Pro</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nachricht *</label>
+                <textarea class="form-textarea" name="message" required placeholder="Wie können wir Ihnen helfen?"></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">Nachricht senden</button>
+        </form>
+
+        <div class="success-message" id="success-message">
+            ✓ Vielen Dank für Ihre Nachricht! Wir melden uns bald bei Ihnen.
+        </div>
+    </section>
+</div>
+
+<script>
+    function submitContact(e) {
+        e.preventDefault();
+        document.getElementById('contact-form').style.display = 'none';
+        document.getElementById('success-message').style.display = 'block';
+    }
+</script>
+{% endblock %}

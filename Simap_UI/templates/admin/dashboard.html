@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - SAJF Strategies</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --accent: #0f3460;
+            --background: #f1f5f9;
+            --surface: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+        }
+
+        .admin-header {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .admin-nav {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .admin-nav a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .admin-nav a:hover,
+        .admin-nav a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .btn-logout {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .admin-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .admin-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .admin-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .admin-card-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .admin-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-card p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="admin-header">
+        <div class="admin-logo">🔐 SAJF Admin</div>
+        <nav class="admin-nav">
+            <a href="/admin" class="active">Dashboard</a>
+            <a href="/admin/content/about">Content</a>
+            <a href="/admin/team">Team</a>
+            <a href="/" target="_blank">Website →</a>
+            <a href="/admin/logout" class="btn-logout">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">Dashboard</h1>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total or 0 }}</div>
+                <div class="stat-label">Total Ausschreibungen</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.today or 0 }}</div>
+                <div class="stat-label">Heute hinzugefügt</div>
+            </div>
+        </div>
+
+        <h2 style="margin-bottom: 1rem;">Schnellzugriff</h2>
+        <div class="admin-cards">
+            <a href="/admin/content/about" class="admin-card">
+                <div class="admin-card-icon">📝</div>
+                <h3>Über uns bearbeiten</h3>
+                <p>Texte und Beschreibungen der Über uns Seite anpassen</p>
+            </a>
+
+            <a href="/admin/team" class="admin-card">
+                <div class="admin-card-icon">👥</div>
+                <h3>Team verwalten</h3>
+                <p>Team-Mitglieder hinzufügen, bearbeiten oder entfernen</p>
+            </a>
+
+            <a href="/admin/content/pro" class="admin-card">
+                <div class="admin-card-icon">⭐</div>
+                <h3>Pro-Seite bearbeiten</h3>
+                <p>Inhalte der Pro Version Seite anpassen</p>
+            </a>
+
+            <a href="/admin/content/support" class="admin-card">
+                <div class="admin-card-icon">💬</div>
+                <h3>Support bearbeiten</h3>
+                <p>FAQ und Kontaktinformationen aktualisieren</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

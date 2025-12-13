@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Über uns - SAJF Strategies{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-hero {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        padding: 4rem 2rem;
+        text-align: center;
+        margin: -2rem -2rem 2rem -2rem;
+    }
+
+    .page-hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .page-hero p {
+        font-size: 1.125rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .about-section {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow);
+    }
+
+    .about-section h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: var(--primary);
+    }
+
+    .about-text {
+        color: var(--text-secondary);
+        line-height: 1.8;
+        font-size: 1rem;
+    }
+
+    .about-text p {
+        margin-bottom: 1rem;
+    }
+
+    /* Team Section */
+    .team-section {
+        margin-top: 3rem;
+    }
+
+    .team-section h2 {
+        font-size: 1.75rem;
+        text-align: center;
+        margin-bottom: 2rem;
+        color: var(--primary);
+    }
+
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+    }
+
+    .team-card {
+        background: var(--surface);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .team-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .team-photo {
+        width: 100%;
+        height: 280px;
+        object-fit: cover;
+        background: var(--border);
+    }
+
+    .team-photo-placeholder {
+        width: 100%;
+        height: 280px;
+        background: linear-gradient(135deg, var(--border), var(--background));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: var(--text-secondary);
+    }
+
+    .team-info {
+        padding: 1.5rem;
+    }
+
+    .team-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .team-role {
+        font-size: 0.875rem;
+        color: var(--accent);
+        font-weight: 500;
+        margin-bottom: 0.75rem;
+    }
+
+    .team-bio {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    /* Values Section */
+    .values-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .value-card {
+        background: var(--surface);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
+        text-align: center;
+    }
+
+    .value-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .value-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .value-text {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero -->
+    <div class="page-hero">
+        <h1>Über uns</h1>
+        <p>{{ content.subtitle or 'Wir machen öffentliche Ausschreibungen für Ihr Unternehmen zugänglich und übersichtlich.' }}</p>
+    </div>
+
+    <!-- About Text -->
+    <section class="about-section">
+        <h2>Unsere Mission</h2>
+        <div class="about-text">
+            {% if content.mission %}
+                {{ content.mission | safe }}
+            {% else %}
+                <p>
+                    SAJF Strategies wurde mit dem Ziel gegründet, Unternehmen in der Schweiz dabei zu helfen, 
+                    öffentliche Ausschreibungen einfacher zu finden und zu gewinnen.
+                </p>
+                <p>
+                    Wir aggregieren täglich Tausende von Ausschreibungen von simap.ch und bereiten sie 
+                    übersichtlich auf, damit Sie keine relevante Geschäftsmöglichkeit mehr verpassen.
+                </p>
+                <p>
+                    Mit unserer Pro-Version bieten wir zusätzlich personalisierte Benachrichtigungen, 
+                    KI-gestützte Matching-Algorithmen und tiefgehende Analysen.
+                </p>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Values -->
+    <section class="about-section">
+        <h2>Unsere Werte</h2>
+        <div class="values-grid">
+            <div class="value-card">
+                <div class="value-icon">🎯</div>
+                <div class="value-title">Präzision</div>
+                <div class="value-text">Wir liefern akkurate und aktuelle Daten, auf die Sie sich verlassen können.</div>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">⚡</div>
+                <div class="value-title">Geschwindigkeit</div>
+                <div class="value-text">Neue Ausschreibungen werden stündlich aktualisiert - Sie sind immer auf dem neuesten Stand.</div>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">🤝</div>
+                <div class="value-title">Partnerschaft</div>
+                <div class="value-text">Wir verstehen uns als Partner Ihres Geschäftserfolgs.</div>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">🔒</div>
+                <div class="value-title">Vertrauen</div>
+                <div class="value-text">Datenschutz und Sicherheit haben bei uns höchste Priorität.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team -->
+    <section class="team-section">
+        <h2>Unser Team</h2>
+        <div class="team-grid">
+            {% if team and team|length > 0 %}
+                {% for member in team %}
+                <div class="team-card">
+                    {% if member.photo_url %}
+                        <img src="{{ member.photo_url }}" alt="{{ member.name }}" class="team-photo">
+                    {% else %}
+                        <div class="team-photo-placeholder">👤</div>
+                    {% endif %}
+                    <div class="team-info">
+                        <div class="team-name">{{ member.name }}</div>
+                        <div class="team-role">{{ member.role }}</div>
+                        <div class="team-bio">{{ member.bio }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <!-- Placeholder Team Members -->
+                <div class="team-card">
+                    <div class="team-photo-placeholder">👤</div>
+                    <div class="team-info">
+                        <div class="team-name">Team Member</div>
+                        <div class="team-role">Position</div>
+                        <div class="team-bio">Team-Mitglieder können im Admin-Panel hinzugefügt werden.</div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+
+{% block title %}Pro Version - SAJF Strategies{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pro-hero {
+        background: linear-gradient(135deg, var(--highlight), #ff6b6b);
+        color: white;
+        padding: 4rem 2rem;
+        text-align: center;
+        margin: -2rem -2rem 2rem -2rem;
+    }
+
+    .pro-hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .pro-hero p {
+        font-size: 1.125rem;
+        opacity: 0.95;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .coming-soon-badge {
+        display: inline-block;
+        background: rgba(255,255,255,0.2);
+        padding: 0.5rem 1.5rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .features-section {
+        margin-bottom: 3rem;
+    }
+
+    .features-section h2 {
+        font-size: 1.75rem;
+        text-align: center;
+        margin-bottom: 2rem;
+        color: var(--primary);
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .feature-card {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: var(--shadow);
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 2px solid transparent;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--highlight);
+    }
+
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .feature-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 0.75rem;
+    }
+
+    .feature-description {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+
+    .feature-tag {
+        display: inline-block;
+        background: #fef3c7;
+        color: #92400e;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-top: 1rem;
+    }
+
+    /* Pricing Section */
+    .pricing-section {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 3rem;
+        text-align: center;
+        box-shadow: var(--shadow);
+        margin-bottom: 3rem;
+    }
+
+    .pricing-section h2 {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+        color: var(--primary);
+    }
+
+    .pricing-subtitle {
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+    }
+
+    .pricing-cards {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .pricing-card {
+        background: var(--background);
+        border-radius: 16px;
+        padding: 2rem;
+        min-width: 280px;
+        max-width: 350px;
+        border: 2px solid var(--border);
+        transition: all 0.2s;
+    }
+
+    .pricing-card.featured {
+        border-color: var(--highlight);
+        transform: scale(1.05);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .pricing-card h3 {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .pricing-price {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 1rem 0;
+    }
+
+    .pricing-price span {
+        font-size: 1rem;
+        font-weight: 400;
+        color: var(--text-secondary);
+    }
+
+    .pricing-features {
+        text-align: left;
+        margin: 1.5rem 0;
+    }
+
+    .pricing-features li {
+        list-style: none;
+        padding: 0.5rem 0;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .pricing-features li::before {
+        content: '✓';
+        color: var(--success);
+        font-weight: bold;
+    }
+
+    .btn-notify {
+        display: inline-block;
+        background: var(--highlight);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        width: 100%;
+    }
+
+    .btn-notify:hover {
+        background: #d63d56;
+        transform: translateY(-2px);
+    }
+
+    .btn-notify.secondary {
+        background: var(--accent);
+    }
+
+    /* Newsletter Section */
+    .newsletter-section {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        border-radius: 16px;
+        padding: 3rem;
+        text-align: center;
+        color: white;
+    }
+
+    .newsletter-section h2 {
+        margin-bottom: 0.5rem;
+    }
+
+    .newsletter-section p {
+        opacity: 0.9;
+        margin-bottom: 1.5rem;
+    }
+
+    .newsletter-form {
+        display: flex;
+        gap: 1rem;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .newsletter-input {
+        flex: 1;
+        padding: 1rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+    }
+
+    .newsletter-btn {
+        background: var(--highlight);
+        color: white;
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .newsletter-btn:hover {
+        background: #d63d56;
+    }
+
+    @media (max-width: 600px) {
+        .newsletter-form {
+            flex-direction: column;
+        }
+
+        .pricing-card.featured {
+            transform: scale(1);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero -->
+    <div class="pro-hero">
+        <div class="coming-soon-badge">🚀 Coming Soon</div>
+        <h1>SAJF Pro</h1>
+        <p>Maximieren Sie Ihre Chancen bei öffentlichen Ausschreibungen mit KI-gestützten Tools und personalisierten Benachrichtigungen.</p>
+    </div>
+
+    <!-- Features -->
+    <section class="features-section">
+        <h2>Pro Features</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📧</div>
+                <div class="feature-title">Tägliche E-Mail Benachrichtigungen</div>
+                <div class="feature-description">
+                    Erhalten Sie jeden Morgen eine personalisierte Übersicht der neuen Ausschreibungen, 
+                    die zu Ihrem Unternehmensprofil passen.
+                </div>
+                <div class="feature-tag">Coming Soon</div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-title">Massgeschneiderte Aufträge</div>
+                <div class="feature-description">
+                    Unser System lernt Ihre Präferenzen und zeigt Ihnen nur die relevantesten 
+                    Ausschreibungen für Ihr Geschäft an.
+                </div>
+                <div class="feature-tag">Coming Soon</div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <div class="feature-title">ML-Wahrscheinlichkeit</div>
+                <div class="feature-description">
+                    Unsere KI bewertet jede Ausschreibung und zeigt Ihnen die Gewinnwahrscheinlichkeit 
+                    basierend auf historischen Daten.
+                </div>
+                <div class="feature-tag">Coming Soon</div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">Erweiterte Analytics</div>
+                <div class="feature-description">
+                    Detaillierte Marktanalysen, Wettbewerber-Tracking und Trends in Ihren relevanten Branchen.
+                </div>
+                <div class="feature-tag">Coming Soon</div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⭐</div>
+                <div class="feature-title">Favoriten & Merkliste</div>
+                <div class="feature-description">
+                    Speichern Sie interessante Ausschreibungen und verfolgen Sie deren Status mit Deadline-Erinnerungen.
+                </div>
+                <div class="feature-tag">Coming Soon</div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📄</div>
+                <div class="feature-title">Export & Integration</div>
+                <div class="feature-description">
+                    Exportieren Sie Daten als Excel/CSV oder integrieren Sie direkt in Ihr CRM via API.
+                </div>
+                <div class="feature-tag">Coming Soon</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="pricing-section">
+        <h2>Preise</h2>
+        <p class="pricing-subtitle">Wählen Sie das passende Paket für Ihr Unternehmen</p>
+        
+        <div class="pricing-cards">
+            <div class="pricing-card">
+                <h3>Free</h3>
+                <div class="pricing-price">CHF 0 <span>/Monat</span></div>
+                <ul class="pricing-features">
+                    <li>Alle öffentlichen Ausschreibungen</li>
+                    <li>Basis-Suchfilter</li>
+                    <li>Stündliche Aktualisierung</li>
+                </ul>
+                <a href="/" class="btn-notify secondary">Aktueller Plan</a>
+            </div>
+
+            <div class="pricing-card featured">
+                <h3>Pro</h3>
+                <div class="pricing-price">CHF 49 <span>/Monat</span></div>
+                <ul class="pricing-features">
+                    <li>Alles aus Free</li>
+                    <li>Tägliche E-Mail Alerts</li>
+                    <li>Personalisierte Empfehlungen</li>
+                    <li>ML-Gewinnwahrscheinlichkeit</li>
+                    <li>Erweiterte Analytics</li>
+                    <li>Favoriten & Merkliste</li>
+                    <li>Priority Support</li>
+                </ul>
+                <button class="btn-notify" onclick="notifyMe()">Benachrichtigen</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="newsletter-section">
+        <h2>Bleiben Sie informiert</h2>
+        <p>Erhalten Sie eine Nachricht, sobald SAJF Pro verfügbar ist.</p>
+        <form class="newsletter-form" onsubmit="submitNewsletter(event)">
+            <input type="email" class="newsletter-input" placeholder="Ihre E-Mail Adresse" required>
+            <button type="submit" class="newsletter-btn">Anmelden</button>
+        </form>
+    </section>
+</div>
+
+<script>
+    function notifyMe() {
+        alert('Vielen Dank für Ihr Interesse! Wir werden Sie benachrichtigen, sobald SAJF Pro verfügbar ist.');
+    }
+
+    function submitNewsletter(e) {
+        e.preventDefault();
+        alert('Vielen Dank! Sie werden benachrichtigt, sobald SAJF Pro startet.');
+        e.target.reset();
+    }
+</script>
+{% endblock %}

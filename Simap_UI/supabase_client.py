@@ -1,6 +1,6 @@
 """
 supabase_client.py - Supabase Datenbank Client
-Einfache Version: Liest Projekte aus projects_website
+Mit Content Management für Admin Panel
 """
 
 from supabase import create_client, Client
@@ -26,13 +26,17 @@ def init_supabase():
     return supabase
 
 
+# ============================================
+# PROJECTS (Tenders)
+# ============================================
+
 def get_all_projects(limit: int = 50) -> List[Dict]:
     """Hole alle Projekte, neueste zuerst"""
     if not supabase:
         return []
 
     try:
-        response = supabase.table('projects_website') \
+        response = supabase.table('projects') \
             .select('*') \
             .order('publication_date', desc=True) \
             .limit(limit) \
@@ -50,7 +54,7 @@ def get_project_by_id(project_id: str) -> Optional[Dict]:
         return None
 
     try:
-        response = supabase.table('projects_website') \
+        response = supabase.table('projects') \
             .select('*') \
             .eq('id', project_id) \
             .execute()
@@ -69,7 +73,7 @@ def search_projects(query: str, limit: int = 50) -> List[Dict]:
         return []
 
     try:
-        response = supabase.table('projects_website') \
+        response = supabase.table('projects') \
             .select('*') \
             .or_(
             f'title_de.ilike.%{query}%,description_de.ilike.%{query}%,project_number.ilike.%{query}%,proc_office_name_de.ilike.%{query}%') \
@@ -94,7 +98,7 @@ def filter_projects(
         return []
 
     try:
-        query = supabase.table('projects_website').select('*')
+        query = supabase.table('projects').select('*')
 
         if canton:
             query = query.eq('canton', canton)
@@ -116,18 +120,16 @@ def get_cantons() -> List[Dict]:
         return []
 
     try:
-        response = supabase.table('projects_website') \
+        response = supabase.table('projects') \
             .select('canton') \
             .execute()
 
-        # Zähle Kantone
         canton_counts = {}
         for row in (response.data or []):
             canton = row.get('canton')
             if canton:
                 canton_counts[canton] = canton_counts.get(canton, 0) + 1
 
-        # Sortiere nach Anzahl
         cantons = [{'code': k, 'count': v} for k, v in canton_counts.items()]
         cantons.sort(key=lambda x: x['count'], reverse=True)
 
@@ -140,17 +142,15 @@ def get_cantons() -> List[Dict]:
 def get_statistics() -> Dict:
     """Hole Statistiken"""
     if not supabase:
-        return {'total': 0, 'today': 0, 'this_week': 0}
+        return {'total': 0, 'today': 0}
 
     try:
-        # Total
-        total = supabase.table('projects_website') \
+        total = supabase.table('projects') \
             .select('id', count='exact') \
             .execute()
 
-        # Heute (basierend auf publication_date)
         today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-        today_count = supabase.table('projects_website') \
+        today_count = supabase.table('projects') \
             .select('id', count='exact') \
             .eq('publication_date', today) \
             .execute()
@@ -167,11 +167,9 @@ def get_statistics() -> Dict:
 def transform_project(row: Dict, include_details: bool = False) -> Dict:
     """Transformiert DB-Zeile für Frontend"""
 
-    # Berechne relative Zeit
     pub_date = row.get('publication_date')
     time_ago = calculate_time_ago(pub_date)
 
-    # Basis-Daten
     project = {
         'id': row.get('id'),
         'title': row.get('title_de') or row.get('title_fr') or 'Ohne Titel',
@@ -192,7 +190,6 @@ def transform_project(row: Dict, include_details: bool = False) -> Dict:
         'simap_url': generate_simap_url(row)
     }
 
-    # Details nur wenn angefordert
     if include_details:
         project['cpv_code'] = row.get('cpv_code_main') or ''
         project['award_amount'] = row.get('award_amount')
@@ -201,10 +198,22 @@ def transform_project(row: Dict, include_details: bool = False) -> Dict:
         project['winner_city'] = row.get('winner_city') or ''
         project['proc_office_email'] = row.get('proc_office_email') or ''
         project['proc_office_phone'] = row.get('proc_office_phone') or ''
-        project['proc_office_street'] = row.get('proc_office_street') or ''
-        project['proc_office_postal_code'] = row.get('proc_office_postal_code') or ''
 
     return project
+
+
+def generate_simap_url(row: Dict) -> str:
+    """Generiert Link zu simap.ch (Format: /de/project-detail/{simap_project_id})"""
+
+    if row.get('simap_link'):
+        return row.get('simap_link')
+
+    project_id = row.get('simap_project_id')
+
+    if project_id:
+        return f"https://www.simap.ch/de/project-detail/{project_id}"
+    else:
+        return "https://www.simap.ch"
 
 
 def clean_html(text: str) -> str:
@@ -214,7 +223,6 @@ def clean_html(text: str) -> str:
     import re
     clean = re.sub(r'<[^>]+>', '', text)
     clean = clean.replace('&nbsp;', ' ').strip()
-    # Kürze für Preview
     if len(clean) > 300:
         clean = clean[:300] + '...'
     return clean
@@ -229,7 +237,6 @@ def calculate_time_ago(date_str: str) -> str:
         pub_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
         now = datetime.now(timezone.utc)
 
-        # Falls pub_date kein Timezone hat
         if pub_date.tzinfo is None:
             pub_date = pub_date.replace(tzinfo=timezone.utc)
 
@@ -258,17 +265,159 @@ def calculate_time_ago(date_str: str) -> str:
         return ''
 
 
-def generate_simap_url(row: Dict) -> str:
-    """Generiert Link zu simap.ch (Format: /de/project-detail/{simap_project_id})"""
+# ============================================
+# CONTENT MANAGEMENT (für Admin Panel)
+# ============================================
 
-    # Prüfe ob simap_link schon in DB gespeichert ist
-    if row.get('simap_link'):
-        return row.get('simap_link')
+def get_content(page: str) -> Dict:
+    """Hole Content für eine Seite"""
+    if not supabase:
+        return {}
 
-    # URL-Format: https://www.simap.ch/de/project-detail/{simap_project_id}
-    project_id = row.get('simap_project_id')
+    try:
+        response = supabase.table('site_content') \
+            .select('*') \
+            .eq('page', page) \
+            .execute()
 
-    if project_id:
-        return f"https://www.simap.ch/de/project-detail/{project_id}"
-    else:
-        return "https://www.simap.ch"
+        if response.data and len(response.data) > 0:
+            return response.data[0].get('content', {})
+        return {}
+    except Exception as e:
+        print(f"❌ Content-Fehler: {e}")
+        return {}
+
+
+def update_content(page: str, content: Dict) -> bool:
+    """Update Content für eine Seite"""
+    if not supabase:
+        return False
+
+    try:
+        # Prüfe ob Eintrag existiert
+        existing = supabase.table('site_content') \
+            .select('id') \
+            .eq('page', page) \
+            .execute()
+
+        if existing.data and len(existing.data) > 0:
+            # Update
+            supabase.table('site_content') \
+                .update({'content': content, 'updated_at': datetime.utcnow().isoformat()}) \
+                .eq('page', page) \
+                .execute()
+        else:
+            # Insert
+            supabase.table('site_content') \
+                .insert({'page': page, 'content': content}) \
+                .execute()
+
+        return True
+    except Exception as e:
+        print(f"❌ Content-Update-Fehler: {e}")
+        return False
+
+
+# ============================================
+# TEAM MEMBERS (für Über uns Seite)
+# ============================================
+
+def get_team_members() -> List[Dict]:
+    """Hole alle Team-Mitglieder"""
+    if not supabase:
+        return []
+
+    try:
+        response = supabase.table('team_members') \
+            .select('*') \
+            .order('display_order', desc=False) \
+            .execute()
+
+        return response.data or []
+    except Exception as e:
+        print(f"❌ Team-Fehler: {e}")
+        return []
+
+
+def add_team_member(data: Dict) -> Optional[Dict]:
+    """Füge Team-Mitglied hinzu"""
+    if not supabase:
+        return None
+
+    try:
+        response = supabase.table('team_members') \
+            .insert({
+            'name': data.get('name'),
+            'role': data.get('role'),
+            'bio': data.get('bio'),
+            'photo_url': data.get('photo_url'),
+            'display_order': data.get('order', 0)
+        }) \
+            .execute()
+
+        return response.data[0] if response.data else None
+    except Exception as e:
+        print(f"❌ Team-Add-Fehler: {e}")
+        return None
+
+
+def update_team_member(member_id: str, data: Dict) -> bool:
+    """Update Team-Mitglied"""
+    if not supabase:
+        return False
+
+    try:
+        supabase.table('team_members') \
+            .update({
+            'name': data.get('name'),
+            'role': data.get('role'),
+            'bio': data.get('bio'),
+            'photo_url': data.get('photo_url'),
+            'display_order': data.get('order', 0),
+            'updated_at': datetime.utcnow().isoformat()
+        }) \
+            .eq('id', member_id) \
+            .execute()
+        return True
+    except Exception as e:
+        print(f"❌ Team-Update-Fehler: {e}")
+        return False
+
+
+def delete_team_member(member_id: str) -> bool:
+    """Lösche Team-Mitglied"""
+    if not supabase:
+        return False
+
+    try:
+        supabase.table('team_members') \
+            .delete() \
+            .eq('id', member_id) \
+            .execute()
+        return True
+    except Exception as e:
+        print(f"❌ Team-Delete-Fehler: {e}")
+        return False
+
+
+# ============================================
+# ADMIN AUTHENTICATION
+# ============================================
+
+def get_admin_by_email(email: str) -> Optional[Dict]:
+    """Hole Admin per E-Mail"""
+    if not supabase:
+        return None
+
+    try:
+        response = supabase.table('admins') \
+            .select('*') \
+            .eq('email', email) \
+            .execute()
+
+        if response.data and len(response.data) > 0:
+            return response.data[0]
+        return None
+    except Exception as e:
+        print(f"❌ Admin-Fehler: {e}")
+        return None
