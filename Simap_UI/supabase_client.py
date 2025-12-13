@@ -259,13 +259,16 @@ def calculate_time_ago(date_str: str) -> str:
 
 
 def generate_simap_url(row: Dict) -> str:
-    """Generiert Link zu simap.ch"""
-    project_id = row.get('simap_project_id')
-    publication_id = row.get('simap_publication_id')
+    """Generiert Link zu simap.ch (Format: /de/project-detail/{simap_project_id})"""
 
-    if publication_id:
-        return f"https://www.simap.ch/shabforms/COMMON/simap/content/start.jsp?projectId={project_id}&publicationId={publication_id}"
-    elif project_id:
-        return f"https://www.simap.ch/shabforms/COMMON/simap/content/start.jsp?projectId={project_id}"
+    # Prüfe ob simap_link schon in DB gespeichert ist
+    if row.get('simap_link'):
+        return row.get('simap_link')
+
+    # URL-Format: https://www.simap.ch/de/project-detail/{simap_project_id}
+    project_id = row.get('simap_project_id')
+
+    if project_id:
+        return f"https://www.simap.ch/de/project-detail/{project_id}"
     else:
         return "https://www.simap.ch"
