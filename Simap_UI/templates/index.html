@@ -492,14 +492,93 @@
 
     async function loadProjects() {
         try {
-            const response = await fetch('/api/projects?limit=100');
+            showLoading();
+            const response = await fetch('/api/projects?limit=200');
             allProjects = await response.json();
-            applyFilters();
+            filteredProjects = allProjects;
+            renderProjects();
         } catch (error) {
             console.error('Error loading projects:', error);
             document.getElementById('tenders-list').innerHTML =
                 '<div class="empty-state">Error loading tenders. Please try again.</div>';
         }
+    }
+
+    async function searchProjects(query) {
+        try {
+            showLoading();
+            const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+            filteredProjects = await response.json();
+            renderProjects();
+        } catch (error) {
+            console.error('Error searching:', error);
+        }
+    }
+
+    async function filterProjects() {
+        try {
+            showLoading();
+
+            // Baue Query-Parameter
+            let params = new URLSearchParams();
+
+            if (activeFilters.canton) {
+                params.append('canton', activeFilters.canton);
+            }
+            if (activeFilters.process_type.length === 1) {
+                params.append('process_type', activeFilters.process_type[0]);
+            }
+            if (activeFilters.order_type.length === 1) {
+                params.append('order_type', activeFilters.order_type[0]);
+            }
+
+            // Wenn Filter gesetzt sind, nutze API
+            if (params.toString()) {
+                const response = await fetch(`/api/filter?${params.toString()}`);
+                let results = await response.json();
+
+                // Zusätzliche lokale Filterung für mehrere process_type/order_type
+                if (activeFilters.process_type.length > 1) {
+                    results = results.filter(p => activeFilters.process_type.includes(p.process_type));
+                }
+                if (activeFilters.order_type.length > 1) {
+                    results = results.filter(p => activeFilters.order_type.includes(p.order_type));
+                }
+
+                // Suche anwenden falls vorhanden
+                if (activeFilters.search) {
+                    const searchLower = activeFilters.search.toLowerCase();
+                    results = results.filter(p =>
+                        (p.title || '').toLowerCase().includes(searchLower) ||
+                        (p.description || '').toLowerCase().includes(searchLower) ||
+                        (p.organization || '').toLowerCase().includes(searchLower) ||
+                        (p.project_number || '').toLowerCase().includes(searchLower)
+                    );
+                }
+
+                filteredProjects = results;
+            } else if (activeFilters.search) {
+                // Nur Suche, keine anderen Filter
+                await searchProjects(activeFilters.search);
+                return;
+            } else {
+                // Keine Filter - zeige alle
+                filteredProjects = allProjects;
+            }
+
+            renderProjects();
+        } catch (error) {
+            console.error('Error filtering:', error);
+        }
+    }
+
+    function showLoading() {
+        document.getElementById('tenders-list').innerHTML = `
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading tenders...
+            </div>
+        `;
     }
 
     async function loadCantons() {
@@ -538,13 +617,21 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 activeFilters.search = e.target.value;
-                applyFilters();
-            }, 300);
+                filterProjects();
+            }, 500);
+        });
+
+        // Enter-Taste für sofortige Suche
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                activeFilters.search = e.target.value;
+                filterProjects();
+            }
         });
 
         document.getElementById('canton-filter').addEventListener('change', (e) => {
             activeFilters.canton = e.target.value;
-            applyFilters();
+            filterProjects();
         });
 
         document.querySelectorAll('.filter-chip').forEach(chip => {
@@ -562,43 +649,13 @@
                     activeFilters[filterType] = activeFilters[filterType].filter(v => v !== value);
                 }
 
-                applyFilters();
+                filterProjects();
             });
         });
     }
 
     function applyFilters() {
-        filteredProjects = allProjects.filter(project => {
-            if (activeFilters.search) {
-                const searchLower = activeFilters.search.toLowerCase();
-                const matchesSearch =
-                    (project.title || '').toLowerCase().includes(searchLower) ||
-                    (project.description || '').toLowerCase().includes(searchLower) ||
-                    (project.organization || '').toLowerCase().includes(searchLower) ||
-                    (project.project_number || '').toLowerCase().includes(searchLower);
-                if (!matchesSearch) return false;
-            }
-
-            if (activeFilters.canton && project.canton !== activeFilters.canton) {
-                return false;
-            }
-
-            if (activeFilters.process_type.length > 0) {
-                if (!activeFilters.process_type.includes(project.process_type)) {
-                    return false;
-                }
-            }
-
-            if (activeFilters.order_type.length > 0) {
-                if (!activeFilters.order_type.includes(project.order_type)) {
-                    return false;
-                }
-            }
-
-            return true;
-        });
-
-        renderProjects();
+        filterProjects();
     }
 
     function renderProjects() {
