@@ -134,23 +134,30 @@
         gap: 0.5rem;
         padding: 0.5rem 1rem;
         background: var(--background);
-        border: 1px solid var(--border);
+        border: 2px solid var(--border);
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.2s;
         font-size: 0.875rem;
         color: var(--text-secondary);
+        user-select: none;
     }
 
     .filter-chip:hover {
         border-color: var(--accent);
         color: var(--text-primary);
+        background: var(--surface-hover);
     }
 
     .filter-chip.active {
         background: var(--accent);
         color: white;
         border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
+
+    .filter-chip.active::before {
+        content: '✓ ';
     }
 
     .filter-chip input {
@@ -252,6 +259,13 @@
         font-weight: 600;
         color: var(--text-primary);
         line-height: 1.4;
+    }
+
+    .tender-preview {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-top: 0.5rem;
+        line-height: 1.5;
     }
 
     .tender-badges {
@@ -680,7 +694,9 @@
             // Erstelle Map mit Anzahl pro Kanton
             const cantonCounts = {};
             cantonData.forEach(c => {
-                cantonCounts[c.code] = c.count;
+                if (c.code) {
+                    cantonCounts[c.code.toUpperCase()] = c.count;
+                }
             });
             
             const select = document.getElementById('canton-filter');
@@ -691,7 +707,7 @@
             sortedCantons.forEach(([code, name]) => {
                 const option = document.createElement('option');
                 option.value = code;
-                const count = cantonCounts[code] || 0;
+                const count = cantonCounts[code] || cantonCounts[code.toLowerCase()] || 0;
                 option.textContent = `${name} (${count})`;
                 select.appendChild(option);
             });
@@ -781,13 +797,15 @@
     function createTenderCard(project) {
         const isNew = isNewProject(project.publication_date);
         const processTypeBadge = getProcessTypeBadge(project.process_type);
+        const pubTypeBadge = getPubTypeBadge(project.pub_type);
         
         return `
             <div class="tender-card ${isNew ? 'new' : ''}" data-id="${project.id}">
                 <div class="tender-header">
                     <div>
-                        <div class="tender-label">TENDER TITLE</div>
+                        <div class="tender-label">${pubTypeBadge}</div>
                         <div class="tender-title">${escapeHtml(project.title)}</div>
+                        <div class="tender-preview">${escapeHtml(project.description ? project.description.substring(0, 150) + '...' : '')}</div>
                     </div>
                     <div class="tender-badges">
                         ${isNew ? '<span class="badge badge-new">NEW</span>' : ''}
@@ -847,6 +865,17 @@
                 </div>
             </div>
         `;
+    }
+
+    function getPubTypeBadge(pubType) {
+        const types = {
+            'tender': '📋 AUSSCHREIBUNG',
+            'award': '🏆 ZUSCHLAG',
+            'cancel': '❌ ABBRUCH',
+            'correction': '✏️ KORREKTUR',
+            'prior_information': 'ℹ️ VORINFORMATION'
+        };
+        return types[pubType] || pubType?.toUpperCase() || 'AUFTRAG';
     }
 
     function toggleCard(card) {

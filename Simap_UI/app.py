@@ -64,6 +64,18 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/how-it-works')
+def how_it_works():
+    """So funktioniert's Seite"""
+    return render_template('how_it_works.html')
+
+
+@app.route('/features')
+def features():
+    """Features Seite"""
+    return render_template('features.html')
+
+
 @app.route('/about')
 def about():
     """Über uns Seite"""

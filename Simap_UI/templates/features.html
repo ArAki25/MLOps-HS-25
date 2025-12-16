@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Features - SAJF Strategies{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-hero {
+        text-align: center;
+        padding: 4rem 2rem;
+        margin: -2rem -2rem 3rem -2rem;
+    }
+
+    .page-hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+
+    .page-hero p {
+        font-size: 1.125rem;
+        color: var(--text-secondary);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .feature-card {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid var(--border);
+        transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--accent);
+    }
+
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .feature-card h3 {
+        font-size: 1.125rem;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+    }
+
+    .feature-card p {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+
+    .feature-tag {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-top: 1rem;
+    }
+
+    .tag-free {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+    }
+
+    .tag-pro {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+    }
+
+    .comparison-section {
+        margin-top: 4rem;
+    }
+
+    .comparison-section h2 {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .comparison-table {
+        background: var(--surface);
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+
+    .comparison-header {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        background: var(--background);
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .comparison-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .comparison-row:last-child {
+        border-bottom: none;
+    }
+
+    .comparison-row span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .comparison-row span:first-child {
+        justify-content: flex-start;
+    }
+
+    .check {
+        color: #10b981;
+        font-size: 1.25rem;
+    }
+
+    .cross {
+        color: var(--text-secondary);
+        opacity: 0.3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-hero">
+        <h1>Features</h1>
+        <p>Alles was Sie brauchen, um die richtigen Ausschreibungen zu finden</p>
+    </div>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">🔍</div>
+            <h3>Intelligente Suche</h3>
+            <p>Durchsuchen Sie alle Ausschreibungen nach Keywords, Projekt-Nummern oder Simap-IDs.</p>
+            <span class="feature-tag tag-free">Kostenlos</span>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">🗺️</div>
+            <h3>Kanton-Filter</h3>
+            <p>Filtern Sie nach allen 26 Schweizer Kantonen und finden Sie lokale Aufträge.</p>
+            <span class="feature-tag tag-free">Kostenlos</span>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Verfahrens- & Auftragstyp</h3>
+            <p>Unterscheiden Sie zwischen offenen, selektiven Verfahren und nach Dienstleistung, Bau oder Lieferung.</p>
+            <span class="feature-tag tag-free">Kostenlos</span>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">⏰</div>
+            <h3>Stündliche Updates</h3>
+            <p>Alle Daten werden stündlich von simap.ch synchronisiert. Sie verpassen nichts.</p>
+            <span class="feature-tag tag-free">Kostenlos</span>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>Personalisierte Empfehlungen</h3>
+            <p>Erhalten Sie Aufträge, die speziell zu Ihrem Unternehmensprofil passen.</p>
+            <span class="feature-tag tag-pro">Pro</span>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">📧</div>
+            <h3>E-Mail Benachrichtigungen</h3>
+            <p>Tägliche Updates über neue relevante Ausschreibungen direkt in Ihr Postfach.</p>
+            <span class="feature-tag tag-pro">Pro</span>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">🤖</div>
+            <h3>KI-Analyse</h3>
+            <p>Unsere KI bewertet Ihre Gewinnchancen basierend auf historischen Daten.</p>
+            <span class="feature-tag tag-pro">Pro</span>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">⭐</div>
+            <h3>Favoriten & Merklisten</h3>
+            <p>Speichern Sie interessante Aufträge und verfolgen Sie deren Status.</p>
+            <span class="feature-tag tag-pro">Pro</span>
+        </div>
+    </div>
+
+    <div class="comparison-section">
+        <h2>Kostenlos vs. Pro</h2>
+        <div class="comparison-table">
+            <div class="comparison-header">
+                <span>Feature</span>
+                <span>Kostenlos</span>
+                <span>Pro</span>
+            </div>
+            <div class="comparison-row">
+                <span>Alle Ausschreibungen durchsuchen</span>
+                <span class="check">✓</span>
+                <span class="check">✓</span>
+            </div>
+            <div class="comparison-row">
+                <span>Filter nach Kanton, Typ, Verfahren</span>
+                <span class="check">✓</span>
+                <span class="check">✓</span>
+            </div>
+            <div class="comparison-row">
+                <span>Stündliche Updates</span>
+                <span class="check">✓</span>
+                <span class="check">✓</span>
+            </div>
+            <div class="comparison-row">
+                <span>Personalisierte Empfehlungen</span>
+                <span class="cross">—</span>
+                <span class="check">✓</span>
+            </div>
+            <div class="comparison-row">
+                <span>E-Mail Benachrichtigungen</span>
+                <span class="cross">—</span>
+                <span class="check">✓</span>
+            </div>
+            <div class="comparison-row">
+                <span>KI-Gewinnwahrscheinlichkeit</span>
+                <span class="cross">—</span>
+                <span class="check">✓</span>
+            </div>
+            <div class="comparison-row">
+                <span>Favoriten & Merklisten</span>
+                <span class="cross">—</span>
+                <span class="check">✓</span>
+            </div>
+            <div class="comparison-row">
+                <span>Priority Support</span>
+                <span class="cross">—</span>
+                <span class="check">✓</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
