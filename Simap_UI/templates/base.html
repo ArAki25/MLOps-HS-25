@@ -14,7 +14,7 @@
             --success: #10b981;
             --warning: #f59e0b;
             --background: #f8fafc;
-            --surface: #110e0e;
+            --surface: #ffffff;
             --text-primary: #1e293b;
             --text-secondary: #64748b;
             --border: #e2e8f0;
@@ -133,6 +133,25 @@
         .btn-pro:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(233, 69, 96, 0.4);
+        }
+
+        .btn-login {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--background);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .btn-login:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
         }
 
         /* Main Container */
@@ -271,6 +290,11 @@
             </div>
             <div class="nav-right">
                 <a href="/pro" class="btn-pro">🚀 Pro holen</a>
+                <a href="/login" class="btn-login" title="Pro Login">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </a>
                 <button class="mobile-menu-btn" onclick="toggleMenu()">
                     <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>

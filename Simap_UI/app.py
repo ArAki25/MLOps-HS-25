@@ -8,11 +8,11 @@ from functools import wraps
 import os
 from dotenv import load_dotenv
 from supabase_client import (
-    init_supabase,
-    get_all_projects,
-    get_project_by_id,
-    search_projects,
-    filter_projects,
+    init_supabase, 
+    get_all_projects, 
+    get_project_by_id, 
+    search_projects, 
+    filter_projects, 
     get_statistics,
     get_cantons,
     get_content,
@@ -21,7 +21,8 @@ from supabase_client import (
     add_team_member,
     update_team_member,
     delete_team_member,
-    get_admin_by_email
+    get_admin_by_email,
+    get_pro_user
 )
 
 load_dotenv()
@@ -50,7 +51,6 @@ def admin_required(f):
         if not session.get('admin_logged_in'):
             return redirect(url_for('admin_login'))
         return f(*args, **kwargs)
-
     return decorated_function
 
 
@@ -87,6 +87,105 @@ def support():
 
 
 # ============================================
+# PRO USER LOGIN & DASHBOARD
+# ============================================
+
+@app.route('/login', methods=['GET', 'POST'])
+def user_login():
+    """Pro User Login"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        # Prüfe Pro-User in Datenbank
+        user = get_pro_user(username, password)
+        if user:
+            session['pro_logged_in'] = True
+            session['pro_user_id'] = user.get('id')
+            session['pro_company_name'] = user.get('company_name')
+            session['pro_table_name'] = user.get('ml_table_name')  # z.B. 'company_a_predictions'
+            return redirect(url_for('pro_dashboard'))
+        else:
+            return render_template('login.html', error='Falsche Anmeldedaten')
+    
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def user_logout():
+    """Pro User Logout"""
+    session.pop('pro_logged_in', None)
+    session.pop('pro_user_id', None)
+    session.pop('pro_company_name', None)
+    session.pop('pro_table_name', None)
+    return redirect(url_for('index'))
+
+
+def pro_user_required(f):
+    """Decorator für Pro-User Seiten"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('pro_logged_in'):
+            return redirect(url_for('user_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@app.route('/pro/dashboard')
+@pro_user_required
+def pro_dashboard():
+    """Pro User Dashboard"""
+    stats = get_statistics()
+    company_name = session.get('pro_company_name', 'Unternehmen')
+    
+    # Hole empfohlene Aufträge count (falls ML-Tabelle existiert)
+    recommended_count = 0
+    match_rate = 0
+    table_name = session.get('pro_table_name')
+    if table_name:
+        try:
+            from supabase_client import get_recommended_projects
+            recommended = get_recommended_projects(table_name)
+            recommended_count = len(recommended)
+            match_rate = 85  # Beispiel, später aus ML-Daten
+        except:
+            pass
+    
+    return render_template('pro_dashboard.html', 
+                         stats=stats,
+                         company_name=company_name,
+                         recommended_count=recommended_count,
+                         match_rate=match_rate)
+
+
+@app.route('/pro/tenders')
+@pro_user_required
+def pro_tenders():
+    """Pro User - Alle Tenders"""
+    return render_template('index.html')
+
+
+@app.route('/pro/recommended')
+@pro_user_required
+def pro_recommended():
+    """Pro User - Empfohlene Aufträge"""
+    table_name = session.get('pro_table_name')
+    company_name = session.get('pro_company_name', 'Unternehmen')
+    
+    projects = []
+    if table_name:
+        try:
+            from supabase_client import get_recommended_projects
+            projects = get_recommended_projects(table_name)
+        except Exception as e:
+            print(f"❌ Fehler beim Laden empfohlener Projekte: {e}")
+    
+    return render_template('pro_recommended.html', 
+                         projects=projects,
+                         company_name=company_name)
+
+
+# ============================================
 # ADMIN PANEL
 # ============================================
 
@@ -96,7 +195,7 @@ def admin_login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-
+        
         admin = get_admin_by_email(email)
         if admin and admin.get('password') == password:
             session['admin_logged_in'] = True
@@ -105,7 +204,7 @@ def admin_login():
             return redirect(url_for('admin_dashboard'))
         else:
             return render_template('admin/login.html', error='Falsche Anmeldedaten')
-
+    
     return render_template('admin/login.html')
 
 
@@ -132,7 +231,7 @@ def admin_content(page):
         data = request.form.to_dict()
         update_content(page, data)
         return redirect(url_for('admin_content', page=page, saved=1))
-
+    
     content = get_content(page)
     return render_template('admin/content.html', page=page, content=content)
 
@@ -216,7 +315,7 @@ def api_filter():
     canton = request.args.get('canton')
     process_type = request.args.get('process_type')
     order_type = request.args.get('order_type')
-
+    
     results = filter_projects(
         canton=canton,
         process_type=process_type,
@@ -244,6 +343,6 @@ if __name__ == '__main__':
     print("🔗 URL: http://127.0.0.1:5000")
     print("🔐 Admin: http://127.0.0.1:5000/admin")
     print("=" * 60)
-
+    
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port)

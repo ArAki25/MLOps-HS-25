@@ -4,32 +4,51 @@
 
 {% block extra_css %}
 <style>
+    /* Disclaimer Banner */
+    .disclaimer-top {
+        background: #fef3c7;
+        border-bottom: 1px solid #f59e0b;
+        padding: 0.75rem 2rem;
+        font-size: 0.875rem;
+        color: #92400e;
+        text-align: center;
+    }
+
+    .disclaimer-top a {
+        color: #92400e;
+        font-weight: 600;
+    }
+
     /* Stats Bar */
     .stats-bar {
         display: flex;
-        gap: 2rem;
+        justify-content: center;
+        gap: 4rem;
         margin-bottom: 2rem;
-        padding: 1rem 1.5rem;
-        background: var(--surface);
-        border-radius: 12px;
-        box-shadow: var(--shadow);
+        padding: 2rem;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        border-radius: 16px;
+        box-shadow: var(--shadow-lg);
     }
 
     .stat-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
+        text-align: center;
+        color: white;
     }
 
     .stat-value {
-        font-size: 1.5rem;
+        font-size: 2.5rem;
         font-weight: 700;
-        color: var(--primary);
+        color: white;
+        line-height: 1;
     }
 
     .stat-label {
         font-size: 0.875rem;
-        color: var(--text-secondary);
+        color: rgba(255,255,255,0.8);
+        margin-top: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
     /* Search & Filter Section */
@@ -270,11 +289,11 @@
         font-size: 0.75rem;
     }
 
-    /* Tender Details (expanded) */
+    /* Tender Details (expanded) - GRÖSSER */
     .tender-details {
         display: none;
-        margin-top: 1rem;
-        padding-top: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
         border-top: 1px solid var(--border);
     }
 
@@ -284,16 +303,21 @@
 
     .tender-description {
         color: var(--text-secondary);
-        font-size: 0.875rem;
-        margin-bottom: 1rem;
-        line-height: 1.6;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        max-height: none;
     }
 
     .tender-info-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: var(--background);
+        border-radius: 8px;
     }
 
     .tender-info-item {
@@ -310,6 +334,22 @@
 
     .tender-info-value {
         font-weight: 500;
+    }
+
+    /* Disclaimer in tender card */
+    .tender-disclaimer {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background: #fef3c7;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        color: #92400e;
+        text-align: center;
+    }
+
+    .tender-disclaimer a {
+        color: #92400e;
+        font-weight: 600;
     }
 
     .simap-link {
@@ -379,27 +419,33 @@
 {% endblock %}
 
 {% block content %}
+<!-- Disclaimer Banner oben -->
+<div class="disclaimer-top">
+    ⚠️ Dies ist keine amtliche Veröffentlichung. Massgebend sind die auf der Plattform 
+    <a href="https://www.simap.ch" target="_blank" rel="noopener">www.simap.ch</a> veröffentlichten Daten.
+</div>
+
 <div class="container">
-    <!-- Stats Bar -->
+    <!-- Stats Bar - Zentriert -->
     <div class="stats-bar">
         <div class="stat-item">
-            <div>
-                <div class="stat-value" id="stat-total">-</div>
-                <div class="stat-label">Total Tenders</div>
-            </div>
+            <div class="stat-value" id="stat-total">-</div>
+            <div class="stat-label">Total Tenders</div>
         </div>
         <div class="stat-item">
-            <div>
-                <div class="stat-value" id="stat-today">-</div>
-                <div class="stat-label">New Today</div>
-            </div>
+            <div class="stat-value" id="stat-today">-</div>
+            <div class="stat-label">New Today</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">26</div>
+            <div class="stat-label">Kantone</div>
         </div>
     </div>
 
     <!-- Search & Filter -->
     <section class="search-section">
         <h2>Advanced Tender Search</h2>
-
+        
         <div class="search-box">
             <svg class="search-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -463,11 +509,6 @@
         </div>
     </div>
 
-    <!-- Disclaimer -->
-    <div class="disclaimer">
-        ⚠️ Dies ist keine amtliche Veröffentlichung. Massgebend sind die auf der Plattform
-        <a href="https://www.simap.ch" target="_blank" rel="noopener">www.simap.ch</a> veröffentlichten Daten.
-    </div>
 </div>
 {% endblock %}
 
@@ -499,7 +540,7 @@
             renderProjects();
         } catch (error) {
             console.error('Error loading projects:', error);
-            document.getElementById('tenders-list').innerHTML =
+            document.getElementById('tenders-list').innerHTML = 
                 '<div class="empty-state">Error loading tenders. Please try again.</div>';
         }
     }
@@ -518,10 +559,10 @@
     async function filterProjects() {
         try {
             showLoading();
-
+            
             // Baue Query-Parameter
             let params = new URLSearchParams();
-
+            
             if (activeFilters.canton) {
                 params.append('canton', activeFilters.canton);
             }
@@ -531,12 +572,12 @@
             if (activeFilters.order_type.length === 1) {
                 params.append('order_type', activeFilters.order_type[0]);
             }
-
+            
             // Wenn Filter gesetzt sind, nutze API
             if (params.toString()) {
                 const response = await fetch(`/api/filter?${params.toString()}`);
                 let results = await response.json();
-
+                
                 // Zusätzliche lokale Filterung für mehrere process_type/order_type
                 if (activeFilters.process_type.length > 1) {
                     results = results.filter(p => activeFilters.process_type.includes(p.process_type));
@@ -544,18 +585,18 @@
                 if (activeFilters.order_type.length > 1) {
                     results = results.filter(p => activeFilters.order_type.includes(p.order_type));
                 }
-
+                
                 // Suche anwenden falls vorhanden
                 if (activeFilters.search) {
                     const searchLower = activeFilters.search.toLowerCase();
-                    results = results.filter(p =>
+                    results = results.filter(p => 
                         (p.title || '').toLowerCase().includes(searchLower) ||
                         (p.description || '').toLowerCase().includes(searchLower) ||
                         (p.organization || '').toLowerCase().includes(searchLower) ||
                         (p.project_number || '').toLowerCase().includes(searchLower)
                     );
                 }
-
+                
                 filteredProjects = results;
             } else if (activeFilters.search) {
                 // Nur Suche, keine anderen Filter
@@ -565,7 +606,7 @@
                 // Keine Filter - zeige alle
                 filteredProjects = allProjects;
             }
-
+            
             renderProjects();
         } catch (error) {
             console.error('Error filtering:', error);
@@ -582,15 +623,56 @@
     }
 
     async function loadCantons() {
+        // Alle Schweizer Kantone mit vollen Namen
+        const allCantons = {
+            'AG': 'Aargau',
+            'AI': 'Appenzell Innerrhoden',
+            'AR': 'Appenzell Ausserrhoden',
+            'BE': 'Bern',
+            'BL': 'Basel-Landschaft',
+            'BS': 'Basel-Stadt',
+            'FR': 'Freiburg',
+            'GE': 'Genf',
+            'GL': 'Glarus',
+            'GR': 'Graubünden',
+            'JU': 'Jura',
+            'LU': 'Luzern',
+            'NE': 'Neuenburg',
+            'NW': 'Nidwalden',
+            'OW': 'Obwalden',
+            'SG': 'St. Gallen',
+            'SH': 'Schaffhausen',
+            'SO': 'Solothurn',
+            'SZ': 'Schwyz',
+            'TG': 'Thurgau',
+            'TI': 'Tessin',
+            'UR': 'Uri',
+            'VD': 'Waadt',
+            'VS': 'Wallis',
+            'ZG': 'Zug',
+            'ZH': 'Zürich'
+        };
+
         try {
             const response = await fetch('/api/cantons');
-            const cantons = await response.json();
-
+            const cantonData = await response.json();
+            
+            // Erstelle Map mit Anzahl pro Kanton
+            const cantonCounts = {};
+            cantonData.forEach(c => {
+                cantonCounts[c.code] = c.count;
+            });
+            
             const select = document.getElementById('canton-filter');
-            cantons.forEach(canton => {
+            
+            // Füge alle Kantone hinzu (sortiert nach Name)
+            const sortedCantons = Object.entries(allCantons).sort((a, b) => a[1].localeCompare(b[1]));
+            
+            sortedCantons.forEach(([code, name]) => {
                 const option = document.createElement('option');
-                option.value = canton.code;
-                option.textContent = `${canton.code} (${canton.count})`;
+                option.value = code;
+                const count = cantonCounts[code] || 0;
+                option.textContent = `${name} (${count})`;
                 select.appendChild(option);
             });
         } catch (error) {
@@ -602,7 +684,7 @@
         try {
             const response = await fetch('/api/statistics');
             const stats = await response.json();
-
+            
             document.getElementById('stat-total').textContent = stats.total || 0;
             document.getElementById('stat-today').textContent = stats.today || 0;
         } catch (error) {
@@ -638,9 +720,9 @@
             chip.addEventListener('click', () => {
                 const filterType = chip.dataset.filter;
                 const value = chip.dataset.value;
-
+                
                 chip.classList.toggle('active');
-
+                
                 if (chip.classList.contains('active')) {
                     if (!activeFilters[filterType].includes(value)) {
                         activeFilters[filterType].push(value);
@@ -648,7 +730,7 @@
                 } else {
                     activeFilters[filterType] = activeFilters[filterType].filter(v => v !== value);
                 }
-
+                
                 filterProjects();
             });
         });
@@ -661,7 +743,7 @@
     function renderProjects() {
         const container = document.getElementById('tenders-list');
         const countEl = document.getElementById('results-count');
-
+        
         countEl.textContent = `(${filteredProjects.length} results)`;
 
         if (filteredProjects.length === 0) {
@@ -670,7 +752,7 @@
         }
 
         container.innerHTML = filteredProjects.map(project => createTenderCard(project)).join('');
-
+        
         container.querySelectorAll('.tender-card').forEach(card => {
             card.addEventListener('click', () => toggleCard(card));
         });
@@ -679,7 +761,7 @@
     function createTenderCard(project) {
         const isNew = isNewProject(project.publication_date);
         const processTypeBadge = getProcessTypeBadge(project.process_type);
-
+        
         return `
             <div class="tender-card ${isNew ? 'new' : ''}" data-id="${project.id}">
                 <div class="tender-header">
@@ -708,10 +790,10 @@
                     </span>
                     <span class="time-ago">${project.time_ago || ''}</span>
                 </div>
-
+                
                 <div class="tender-details">
                     <p class="tender-description">${escapeHtml(project.description)}</p>
-
+                    
                     <div class="tender-info-grid">
                         <div class="tender-info-item">
                             <span class="tender-info-label">Project Number</span>
@@ -730,13 +812,18 @@
                             <span class="tender-info-value">${formatDate(project.deadline) || '-'}</span>
                         </div>
                     </div>
-
+                    
                     <a href="${project.simap_url}" target="_blank" rel="noopener" class="simap-link" onclick="event.stopPropagation()">
                         View on simap.ch
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                         </svg>
                     </a>
+                    
+                    <div class="tender-disclaimer">
+                        ⚠️ Dies ist keine amtliche Veröffentlichung. 
+                        <a href="${project.simap_url}" target="_blank">Offizielle Daten auf simap.ch</a>
+                    </div>
                 </div>
             </div>
         `;

@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Pro Dashboard - SAJF Strategies{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pro-header {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        padding: 2rem;
+        margin: -2rem -2rem 2rem -2rem;
+    }
+
+    .pro-header-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .pro-welcome h1 {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .pro-welcome p {
+        opacity: 0.9;
+    }
+
+    .pro-badge-large {
+        background: rgba(255,255,255,0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-card {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: var(--shadow);
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .card-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--primary);
+    }
+
+    .card-description {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .card-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .card-stat {
+        text-align: center;
+    }
+
+    .card-stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--accent);
+    }
+
+    .card-stat-label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .btn-logout {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn-logout:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
+    .coming-soon {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .coming-soon-badge {
+        display: inline-block;
+        background: var(--warning);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pro-header">
+    <div class="pro-header-content">
+        <div class="pro-welcome">
+            <h1>Willkommen, {{ company_name }}</h1>
+            <p>Ihr personalisiertes Pro-Dashboard</p>
+        </div>
+        <div>
+            <span class="pro-badge-large">⭐ PRO</span>
+            <a href="/logout" class="btn-logout" style="margin-left: 1rem;">Logout</a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="dashboard-grid">
+        <!-- Alle Aufträge -->
+        <a href="/pro/tenders" class="dashboard-card">
+            <div class="card-icon">📋</div>
+            <div class="card-title">Alle Aufträge</div>
+            <div class="card-description">
+                Durchsuchen Sie alle aktuellen öffentlichen Ausschreibungen. 
+                Neueste Aufträge zuerst, mit erweiterten Filteroptionen.
+            </div>
+            <div class="card-stats">
+                <div class="card-stat">
+                    <div class="card-stat-value">{{ stats.total }}</div>
+                    <div class="card-stat-label">Total</div>
+                </div>
+                <div class="card-stat">
+                    <div class="card-stat-value">{{ stats.today }}</div>
+                    <div class="card-stat-label">Heute neu</div>
+                </div>
+            </div>
+        </a>
+
+        <!-- Empfohlene Aufträge (ML) -->
+        <a href="/pro/recommended" class="dashboard-card">
+            <div class="card-icon">🎯</div>
+            <div class="card-title">Empfohlene Aufträge <span class="coming-soon-badge">BETA</span></div>
+            <div class="card-description">
+                Aufträge, die speziell für {{ company_name }} ausgewählt wurden. 
+                Basierend auf Ihrem Firmenprofil und historischen Daten.
+            </div>
+            <div class="card-stats">
+                <div class="card-stat">
+                    <div class="card-stat-value">{{ recommended_count }}</div>
+                    <div class="card-stat-label">Empfohlen</div>
+                </div>
+                <div class="card-stat">
+                    <div class="card-stat-value">{{ match_rate }}%</div>
+                    <div class="card-stat-label">Match-Rate</div>
+                </div>
+            </div>
+        </a>
+
+        <!-- ML Wahrscheinlichkeit -->
+        <div class="dashboard-card coming-soon">
+            <div class="card-icon">🤖</div>
+            <div class="card-title">ML Gewinnwahrscheinlichkeit <span class="coming-soon-badge">COMING SOON</span></div>
+            <div class="card-description">
+                KI-basierte Analyse Ihrer Gewinnchancen für jeden Auftrag. 
+                Basierend auf historischen Vergabedaten.
+            </div>
+        </div>
+
+        <!-- E-Mail Benachrichtigungen -->
+        <div class="dashboard-card coming-soon">
+            <div class="card-icon">📧</div>
+            <div class="card-title">E-Mail Alerts <span class="coming-soon-badge">COMING SOON</span></div>
+            <div class="card-description">
+                Tägliche Benachrichtigungen über neue Aufträge, 
+                die zu Ihrem Profil passen.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
