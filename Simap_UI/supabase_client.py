@@ -100,7 +100,8 @@ def filter_projects(
         query = supabase.table('projects_website').select('*')
 
         if canton:
-            query = query.eq('canton', canton)
+            # Case-insensitive canton filter
+            query = query.ilike('canton', canton)
         if process_type:
             query = query.eq('process_type', process_type)
         if order_type:

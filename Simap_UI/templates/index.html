@@ -137,7 +137,7 @@
         border: 2px solid var(--border);
         border-radius: 8px;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.15s ease;
         font-size: 0.875rem;
         color: var(--text-secondary);
         user-select: none;
@@ -150,14 +150,11 @@
     }
 
     .filter-chip.active {
-        background: var(--accent);
-        color: white;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
-    }
-
-    .filter-chip.active::before {
-        content: '✓ ';
+        background: #3b82f6 !important;
+        color: white !important;
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+        font-weight: 600;
     }
 
     .filter-chip input {
@@ -691,11 +688,12 @@
             const response = await fetch('/api/cantons');
             const cantonData = await response.json();
             
-            // Erstelle Map mit Anzahl pro Kanton
+            // Erstelle Map mit Anzahl pro Kanton - normalisiere zu UPPERCASE
             const cantonCounts = {};
             cantonData.forEach(c => {
                 if (c.code) {
-                    cantonCounts[c.code.toUpperCase()] = c.count;
+                    const upperCode = c.code.toUpperCase();
+                    cantonCounts[upperCode] = c.count;
                 }
             });
             
@@ -706,8 +704,8 @@
             
             sortedCantons.forEach(([code, name]) => {
                 const option = document.createElement('option');
-                option.value = code;
-                const count = cantonCounts[code] || cantonCounts[code.toLowerCase()] || 0;
+                option.value = code;  // Sende UPPERCASE zum Filter
+                const count = cantonCounts[code] || 0;
                 option.textContent = `${name} (${count})`;
                 select.appendChild(option);
             });
