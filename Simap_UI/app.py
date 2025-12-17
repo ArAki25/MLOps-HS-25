@@ -183,18 +183,25 @@ def pro_recommended():
     """Pro User - Empfohlene Aufträge"""
     table_name = session.get('pro_table_name')
     company_name = session.get('pro_company_name', 'Unternehmen')
-    
+
     projects = []
+    avg_match = 0
     if table_name:
         try:
             from supabase_client import get_recommended_projects
             projects = get_recommended_projects(table_name)
+
+            # Berechne durchschnittliche Match-Rate
+            if projects:
+                total_prob = sum(p.get('probability', 0) for p in projects)
+                avg_match = int((total_prob / len(projects)) * 100)
         except Exception as e:
             print(f"❌ Fehler beim Laden empfohlener Projekte: {e}")
-    
-    return render_template('pro_recommended.html', 
-                         projects=projects,
-                         company_name=company_name)
+
+    return render_template('pro_recommended.html',
+                           projects=projects,
+                           company_name=company_name,
+                           avg_match=avg_match)
 
 
 # ============================================
