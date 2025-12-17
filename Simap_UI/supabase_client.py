@@ -477,11 +477,28 @@ def get_recommended_projects(table_name: str, limit: int = 50) -> List[Dict]:
     try:
         response = supabase.table(table_name) \
             .select('*') \
-            .order('score', desc=True) \
+            .order('probability', desc=True) \
             .limit(limit) \
             .execute()
 
-        return response.data or []
+        # Transformiere die Daten für das Frontend
+        projects = []
+        for row in (response.data or []):
+            projects.append({
+                'id': row.get('id'),
+                'project_id': row.get('project_id'),
+                'title': row.get('title') or 'Ohne Titel',
+                'description': row.get('description') or '',
+                'canton': row.get('canton') or '',
+                'probability': row.get('probability') or 0,
+                'prediction': row.get('prediction'),
+                'publication_date': row.get('publication_date'),
+                'cpv_code': row.get('cpv_code'),
+                'simap_url': f"https://www.simap.ch/de/project-detail/{row.get('project_id')}" if row.get(
+                    'project_id') else "https://www.simap.ch"
+            })
+
+        return projects
     except Exception as e:
         print(f"❌ ML-Projekte-Fehler: {e}")
         return []
