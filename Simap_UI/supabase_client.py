@@ -120,19 +120,38 @@ def get_cantons() -> List[Dict]:
         return []
 
     try:
-        response = supabase.table('projects_website') \
-            .select('canton') \
-            .execute()
+        # Hole alle Kantone in Batches um Limit zu umgehen
+        all_cantons = []
+        batch_size = 1000
+        offset = 0
 
+        while True:
+            response = supabase.table('projects_website') \
+                .select('canton') \
+                .range(offset, offset + batch_size - 1) \
+                .execute()
+
+            if not response.data or len(response.data) == 0:
+                break
+
+            all_cantons.extend(response.data)
+
+            if len(response.data) < batch_size:
+                break
+
+            offset += batch_size
+
+        # Zähle Kantone
         canton_counts = {}
-        for row in (response.data or []):
+        for row in all_cantons:
             canton = row.get('canton')
             if canton:
                 canton_counts[canton] = canton_counts.get(canton, 0) + 1
 
         cantons = [{'code': k, 'count': v} for k, v in canton_counts.items()]
         cantons.sort(key=lambda x: x['count'], reverse=True)
-        
+
+        print(f"✅ {len(cantons)} Kantone geladen, {len(all_cantons)} Projekte gezählt")
         return cantons
     except Exception as e:
         print(f"❌ Canton-Fehler: {e}")
