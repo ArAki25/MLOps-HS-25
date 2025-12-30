@@ -36,7 +36,7 @@ def get_all_projects(limit: int = 50) -> List[Dict]:
         return []
 
     try:
-        response = supabase.table('projects_website') \
+        response = supabase.table('projects_ui') \
             .select('*') \
             .order('publication_date', desc=True) \
             .limit(limit) \
@@ -54,7 +54,7 @@ def get_project_by_id(project_id: str) -> Optional[Dict]:
         return None
 
     try:
-        response = supabase.table('projects_website') \
+        response = supabase.table('projects_ui') \
             .select('*') \
             .eq('id', project_id) \
             .execute()
@@ -73,9 +73,10 @@ def search_projects(query: str, limit: int = 50) -> List[Dict]:
         return []
 
     try:
-        response = supabase.table('projects_website') \
+        response = supabase.table('projects_ui') \
             .select('*') \
-            .or_(f'title_de.ilike.%{query}%,description_de.ilike.%{query}%,project_number.ilike.%{query}%,proc_office_name_de.ilike.%{query}%') \
+            .or_(
+            f'title_de.ilike.%{query}%,description_de.ilike.%{query}%,project_number.ilike.%{query}%,proc_office_name_de.ilike.%{query}%') \
             .order('publication_date', desc=True) \
             .limit(limit) \
             .execute()
@@ -87,17 +88,17 @@ def search_projects(query: str, limit: int = 50) -> List[Dict]:
 
 
 def filter_projects(
-    canton: Optional[str] = None,
-    process_type: Optional[str] = None,
-    order_type: Optional[str] = None,
-    limit: int = 50
+        canton: Optional[str] = None,
+        process_type: Optional[str] = None,
+        order_type: Optional[str] = None,
+        limit: int = 50
 ) -> List[Dict]:
     """Filtere Projekte nach Kriterien"""
     if not supabase:
         return []
 
     try:
-        query = supabase.table('projects_website').select('*')
+        query = supabase.table('projects_ui').select('*')
 
         if canton:
             # Case-insensitive canton filter
@@ -126,7 +127,7 @@ def get_cantons() -> List[Dict]:
         offset = 0
 
         while True:
-            response = supabase.table('projects_website') \
+            response = supabase.table('projects_ui') \
                 .select('canton') \
                 .range(offset, offset + batch_size - 1) \
                 .execute()
@@ -164,12 +165,12 @@ def get_statistics() -> Dict:
         return {'total': 0, 'today': 0}
 
     try:
-        total = supabase.table('projects_website') \
+        total = supabase.table('projects_ui') \
             .select('id', count='exact') \
             .execute()
 
         today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-        today_count = supabase.table('projects_website') \
+        today_count = supabase.table('projects_ui') \
             .select('id', count='exact') \
             .eq('publication_date', today) \
             .execute()
@@ -185,10 +186,10 @@ def get_statistics() -> Dict:
 
 def transform_project(row: Dict, include_details: bool = False) -> Dict:
     """Transformiert DB-Zeile für Frontend"""
-    
+
     pub_date = row.get('publication_date')
     time_ago = calculate_time_ago(pub_date)
-    
+
     project = {
         'id': row.get('id'),
         'title': row.get('title_de') or row.get('title_fr') or 'Ohne Titel',
@@ -208,7 +209,7 @@ def transform_project(row: Dict, include_details: bool = False) -> Dict:
         'simap_id': row.get('simap_project_id') or '',
         'simap_url': generate_simap_url(row)
     }
-    
+
     if include_details:
         project['cpv_code'] = row.get('cpv_code_main') or ''
         project['award_amount'] = row.get('award_amount')
@@ -217,18 +218,18 @@ def transform_project(row: Dict, include_details: bool = False) -> Dict:
         project['winner_city'] = row.get('winner_city') or ''
         project['proc_office_email'] = row.get('proc_office_email') or ''
         project['proc_office_phone'] = row.get('proc_office_phone') or ''
-    
+
     return project
 
 
 def generate_simap_url(row: Dict) -> str:
-    """Generiert Link zu simap.ch (Format: /de/project-detail/{simap_project_id})"""
-    
+    """Generiert Link zu simap.ch"""
+
     if row.get('simap_link'):
         return row.get('simap_link')
-    
+
     project_id = row.get('simap_project_id')
-    
+
     if project_id:
         return f"https://www.simap.ch/de/project-detail/{project_id}"
     else:
@@ -242,7 +243,6 @@ def clean_html(text: str) -> str:
     import re
     clean = re.sub(r'<[^>]+>', '', text)
     clean = clean.replace('&nbsp;', ' ').strip()
-    # Kein Limit mehr - zeige volle Beschreibung
     return clean
 
 
@@ -250,20 +250,20 @@ def calculate_time_ago(date_str: str) -> str:
     """Berechnet 'vor X Minuten/Stunden/Tagen'"""
     if not date_str:
         return ''
-    
+
     try:
         pub_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
         now = datetime.now(timezone.utc)
-        
+
         if pub_date.tzinfo is None:
             pub_date = pub_date.replace(tzinfo=timezone.utc)
-        
+
         diff = now - pub_date
-        
+
         minutes = int(diff.total_seconds() / 60)
         hours = int(diff.total_seconds() / 3600)
         days = diff.days
-        
+
         if minutes < 1:
             return 'Gerade eben'
         elif minutes < 60:
@@ -312,24 +312,21 @@ def update_content(page: str, content: Dict) -> bool:
         return False
 
     try:
-        # Prüfe ob Eintrag existiert
         existing = supabase.table('site_content') \
             .select('id') \
             .eq('page', page) \
             .execute()
 
         if existing.data and len(existing.data) > 0:
-            # Update
             supabase.table('site_content') \
                 .update({'content': content, 'updated_at': datetime.utcnow().isoformat()}) \
                 .eq('page', page) \
                 .execute()
         else:
-            # Insert
             supabase.table('site_content') \
                 .insert({'page': page, 'content': content}) \
                 .execute()
-        
+
         return True
     except Exception as e:
         print(f"❌ Content-Update-Fehler: {e}")
@@ -365,12 +362,12 @@ def add_team_member(data: Dict) -> Optional[Dict]:
     try:
         response = supabase.table('team_members') \
             .insert({
-                'name': data.get('name'),
-                'role': data.get('role'),
-                'bio': data.get('bio'),
-                'photo_url': data.get('photo_url'),
-                'display_order': data.get('order', 0)
-            }) \
+            'name': data.get('name'),
+            'role': data.get('role'),
+            'bio': data.get('bio'),
+            'photo_url': data.get('photo_url'),
+            'display_order': data.get('order', 0)
+        }) \
             .execute()
 
         return response.data[0] if response.data else None
@@ -387,13 +384,13 @@ def update_team_member(member_id: str, data: Dict) -> bool:
     try:
         supabase.table('team_members') \
             .update({
-                'name': data.get('name'),
-                'role': data.get('role'),
-                'bio': data.get('bio'),
-                'photo_url': data.get('photo_url'),
-                'display_order': data.get('order', 0),
-                'updated_at': datetime.utcnow().isoformat()
-            }) \
+            'name': data.get('name'),
+            'role': data.get('role'),
+            'bio': data.get('bio'),
+            'photo_url': data.get('photo_url'),
+            'display_order': data.get('order', 0),
+            'updated_at': datetime.utcnow().isoformat()
+        }) \
             .eq('id', member_id) \
             .execute()
         return True
