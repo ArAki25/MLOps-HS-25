@@ -317,7 +317,7 @@
         font-size: 0.75rem;
     }
 
-    /* Tender Details (expanded) - GRÖSSER */
+    /* Tender Details (expanded) */
     .tender-details {
         display: none;
         margin-top: 1.5rem;
@@ -366,7 +366,6 @@
         color: var(--text-primary);
     }
 
-    /* Disclaimer in tender card */
     .tender-disclaimer {
         margin-top: 1rem;
         padding: 0.75rem;
@@ -417,7 +416,7 @@
         margin: 0 auto 1rem;
     }
 
-     .favorite-btn {
+    .favorite-btn {
         background: transparent;
         border: none;
         font-size: 1.25rem;
@@ -475,12 +474,12 @@
 {% block content %}
 <!-- Disclaimer Banner oben -->
 <div class="disclaimer-top">
-    ⚠️ Dies ist keine amtliche Veröffentlichung. Massgebend sind die auf der Plattform 
+    ⚠️ Dies ist keine amtliche Veröffentlichung. Massgebend sind die auf der Plattform
     <a href="https://www.simap.ch" target="_blank" rel="noopener">www.simap.ch</a> veröffentlichten Daten.
 </div>
 
 <div class="container">
-    <!-- Stats Bar - Zentriert -->
+    <!-- Stats Bar -->
     <div class="stats-bar">
         <div class="stat-item">
             <div class="stat-value" id="stat-total">-</div>
@@ -499,7 +498,7 @@
     <!-- Search & Filter -->
     <section class="search-section">
         <h2>Advanced Tender Search</h2>
-        
+
         <div class="search-box">
             <svg class="search-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -562,7 +561,6 @@
             Loading tenders...
         </div>
     </div>
-
 </div>
 {% endblock %}
 
@@ -570,8 +568,8 @@
 <script>
     let allProjects = [];
     let filteredProjects = [];
-    let isProUser = false;           // NEU
-    let userFavorites = [];          // NEU
+    let isProUser = false;
+    let userFavorites = [];
     let activeFilters = {
         search: '',
         canton: '',
@@ -580,7 +578,7 @@
     };
 
     document.addEventListener('DOMContentLoaded', () => {
-        checkProStatus();            // NEU - als erstes aufrufen
+        checkProStatus();
         loadProjects();
         loadCantons();
         loadStatistics();
@@ -588,7 +586,6 @@
         setInterval(loadProjects, 5 * 60 * 1000);
     });
 
-    // NEU - Ganze Funktion hinzufügen
     async function checkProStatus() {
         try {
             const response = await fetch('/api/favorites');
@@ -601,7 +598,7 @@
         }
     }
 
-     async function toggleFavorite(projectId, button, project) {
+    async function toggleFavorite(projectId, button, project) {
         const isFavorite = userFavorites.includes(projectId);
         const endpoint = isFavorite ? '/api/favorites/remove' : '/api/favorites/add';
 
@@ -636,10 +633,6 @@
         }
     }
 
-    // ... restlicher bestehender Code ...
-</script>
-{% endblock %}
-
     async function loadProjects() {
         try {
             showLoading();
@@ -649,7 +642,7 @@
             renderProjects();
         } catch (error) {
             console.error('Error loading projects:', error);
-            document.getElementById('tenders-list').innerHTML = 
+            document.getElementById('tenders-list').innerHTML =
                 '<div class="empty-state">Error loading tenders. Please try again.</div>';
         }
     }
@@ -668,10 +661,9 @@
     async function filterProjects() {
         try {
             showLoading();
-            
-            // Baue Query-Parameter
+
             let params = new URLSearchParams();
-            
+
             if (activeFilters.canton) {
                 params.append('canton', activeFilters.canton);
             }
@@ -681,41 +673,36 @@
             if (activeFilters.order_type.length === 1) {
                 params.append('order_type', activeFilters.order_type[0]);
             }
-            
-            // Wenn Filter gesetzt sind, nutze API
+
             if (params.toString()) {
                 const response = await fetch(`/api/filter?${params.toString()}`);
                 let results = await response.json();
-                
-                // Zusätzliche lokale Filterung für mehrere process_type/order_type
+
                 if (activeFilters.process_type.length > 1) {
                     results = results.filter(p => activeFilters.process_type.includes(p.process_type));
                 }
                 if (activeFilters.order_type.length > 1) {
                     results = results.filter(p => activeFilters.order_type.includes(p.order_type));
                 }
-                
-                // Suche anwenden falls vorhanden
+
                 if (activeFilters.search) {
                     const searchLower = activeFilters.search.toLowerCase();
-                    results = results.filter(p => 
+                    results = results.filter(p =>
                         (p.title || '').toLowerCase().includes(searchLower) ||
                         (p.description || '').toLowerCase().includes(searchLower) ||
                         (p.organization || '').toLowerCase().includes(searchLower) ||
                         (p.project_number || '').toLowerCase().includes(searchLower)
                     );
                 }
-                
+
                 filteredProjects = results;
             } else if (activeFilters.search) {
-                // Nur Suche, keine anderen Filter
                 await searchProjects(activeFilters.search);
                 return;
             } else {
-                // Keine Filter - zeige alle
                 filteredProjects = allProjects;
             }
-            
+
             renderProjects();
         } catch (error) {
             console.error('Error filtering:', error);
@@ -732,41 +719,20 @@
     }
 
     async function loadCantons() {
-        // Alle Schweizer Kantone mit vollen Namen
         const allCantons = {
-            'AG': 'Aargau',
-            'AI': 'Appenzell Innerrhoden',
-            'AR': 'Appenzell Ausserrhoden',
-            'BE': 'Bern',
-            'BL': 'Basel-Landschaft',
-            'BS': 'Basel-Stadt',
-            'FR': 'Freiburg',
-            'GE': 'Genf',
-            'GL': 'Glarus',
-            'GR': 'Graubünden',
-            'JU': 'Jura',
-            'LU': 'Luzern',
-            'NE': 'Neuenburg',
-            'NW': 'Nidwalden',
-            'OW': 'Obwalden',
-            'SG': 'St. Gallen',
-            'SH': 'Schaffhausen',
-            'SO': 'Solothurn',
-            'SZ': 'Schwyz',
-            'TG': 'Thurgau',
-            'TI': 'Tessin',
-            'UR': 'Uri',
-            'VD': 'Waadt',
-            'VS': 'Wallis',
-            'ZG': 'Zug',
-            'ZH': 'Zürich'
+            'AG': 'Aargau', 'AI': 'Appenzell Innerrhoden', 'AR': 'Appenzell Ausserrhoden',
+            'BE': 'Bern', 'BL': 'Basel-Landschaft', 'BS': 'Basel-Stadt',
+            'FR': 'Freiburg', 'GE': 'Genf', 'GL': 'Glarus', 'GR': 'Graubünden',
+            'JU': 'Jura', 'LU': 'Luzern', 'NE': 'Neuenburg', 'NW': 'Nidwalden',
+            'OW': 'Obwalden', 'SG': 'St. Gallen', 'SH': 'Schaffhausen', 'SO': 'Solothurn',
+            'SZ': 'Schwyz', 'TG': 'Thurgau', 'TI': 'Tessin', 'UR': 'Uri',
+            'VD': 'Waadt', 'VS': 'Wallis', 'ZG': 'Zug', 'ZH': 'Zürich'
         };
 
         try {
             const response = await fetch('/api/cantons');
             const cantonData = await response.json();
-            
-            // Erstelle Map mit Anzahl pro Kanton - normalisiere zu UPPERCASE
+
             const cantonCounts = {};
             cantonData.forEach(c => {
                 if (c.code) {
@@ -774,15 +740,13 @@
                     cantonCounts[upperCode] = c.count;
                 }
             });
-            
+
             const select = document.getElementById('canton-filter');
-            
-            // Füge alle Kantone hinzu (sortiert nach Name)
             const sortedCantons = Object.entries(allCantons).sort((a, b) => a[1].localeCompare(b[1]));
-            
+
             sortedCantons.forEach(([code, name]) => {
                 const option = document.createElement('option');
-                option.value = code;  // Sende UPPERCASE zum Filter
+                option.value = code;
                 const count = cantonCounts[code] || 0;
                 option.textContent = `${name} (${count})`;
                 select.appendChild(option);
@@ -796,7 +760,7 @@
         try {
             const response = await fetch('/api/statistics');
             const stats = await response.json();
-            
+
             document.getElementById('stat-total').textContent = stats.total || 0;
             document.getElementById('stat-today').textContent = stats.today || 0;
         } catch (error) {
@@ -815,7 +779,6 @@
             }, 500);
         });
 
-        // Enter-Taste für sofortige Suche
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 activeFilters.search = e.target.value;
@@ -832,9 +795,9 @@
             chip.addEventListener('click', () => {
                 const filterType = chip.dataset.filter;
                 const value = chip.dataset.value;
-                
+
                 chip.classList.toggle('active');
-                
+
                 if (chip.classList.contains('active')) {
                     if (!activeFilters[filterType].includes(value)) {
                         activeFilters[filterType].push(value);
@@ -842,20 +805,16 @@
                 } else {
                     activeFilters[filterType] = activeFilters[filterType].filter(v => v !== value);
                 }
-                
+
                 filterProjects();
             });
         });
     }
 
-    function applyFilters() {
-        filterProjects();
-    }
-
     function renderProjects() {
         const container = document.getElementById('tenders-list');
         const countEl = document.getElementById('results-count');
-        
+
         countEl.textContent = `(${filteredProjects.length} results)`;
 
         if (filteredProjects.length === 0) {
@@ -864,121 +823,101 @@
         }
 
         container.innerHTML = filteredProjects.map(project => createTenderCard(project)).join('');
-        
+
         container.querySelectorAll('.tender-card').forEach(card => {
             card.addEventListener('click', () => toggleCard(card));
         });
     }
 
     function createTenderCard(project) {
-    const isNew = isNewProject(project.publication_date);
-    const processTypeBadge = getProcessTypeBadge(project.process_type);
-    const pubTypeBadge = getPubTypeBadge(project.pub_type);
-    const isFavorite = userFavorites.includes(project.id);
+        const isNew = isNewProject(project.publication_date);
+        const processTypeBadge = getProcessTypeBadge(project.process_type);
+        const pubTypeBadge = getPubTypeBadge(project.pub_type);
+        const isFavorite = userFavorites.includes(project.id);
 
-    // Projekt-Daten für toggleFavorite vorbereiten
-    const projectData = {
-        id: project.id,
-        title: project.title,
-        canton: project.canton,
-        description: project.description,
-        simap_url: project.simap_url
-    };
-    const projectDataStr = JSON.stringify(projectData).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const projectData = {
+            id: project.id,
+            title: project.title,
+            canton: project.canton,
+            description: project.description,
+            simap_url: project.simap_url
+        };
+        const projectDataStr = JSON.stringify(projectData).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-    return `
-        <div class="tender-card ${isNew ? 'new' : ''}" data-id="${project.id}">
-            <div class="tender-header">
-                <div>
-                    <div class="tender-label">${pubTypeBadge}</div>
-                    <div class="tender-title">${escapeHtml(project.title)}</div>
-                    <div class="tender-preview">${escapeHtml(project.description ? project.description.substring(0, 150) + '...' : '')}</div>
+        return `
+            <div class="tender-card ${isNew ? 'new' : ''}" data-id="${project.id}">
+                <div class="tender-header">
+                    <div>
+                        <div class="tender-label">${pubTypeBadge}</div>
+                        <div class="tender-title">${escapeHtml(project.title)}</div>
+                        <div class="tender-preview">${escapeHtml(project.description ? project.description.substring(0, 150) + '...' : '')}</div>
+                    </div>
+                    <div class="tender-badges">
+                        ${isProUser ? `
+                            <button class="favorite-btn ${isFavorite ? 'active' : ''}"
+                                    onclick="event.stopPropagation(); toggleFavorite('${project.id}', this, ${projectDataStr})"
+                                    title="${isFavorite ? 'Aus Merkliste entfernen' : 'Zur Merkliste hinzufügen'}">
+                                ${isFavorite ? '❤️' : '🤍'}
+                            </button>
+                        ` : ''}
+                        ${isNew ? '<span class="badge badge-new">NEW</span>' : ''}
+                        ${processTypeBadge}
+                    </div>
                 </div>
-                <div class="tender-badges">
-                    ${isProUser ? `
-                        <button class="favorite-btn ${isFavorite ? 'active' : ''}"
-                                onclick="event.stopPropagation(); toggleFavorite('${project.id}', this, ${projectDataStr})"
-                                title="${isFavorite ? 'Aus Merkliste entfernen' : 'Zur Merkliste hinzufügen'}">
-                            ${isFavorite ? '❤️' : '🤍'}
-                        </button>
-                    ` : ''}
-                    ${isNew ? '<span class="badge badge-new">NEW</span>' : ''}
-                    ${processTypeBadge}
+                <div class="tender-meta">
+                    <span class="tender-meta-item">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        ${project.city || ''} ${project.canton ? ', ' + project.canton : ''}
+                    </span>
+                    <span class="tender-meta-item">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                        ${escapeHtml(project.organization)}
+                    </span>
+                    <span class="time-ago">${project.time_ago || ''}</span>
+                </div>
+
+                <div class="tender-details">
+                    <p class="tender-description">${escapeHtml(project.description)}</p>
+
+                    <div class="tender-info-grid">
+                        <div class="tender-info-item">
+                            <span class="tender-info-label">Project Number</span>
+                            <span class="tender-info-value">${project.project_number || '-'}</span>
+                        </div>
+                        <div class="tender-info-item">
+                            <span class="tender-info-label">Order Type</span>
+                            <span class="tender-info-value">${capitalize(project.order_type) || '-'}</span>
+                        </div>
+                        <div class="tender-info-item">
+                            <span class="tender-info-label">Procedure</span>
+                            <span class="tender-info-value">${capitalize(project.process_type) || '-'}</span>
+                        </div>
+                        <div class="tender-info-item">
+                            <span class="tender-info-label">Deadline</span>
+                            <span class="tender-info-value">${formatDate(project.deadline) || '-'}</span>
+                        </div>
+                    </div>
+
+                    <a href="${project.simap_url}" target="_blank" rel="noopener" class="simap-link" onclick="event.stopPropagation()">
+                        View on simap.ch
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                    </a>
+
+                    <div class="tender-disclaimer">
+                        ⚠️ Dies ist keine amtliche Veröffentlichung.
+                        <a href="${project.simap_url}" target="_blank">Offizielle Daten auf simap.ch</a>
+                    </div>
                 </div>
             </div>
-            <div class="tender-meta">
-                <span class="tender-meta-item">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    ${project.city || ''} ${project.canton ? ', ' + project.canton : ''}
-                </span>
-                <span class="tender-meta-item">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                    </svg>
-                    ${escapeHtml(project.organization)}
-                </span>
-                <span class="time-ago">${project.time_ago || ''}</span>
-            </div>
-
-            <div class="tender-details">
-                <p class="tender-description">${escapeHtml(project.description)}</p>
-
-                <div class="tender-info-grid">
-                    <div class="tender-info-item">
-                        <span class="tender-info-label">Project Number</span>
-                        <span class="tender-info-value">${project.project_number || '-'}</span>
-                    </div>
-                    <div class="tender-info-item">
-                        <span class="tender-info-label">Order Type</span>
-                        <span class="tender-info-value">${capitalize(project.order_type) || '-'}</span>
-                    </div>
-                    <div class="tender-info-item">
-                        <span class="tender-info-label">Procedure</span>
-                        <span class="tender-info-value">${capitalize(project.process_type) || '-'}</span>
-                    </div>
-                    <div class="tender-info-item">
-                        <span class="tender-info-label">Deadline</span>
-                        <span class="tender-info-value">${formatDate(project.deadline) || '-'}</span>
-                    </div>
-                </div>
-
-                <a href="${project.simap_url}" target="_blank" rel="noopener" class="simap-link" onclick="event.stopPropagation()">
-                    View on simap.ch
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                    </svg>
-                </a>
-
-                <div class="tender-disclaimer">
-                    ⚠️ Dies ist keine amtliche Veröffentlichung.
-                    <a href="${project.simap_url}" target="_blank">Offizielle Daten auf simap.ch</a>
-                </div>
-            </div>
-        </div>
-    `;
-}
-```
-
----
-
-# BKP-Rechner Erklärung
-
-## Was ist BKP?
-
-**BKP (Baukostenplan)** ist ein Schweizer Normkostengliederungssystem. Jede Bauleistung hat einen Code:
-```
-BKP-Code Struktur: X YY.Z
-
-Beispiele:
-- 211    = Baumeisterarbeiten
-- 221    = Fenster, Aussentüren
-- 232    = Elektroanlagen (Starkstrom)
-- 242    = Heizungsanlagen
-- 253    = Sanitäranlagen
-- 281    = Bodenbeläge
+        `;
+    }
 
     function getPubTypeBadge(pubType) {
         const types = {
