@@ -31,6 +31,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
     }
 
     .pro-header h1 {
@@ -40,6 +42,7 @@
     .pro-nav {
         display: flex;
         gap: 1rem;
+        flex-wrap: wrap;
     }
 
     .pro-nav a {
@@ -131,6 +134,7 @@
     .favorite-actions {
         display: flex;
         gap: 0.5rem;
+        flex-shrink: 0;
     }
 
     .btn-remove {
@@ -175,6 +179,16 @@
         font-size: 4rem;
         margin-bottom: 1rem;
     }
+
+    @media (max-width: 768px) {
+        .favorite-header {
+            flex-direction: column;
+        }
+        .favorite-actions {
+            width: 100%;
+            justify-content: flex-end;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -190,8 +204,8 @@
         <nav class="pro-nav">
             <a href="/pro/dashboard">Dashboard</a>
             <a href="/pro/tenders">Alle Aufträge</a>
-            <a href="/pro/recommended">Empfohlen</a>
             <a href="/pro/favorites" class="active">Merkliste</a>
+            <a href="/pro/bkp-calculator">BKP-Rechner</a>
             <a href="/logout">Logout</a>
         </nav>
     </div>
@@ -230,7 +244,7 @@
         <div class="empty-state">
             <div class="empty-state-icon">❤️</div>
             <h3>Keine gespeicherten Aufträge</h3>
-            <p>Klicke auf das Herz-Symbol bei einem Auftrag, um ihn hier zu speichern.</p>
+            <p>Klicken Sie auf das Herz-Symbol bei einem Auftrag, um ihn hier zu speichern.</p>
             <br>
             <a href="/pro/tenders" class="btn-view">Aufträge durchsuchen →</a>
         </div>
@@ -251,13 +265,11 @@ async function removeFavorite(projectId, button) {
         const data = await response.json();
 
         if (data.success) {
-            // Entferne Card aus DOM
             const card = button.closest('.favorite-card');
             card.style.opacity = '0';
             card.style.transform = 'translateX(100px)';
             setTimeout(() => card.remove(), 300);
 
-            // Update Counter
             const counter = document.querySelector('.stat-value');
             counter.textContent = parseInt(counter.textContent) - 1;
         }
@@ -267,11 +279,3 @@ async function removeFavorite(projectId, button) {
 }
 </script>
 {% endblock %}
-
-<nav class="pro-nav">
-    <a href="/pro/dashboard">Dashboard</a>
-    <a href="/pro/tenders">Alle Aufträge</a>
-    <a href="/pro/favorites">Merkliste</a>
-    <a href="/pro/bkp-calculator">BKP-Rechner</a>
-    <a href="/logout">Logout</a>
-</nav>

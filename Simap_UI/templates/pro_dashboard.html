@@ -17,6 +17,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
     }
 
     .pro-welcome h1 {
@@ -26,6 +28,25 @@
 
     .pro-welcome p {
         opacity: 0.9;
+    }
+
+    .pro-nav {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .pro-nav a {
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+    .pro-nav a:hover, .pro-nav a.active {
+        background: rgba(255,255,255,0.2);
+        color: white;
     }
 
     .pro-badge-large {
@@ -53,11 +74,13 @@
         text-decoration: none;
         color: inherit;
         display: block;
+        border: 1px solid var(--border);
     }
 
     .dashboard-card:hover {
         transform: translateY(-4px);
         box-shadow: var(--shadow-lg);
+        border-color: var(--accent);
     }
 
     .card-icon {
@@ -69,7 +92,7 @@
         font-size: 1.25rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
-        color: var(--primary);
+        color: var(--text-primary);
     }
 
     .card-description {
@@ -101,35 +124,33 @@
         color: var(--text-secondary);
     }
 
-    .btn-logout {
-        background: rgba(255,255,255,0.2);
-        color: white;
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 8px;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .btn-logout:hover {
-        background: rgba(255,255,255,0.3);
-    }
-
     .coming-soon {
         opacity: 0.6;
         pointer-events: none;
     }
 
-    .coming-soon-badge {
+    .badge-beta {
         display: inline-block;
-        background: var(--warning);
+        background: #f59e0b;
         color: white;
         padding: 0.25rem 0.5rem;
         border-radius: 4px;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 600;
         margin-left: 0.5rem;
+        vertical-align: middle;
+    }
+
+    .badge-coming {
+        display: inline-block;
+        background: var(--text-secondary);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+        vertical-align: middle;
     }
 </style>
 {% endblock %}
@@ -141,10 +162,13 @@
             <h1>Willkommen, {{ company_name }}</h1>
             <p>Ihr personalisiertes Pro-Dashboard</p>
         </div>
-        <div>
-            <span class="pro-badge-large">⭐ PRO</span>
-            <a href="/logout" class="btn-logout" style="margin-left: 1rem;">Logout</a>
-        </div>
+        <nav class="pro-nav">
+            <a href="/pro/dashboard" class="active">Dashboard</a>
+            <a href="/pro/tenders">Alle Aufträge</a>
+            <a href="/pro/favorites">Merkliste</a>
+            <a href="/pro/bkp-calculator">BKP-Rechner</a>
+            <a href="/logout">Logout</a>
+        </nav>
     </div>
 </div>
 
@@ -155,7 +179,7 @@
             <div class="card-icon">📋</div>
             <div class="card-title">Alle Aufträge</div>
             <div class="card-description">
-                Durchsuchen Sie alle aktuellen öffentlichen Ausschreibungen. 
+                Durchsuchen Sie alle aktuellen öffentlichen Ausschreibungen.
                 Neueste Aufträge zuerst, mit erweiterten Filteroptionen.
             </div>
             <div class="card-stats">
@@ -173,9 +197,9 @@
         <!-- Empfohlene Aufträge (ML) -->
         <a href="/pro/recommended" class="dashboard-card">
             <div class="card-icon">🎯</div>
-            <div class="card-title">Empfohlene Aufträge <span class="coming-soon-badge">BETA</span></div>
+            <div class="card-title">Empfohlene Aufträge <span class="badge-beta">BETA</span></div>
             <div class="card-description">
-                Aufträge, die speziell für {{ company_name }} ausgewählt wurden. 
+                Aufträge, die speziell für {{ company_name }} ausgewählt wurden.
                 Basierend auf Ihrem Firmenprofil und historischen Daten.
             </div>
             <div class="card-stats">
@@ -190,58 +214,41 @@
             </div>
         </a>
 
-        <a href="/pro/bkp-calculator" class="dashboard-card">
-    <div class="card-icon">🧮</div>
-    <div class="card-title">BKP-Rechner</div>
-    <div class="card-description">
-        Berechnen Sie Baukosten nach BKP-Kategorien.
-        Kostenschätzung für verschiedene Gebäudetypen und Baustandards.
-    </div>
-</a>
-
-        <!-- Nach der "Empfohlene Aufträge" Card einfügen -->
-<a href="/pro/favorites" class="dashboard-card">
-    <div class="card-icon">❤️</div>
-    <div class="card-title">Merkliste</div>
-    <div class="card-description">
-        Ihre gespeicherten Aufträge. Markieren Sie interessante
-        Ausschreibungen und greifen Sie jederzeit darauf zu.
-    </div>
-    <div class="card-stats">
-        <div class="card-stat">
-            <div class="card-stat-value">{{ favorites_count }}</div>
-            <div class="card-stat-label">Gespeichert</div>
-        </div>
-    </div>
-</a>
-
-        <!-- ML Wahrscheinlichkeit -->
-        <div class="dashboard-card coming-soon">
-            <div class="card-icon">🤖</div>
-            <div class="card-title">ML Gewinnwahrscheinlichkeit <span class="coming-soon-badge">COMING SOON</span></div>
+        <!-- Merkliste -->
+        <a href="/pro/favorites" class="dashboard-card">
+            <div class="card-icon">❤️</div>
+            <div class="card-title">Merkliste</div>
             <div class="card-description">
-                KI-basierte Analyse Ihrer Gewinnchancen für jeden Auftrag. 
-                Basierend auf historischen Vergabedaten.
+                Ihre gespeicherten Aufträge. Markieren Sie interessante
+                Ausschreibungen und greifen Sie jederzeit darauf zu.
             </div>
-        </div>
+            <div class="card-stats">
+                <div class="card-stat">
+                    <div class="card-stat-value">{{ favorites_count }}</div>
+                    <div class="card-stat-label">Gespeichert</div>
+                </div>
+            </div>
+        </a>
+
+        <!-- BKP-Rechner -->
+        <a href="/pro/bkp-calculator" class="dashboard-card">
+            <div class="card-icon">🧮</div>
+            <div class="card-title">BKP-Rechner <span class="badge-beta">BETA</span></div>
+            <div class="card-description">
+                Berechnen Sie Baukosten nach BKP-Kategorien.
+                Kostenschätzung für verschiedene Gebäudetypen und Baustandards.
+            </div>
+        </a>
 
         <!-- E-Mail Benachrichtigungen -->
         <div class="dashboard-card coming-soon">
             <div class="card-icon">📧</div>
-            <div class="card-title">E-Mail Alerts <span class="coming-soon-badge">COMING SOON</span></div>
+            <div class="card-title">E-Mail Alerts <span class="badge-coming">COMING SOON</span></div>
             <div class="card-description">
-                Tägliche Benachrichtigungen über neue Aufträge, 
+                Tägliche Benachrichtigungen über neue Aufträge,
                 die zu Ihrem Profil passen.
             </div>
         </div>
     </div>
 </div>
-
-<nav class="pro-nav">
-    <a href="/pro/dashboard">Dashboard</a>
-    <a href="/pro/tenders">Alle Aufträge</a>
-    <a href="/pro/favorites">Merkliste</a>
-    <a href="/pro/bkp-calculator">BKP-Rechner</a>
-    <a href="/logout">Logout</a>
-</nav>
 {% endblock %}
