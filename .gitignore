@@ -48,5 +48,3 @@ logs/
 # ML Models
 *.joblib
 *.pkl
-
-supabase
