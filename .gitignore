@@ -48,3 +48,11 @@ logs/
 # ML Models
 *.joblib
 *.pkl
+
+# Supabase
+.supabase/
+supabase/.env
+supabase/config.toml
+**/supabase/.temp/
+*.sql.backup
+supabase-*.tar.gz
