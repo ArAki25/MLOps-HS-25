@@ -503,3 +503,98 @@ def get_recommended_projects(table_name: str, limit: int = 50) -> List[Dict]:
     except Exception as e:
         print(f"❌ ML-Projekte-Fehler: {e}")
         return []
+
+# ============================================
+# FAVORITES / MERKLISTE
+# ============================================
+
+def get_user_favorites(user_id: str) -> List[Dict]:
+    """Hole alle Favoriten eines Users"""
+    if not supabase or not user_id:
+        return []
+
+    try:
+        response = supabase.table('favorites') \
+            .select('*') \
+            .eq('user_id', user_id) \
+            .order('created_at', desc=True) \
+            .execute()
+
+        return response.data or []
+    except Exception as e:
+        print(f"❌ Favorites-Fehler: {e}")
+        return []
+
+
+def add_favorite(user_id: str, project: Dict) -> bool:
+    """Füge Projekt zu Favoriten hinzu"""
+    if not supabase or not user_id:
+        return False
+
+    try:
+        supabase.table('favorites') \
+            .insert({
+                'user_id': user_id,
+                'project_id': project.get('id'),
+                'project_title': project.get('title'),
+                'project_canton': project.get('canton'),
+                'project_description': project.get('description', '')[:500],
+                'simap_url': project.get('simap_url')
+            }) \
+            .execute()
+        return True
+    except Exception as e:
+        print(f"❌ Favorite-Add-Fehler: {e}")
+        return False
+
+
+def remove_favorite(user_id: str, project_id: str) -> bool:
+    """Entferne Projekt aus Favoriten"""
+    if not supabase or not user_id:
+        return False
+
+    try:
+        supabase.table('favorites') \
+            .delete() \
+            .eq('user_id', user_id) \
+            .eq('project_id', project_id) \
+            .execute()
+        return True
+    except Exception as e:
+        print(f"❌ Favorite-Remove-Fehler: {e}")
+        return False
+
+
+def is_favorite(user_id: str, project_id: str) -> bool:
+    """Prüfe ob Projekt in Favoriten ist"""
+    if not supabase or not user_id:
+        return False
+
+    try:
+        response = supabase.table('favorites') \
+            .select('id') \
+            .eq('user_id', user_id) \
+            .eq('project_id', project_id) \
+            .execute()
+
+        return len(response.data or []) > 0
+    except Exception as e:
+        print(f"❌ Favorite-Check-Fehler: {e}")
+        return False
+
+
+def get_user_favorites_ids(user_id: str) -> List[str]:
+    """Hole nur die Project-IDs der Favoriten (für schnellen Check)"""
+    if not supabase or not user_id:
+        return []
+
+    try:
+        response = supabase.table('favorites') \
+            .select('project_id') \
+            .eq('user_id', user_id) \
+            .execute()
+
+        return [str(row.get('project_id')) for row in (response.data or [])]
+    except Exception as e:
+        print(f"❌ Favorites-IDs-Fehler: {e}")
+        return []

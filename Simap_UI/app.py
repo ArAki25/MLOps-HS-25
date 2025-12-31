@@ -22,7 +22,11 @@ from supabase_client import (
     update_team_member,
     delete_team_member,
     get_admin_by_email,
-    get_pro_user
+    get_pro_user,
+    get_user_favorites,
+    add_favorite,
+    remove_favorite,
+    get_user_favorites_ids
 )
 
 load_dotenv()
@@ -202,6 +206,73 @@ def pro_recommended():
                            projects=projects,
                            company_name=company_name,
                            avg_match=avg_match)
+
+
+# ============================================
+# FAVORITES / MERKLISTE ROUTES
+# ============================================
+
+@app.route('/pro/favorites')
+@pro_user_required
+def pro_favorites():
+    """Pro User - Merkliste"""
+    user_id = session.get('pro_user_id')
+    company_name = session.get('pro_company_name', 'Unternehmen')
+
+    favorites = get_user_favorites(user_id)
+
+    return render_template('pro_favorites.html',
+                           favorites=favorites,
+                           company_name=company_name)
+
+
+@app.route('/api/favorites', methods=['GET'])
+def api_get_favorites():
+    """API: Hole Favoriten-IDs des Users"""
+    if not session.get('pro_logged_in'):
+        return jsonify({'favorites': []})
+
+    user_id = session.get('pro_user_id')
+    favorite_ids = get_user_favorites_ids(user_id)
+
+    return jsonify({'favorites': favorite_ids})
+
+
+@app.route('/api/favorites/add', methods=['POST'])
+def api_add_favorite():
+    """API: Füge Favorit hinzu"""
+    if not session.get('pro_logged_in'):
+        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
+
+    user_id = session.get('pro_user_id')
+    data = request.get_json()
+
+    project = {
+        'id': data.get('project_id'),
+        'title': data.get('title'),
+        'canton': data.get('canton'),
+        'description': data.get('description'),
+        'simap_url': data.get('simap_url')
+    }
+
+    success = add_favorite(user_id, project)
+
+    return jsonify({'success': success})
+
+
+@app.route('/api/favorites/remove', methods=['POST'])
+def api_remove_favorite():
+    """API: Entferne Favorit"""
+    if not session.get('pro_logged_in'):
+        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
+
+    user_id = session.get('pro_user_id')
+    data = request.get_json()
+    project_id = data.get('project_id')
+
+    success = remove_favorite(user_id, project_id)
+
+    return jsonify({'success': success})
 
 
 # ============================================
