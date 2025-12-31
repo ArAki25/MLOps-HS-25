@@ -426,6 +426,16 @@ def api_statistics():
     return jsonify(stats)
 
 
+@app.route('/pro/bkp-calculator')
+@pro_user_required
+def pro_bkp_calculator():
+    """Pro User - BKP Rechner"""
+    company_name = session.get('pro_company_name', 'Unternehmen')
+
+    return render_template('pro_bkp_calculator.html',
+                           company_name=company_name)
+
+
 if __name__ == '__main__':
     print("\n" + "=" * 60)
     print("🌐 SAJF Strategies - Tender Platform")
