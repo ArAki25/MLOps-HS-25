@@ -9,6 +9,7 @@ import pandas as pd
 import requests
 from datetime import datetime, timedelta
 from typing import Optional, List
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Fix Windows Console Encoding
@@ -18,7 +19,10 @@ if sys.platform == 'win32':
         sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
         sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
-load_dotenv()
+# Lade .env aus Projekt-Root (2 Ebenen höher: algorithm -> ml -> MLOps-HS-25)
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+env_path = PROJECT_ROOT / ".env"
+load_dotenv(env_path, override=True)  # override=True um gecachte Werte zu überschreiben
 
 
 class SupabaseAPILoader:
@@ -28,10 +32,14 @@ class SupabaseAPILoader:
         """
         Args:
             url: Supabase Project URL (z.B. https://xxx.supabase.co)
-            key: Supabase API Key (anon/public key)
+            key: Supabase API Key (service role key für RLS-geschützte Tabellen)
         """
         self.base_url = url or os.getenv('SUPABASE_URL')
-        self.api_key = key or os.getenv('SUPABASE_KEY')
+        # Priorität: SERVICE_KEY > SERVICE_ROLE_KEY > SUPABASE_KEY
+        self.api_key = (key or
+                       os.getenv('SUPABASE_SERVICE_KEY') or
+                       os.getenv('SUPABASE_SERVICE_ROLE_KEY') or
+                       os.getenv('SUPABASE_KEY'))
 
         if not self.base_url or not self.api_key:
             raise ValueError(
@@ -51,11 +59,11 @@ class SupabaseAPILoader:
         }
 
     def lade_projekte(self,
-                     tage_zurueck: int = 10,
+                     tage_zurueck: int = 365,
                      kantone: Optional[List[str]] = None,
                      projekt_typen: Optional[List[str]] = None,
                      auftrags_arten: Optional[List[str]] = None,
-                     limit: int = 10000) -> pd.DataFrame:
+                     limit: int = 20000) -> pd.DataFrame:
         """
         Lädt Projekte via Supabase REST API
 
@@ -103,6 +111,22 @@ class SupabaseAPILoader:
             if response.status_code == 200:
                 data = response.json()
                 df = pd.DataFrame(data)
+
+                # Mappe die Felder zum erwarteten Format
+                # title_de/title_fr -> title, description_de/description_fr -> description
+                if 'title_de' in df.columns and 'title' not in df.columns:
+                    df['title'] = df['title_de'].fillna(df.get('title_fr', ''))
+                if 'description_de' in df.columns and 'description' not in df.columns:
+                    df['description'] = df['description_de'].fillna(df.get('description_fr', ''))
+
+                # cpv_code_main -> cpv_code
+                if 'cpv_code_main' in df.columns and 'cpv_code' not in df.columns:
+                    df['cpv_code'] = df['cpv_code_main']
+
+                # estimated_amount fehlt - könnte award_amount sein
+                if 'award_amount' in df.columns and 'estimated_amount' not in df.columns:
+                    df['estimated_amount'] = df['award_amount']
+
                 print(f"✓ {len(df)} Projekte geladen")
                 return df
             else:
@@ -121,7 +145,7 @@ class SupabaseAPILoader:
         """Testet die API-Verbindung"""
         try:
             url = f"{self.base_url}/rest/v1/projects"
-            params = {'select': 'count', 'limit': 1}
+            params = {'select': '*', 'limit': 1}  # FIX: 'count' wird nicht unterstützt
 
             response = requests.get(url, headers=self.headers, params=params, timeout=10)
 
@@ -130,6 +154,7 @@ class SupabaseAPILoader:
                 return True
             else:
                 print(f"❌ API-Fehler: {response.status_code}")
+                print(f"   Response: {response.text[:200]}")
                 return False
 
         except Exception as e:

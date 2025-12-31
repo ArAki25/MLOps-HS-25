@@ -1,40 +1,104 @@
 import pandas as pd
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import classification_report, precision_recall_curve, average_precision_score
 from sentence_transformers import SentenceTransformer
 import joblib
 import os
 import warnings
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+from dataclasses import dataclass, field
+from typing import List, Dict, Optional, Tuple
 
-# Füge den ml/algorithm Pfad hinzu
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+env_path = PROJECT_ROOT / ".env"
+if env_path.exists():
+    load_dotenv(env_path)
+else:
+    load_dotenv()
+
 sys.path.append(str(Path(__file__).parent / "algorithm"))
 from supabase_api_loader import SupabaseAPILoader, lade_aus_supabase_api, teste_supabase_api
 from supabase_storage_handler import SupabaseStorageHandler, lade_modell_von_storage, speichere_modell_zu_storage
 warnings.filterwarnings('ignore')
 
 
+@dataclass
+class FilterKriterien:
+    keywords_must: List[str] = field(default_factory=list)
+    keywords_should: List[str] = field(default_factory=list)
+    keywords_exclude: List[str] = field(default_factory=list)
+    kantone: List[str] = field(default_factory=list)
+    order_types: List[str] = field(default_factory=list)
+    project_types: List[str] = field(default_factory=list)
+    cpv_codes: List[str] = field(default_factory=list)
+    min_budget: Optional[float] = None
+    max_budget: Optional[float] = None
+    semantic_threshold_must: float = 0.55
+    semantic_threshold_should: float = 0.45
+    semantic_threshold_exclude: float = 0.50
+
+
 class ProjektKlassifikator:
-
-
     def __init__(self):
-        print("Lade Embedding-Modell")
-        self.embedding_model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-        self.rf_classifier = None
+        print("Loading embedding model...")
+        self.embedding_model = SentenceTransformer('intfloat/multilingual-e5-small')
+
+        import torch
+        if torch.cuda.is_available():
+            print("GPU detected")
+            self.embedding_model = self.embedding_model.to('cuda')
+
+        self.classifier = None
         self.label_encoders = {}
-        self.kriterien_config = {}  # Speichert die Kriterien
+        self.kriterien_config = None
+        self._kw_must_emb = None
+        self._kw_should_emb = None
+        self._kw_exclude_emb = None
+        self._embedding_cache = {}
+
         self.categorical_features = [
             'publication_type', 'project_type', 'project_subtype',
             'canton', 'process_type', 'lots_type', 'order_type',
             'construction_type', 'construction_category', 'creation_language'
         ]
 
+    def set_kriterien(self, kriterien: FilterKriterien):
+        self.kriterien_config = kriterien
+        print("\nPrecomputing keyword embeddings...")
+
+        if kriterien.keywords_must:
+            self._kw_must_emb = self.embedding_model.encode(
+                kriterien.keywords_must,
+                convert_to_numpy=True,
+                normalize_embeddings=True
+            )
+            print(f"  MUST: {len(kriterien.keywords_must)} keywords")
+
+        if kriterien.keywords_should:
+            self._kw_should_emb = self.embedding_model.encode(
+                kriterien.keywords_should,
+                convert_to_numpy=True,
+                normalize_embeddings=True
+            )
+            print(f"  SHOULD: {len(kriterien.keywords_should)} keywords")
+
+        if kriterien.keywords_exclude:
+            self._kw_exclude_emb = self.embedding_model.encode(
+                kriterien.keywords_exclude,
+                convert_to_numpy=True,
+                normalize_embeddings=True
+            )
+            print(f"  EXCLUDE: {len(kriterien.keywords_exclude)} keywords")
+
     def daten_vorbereiten(self, df):
-        """Bereitet Daten vor"""
         df = df.copy()
         df['title'] = df['title'].fillna('')
         df['description'] = df['description'].fillna('')
@@ -46,398 +110,565 @@ class ProjektKlassifikator:
 
         return df
 
-    def erstelle_embeddings(self, texts):
-        """Erstellt Text-Embeddings"""
-        print(f"Erstelle Embeddings für {len(texts)} Texte...")
-        return self.embedding_model.encode(texts, show_progress_bar=True, batch_size=32)
+    def wende_harte_filter_an(self, df):
+        if self.kriterien_config is None:
+            return df
 
-    def encodiere_kategorien(self, df, fit=True):
-        """One-Hot-Encoding für kategoriale Features"""
-        encoded_features = []
+        print("\n" + "="*60)
+        print("HARD FILTERS")
+        print("="*60)
+
+        filtered = df.copy()
+        original = len(filtered)
+        kriterien = self.kriterien_config
+
+        if kriterien.order_types and 'order_type' in filtered.columns:
+            before = len(filtered)
+            order_types_lower = [ot.lower() for ot in kriterien.order_types]
+            filtered = filtered[filtered['order_type'].str.lower().isin(order_types_lower)]
+            print(f"Order Type: {before} -> {len(filtered)} (filter: {kriterien.order_types})")
+
+        if kriterien.kantone and 'canton' in filtered.columns:
+            before = len(filtered)
+            kantone_upper = [k.upper() for k in kriterien.kantone]
+            filtered = filtered[filtered['canton'].str.upper().isin(kantone_upper)]
+            print(f"Canton: {before} -> {len(filtered)}")
+
+        if kriterien.project_types and 'project_type' in filtered.columns:
+            before = len(filtered)
+            project_types_lower = [pt.lower() for pt in kriterien.project_types]
+            filtered = filtered[filtered['project_type'].str.lower().isin(project_types_lower)]
+            print(f"Project Type: {before} -> {len(filtered)}")
+
+        if kriterien.cpv_codes and 'cpv_code' in filtered.columns:
+            before = len(filtered)
+            cpv_mask = pd.Series(False, index=filtered.index)
+            for prefix in kriterien.cpv_codes:
+                cpv_mask |= filtered['cpv_code'].astype(str).str.startswith(str(prefix))
+            filtered = filtered[cpv_mask]
+            print(f"CPV Code: {before} -> {len(filtered)}")
+
+        if 'estimated_amount' in filtered.columns:
+            if kriterien.min_budget:
+                before = len(filtered)
+                filtered = filtered[
+                    (filtered['estimated_amount'] >= kriterien.min_budget) |
+                    (filtered['estimated_amount'].isna())
+                ]
+                print(f"Min Budget: {before} -> {len(filtered)}")
+
+            if kriterien.max_budget:
+                before = len(filtered)
+                filtered = filtered[
+                    (filtered['estimated_amount'] <= kriterien.max_budget) |
+                    (filtered['estimated_amount'].isna())
+                ]
+                print(f"Max Budget: {before} -> {len(filtered)}")
+
+        print(f"\nHard Filter Result: {original} -> {len(filtered)} ({len(filtered)/original*100:.1f}%)")
+        return filtered
+
+    def berechne_semantic_scores(self, df):
+        print("\n" + "="*60)
+        print("SEMANTIC SCORING")
+        print("="*60)
+
+        df = df.copy()
+        texts = df['combined_text'].tolist()
+
+        print(f"Computing embeddings for {len(texts)} texts...")
+        text_embeddings = self.embedding_model.encode(
+            texts,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+            batch_size=256,
+            show_progress_bar=True
+        )
+
+        df['_must_max'] = 0.0
+        df['_must_mean'] = 0.0
+        df['_should_max'] = 0.0
+        df['_should_mean'] = 0.0
+        df['_exclude_max'] = 0.0
+
+        if self._kw_must_emb is not None and len(self._kw_must_emb) > 0:
+            similarities = np.dot(text_embeddings, self._kw_must_emb.T)
+            df['_must_max'] = np.max(similarities, axis=1)
+            df['_must_mean'] = np.mean(similarities, axis=1)
+            print(f"MUST scores: mean={df['_must_max'].mean():.3f}, std={df['_must_max'].std():.3f}")
+
+        if self._kw_should_emb is not None and len(self._kw_should_emb) > 0:
+            similarities = np.dot(text_embeddings, self._kw_should_emb.T)
+            df['_should_max'] = np.max(similarities, axis=1)
+            df['_should_mean'] = np.mean(similarities, axis=1)
+            print(f"SHOULD scores: mean={df['_should_max'].mean():.3f}")
+
+        if self._kw_exclude_emb is not None and len(self._kw_exclude_emb) > 0:
+            similarities = np.dot(text_embeddings, self._kw_exclude_emb.T)
+            df['_exclude_max'] = np.max(similarities, axis=1)
+            print(f"EXCLUDE scores: mean={df['_exclude_max'].mean():.3f}")
+
+        return df
+
+    def erstelle_labels(self, df):
+        print("\n" + "="*60)
+        print("LABEL GENERATION")
+        print("="*60)
+
+        kriterien = self.kriterien_config
+        labels = np.zeros(len(df), dtype=int)
+
+        exclude_mask = df['_exclude_max'] >= kriterien.semantic_threshold_exclude
+        n_excluded = exclude_mask.sum()
+        print(f"Excluded by EXCLUDE keywords: {n_excluded}")
+
+        if len(kriterien.keywords_must) > 0:
+            positive_mask = (df['_must_max'] >= kriterien.semantic_threshold_must) & ~exclude_mask
+        elif len(kriterien.keywords_should) > 0:
+            positive_mask = (df['_should_max'] >= kriterien.semantic_threshold_should) & ~exclude_mask
+        else:
+            raise ValueError("Keywords required for label generation")
+
+        labels[positive_mask] = 1
+
+        n_positive = labels.sum()
+        n_negative = len(labels) - n_positive
+
+        print(f"Positive (interesting): {n_positive} ({n_positive/len(labels)*100:.1f}%)")
+        print(f"Negative (not interesting): {n_negative} ({n_negative/len(labels)*100:.1f}%)")
+
+        if n_positive < 10 or n_negative < 10:
+            print("\nAuto-adjusting labels due to imbalance...")
+            scores = df['_must_max'].values if len(kriterien.keywords_must) > 0 else df['_should_max'].values
+            sorted_indices = np.argsort(scores)
+
+            threshold_low = int(len(sorted_indices) * 0.3)
+            threshold_high = int(len(sorted_indices) * 0.7)
+
+            labels = np.zeros(len(df), dtype=int)
+            labels[sorted_indices[threshold_high:]] = 1
+            labels[sorted_indices[:threshold_low]] = 0
+
+            for idx in sorted_indices[threshold_low:threshold_high]:
+                if exclude_mask.iloc[idx]:
+                    labels[idx] = 0
+
+            n_positive = labels.sum()
+            n_negative = len(labels) - n_positive
+            print(f"Adjusted: {n_positive} positive, {n_negative} negative")
+
+        return labels
+
+    def erstelle_features(self, df, fit=True):
+        features = []
+
+        semantic_features = df[[
+            '_must_max', '_must_mean',
+            '_should_max', '_should_mean',
+            '_exclude_max'
+        ]].fillna(0).values
+        features.append(semantic_features)
+
+        interaction = (df['_must_max'] * (1 - df['_exclude_max'])).values.reshape(-1, 1)
+        features.append(interaction)
 
         for col in self.categorical_features:
             if col not in df.columns:
                 continue
 
+            col_data = df[col].fillna('unknown').astype(str)
+
             if fit:
                 le = LabelEncoder()
-                unique_vals = list(df[col].unique()) + ['unknown']
-                le.fit(unique_vals)
+                le.fit(list(col_data.unique()) + ['unknown'])
                 self.label_encoders[col] = le
 
-            le = self.label_encoders[col]
-            encoded = []
-            for val in df[col]:
-                try:
-                    encoded.append(le.transform([val])[0])
-                except:
-                    encoded.append(le.transform(['unknown'])[0])
+            if col in self.label_encoders:
+                le = self.label_encoders[col]
+                encoded = []
+                for val in col_data:
+                    try:
+                        encoded.append(le.transform([val])[0])
+                    except ValueError:
+                        encoded.append(le.transform(['unknown'])[0])
 
-            n_classes = len(le.classes_)
-            one_hot = np.zeros((len(encoded), n_classes))
-            for i, val in enumerate(encoded):
-                one_hot[i, val] = 1
+                n_classes = len(le.classes_)
+                one_hot = np.zeros((len(df), n_classes))
+                for i, val in enumerate(encoded):
+                    one_hot[i, val] = 1
+                features.append(one_hot)
 
-            encoded_features.append(one_hot)
+        return np.hstack(features)
 
-        return np.hstack(encoded_features) if encoded_features else np.array([]).reshape(len(df), 0)
-
-    def berechne_keyword_score(self, text, keywords):
-        """
-        Berechnet einen Keyword-Matching-Score mit Gewichtung
-        - Exakte Titel-Treffer: sehr hohe Gewichtung
-        - Phrasen-Treffer: hohe Gewichtung
-        - Einzelwort-Treffer: moderate Gewichtung
-        """
-        if not keywords:
-            return 0.0
-
-        text_lower = text.lower()
-        score = 0.0
-
-        for keyword in keywords:
-            keyword_lower = keyword.lower()
-
-            # Exakter Treffer (ganzer Titel/Phrase) - sehr hohe Gewichtung
-            if keyword_lower == text_lower:
-                score += 10.0
-            # Phrase komplett enthalten - hohe Gewichtung
-            elif keyword_lower in text_lower:
-                # Längere Phrasen bekommen mehr Gewicht
-                phrase_length = len(keyword_lower.split())
-                score += 5.0 * (1 + phrase_length * 0.3)
-            # Einzelne Wörter aus der Phrase - moderate Gewichtung
-            else:
-                keyword_words = keyword_lower.split()
-                if len(keyword_words) > 1:
-                    # Mehrwort-Phrase: zähle wie viele Wörter gefunden werden
-                    found_words = sum(1 for word in keyword_words if word in text_lower)
-                    if found_words > 0:
-                        match_ratio = found_words / len(keyword_words)
-                        score += 2.0 * match_ratio
-                else:
-                    # Einzelwort
-                    if keyword_lower in text_lower:
-                        score += 1.0
-
-        # Normalisiere auf 0-1 Bereich (aber kann höher gehen für sehr gute Matches)
-        return min(score / len(keywords), 3.0)
-
-    def erstelle_features(self, df, fit=True):
-        """Erstellt komplette Feature-Matrix mit starker Gewichtung auf Keywords und CPV"""
-        embeddings = self.erstelle_embeddings(df['combined_text'].tolist())
-        categorical = self.encodiere_kategorien(df, fit=fit)
-
-        # Berechne Keyword-Scores als zusätzliche Features
-        keyword_features = np.zeros((len(df), 2))  # [title_score, description_score]
-
-        if self.kriterien_config.get('keywords'):
-            print("Berechne Keyword-Matching-Scores...")
-            for i, (idx, row) in enumerate(df.iterrows()):
-                title_score = self.berechne_keyword_score(
-                    str(row.get('title', '')),
-                    self.kriterien_config['keywords']
-                )
-                desc_score = self.berechne_keyword_score(
-                    str(row.get('description', '')),
-                    self.kriterien_config['keywords']
-                )
-                keyword_features[i] = [title_score, desc_score]
-
-        # WICHTIG: Gewichte die Features unterschiedlich!
-        # Embeddings (semantisches Verständnis) - Gewicht: 0.3
-        embeddings_weighted = embeddings * 0.3
-
-        # Kategoriale Features (CPV-Codes, Kantone, etc.) - Gewicht: 2.0 (sehr wichtig!)
-        if categorical.shape[1] > 0:
-            categorical_weighted = categorical * 2.0
-        else:
-            categorical_weighted = categorical
-
-        # Keywords - Gewicht: 5.0 (am wichtigsten!)
-        keyword_features_weighted = keyword_features * 5.0
-
-        # Kombiniere alle Features
-        if categorical.shape[1] > 0:
-            features = np.hstack([embeddings_weighted, categorical_weighted, keyword_features_weighted])
-        else:
-            features = np.hstack([embeddings_weighted, keyword_features_weighted])
-
-        print(f"Feature-Matrix: {features.shape}")
-        print(f"  Embeddings (30% Gewicht), Kategorien (200% Gewicht), Keywords (500% Gewicht)")
-        return features
-
-    def wende_harte_filter_an(self, df, kriterien):
-        """
-        STUFE 1: Harte Filter - Eliminiert Projekte die DEFINITIV nicht passen
-        Returns: Gefiltertes DataFrame
-        """
-        print("\n" + "="*70)
-        print("STUFE 1: HARTE FILTER")
-        print("="*70)
-
-        filtered = df.copy()
-        original_count = len(filtered)
-
-        # FILTER 1: Kantone (HART)
-        if kriterien.get('kantone') and 'canton' in df.columns:
-            filtered = filtered[filtered['canton'].isin(kriterien['kantone'])]
-            print(f"✓ Kanton-Filter: {len(filtered)}/{original_count} Projekte übrig")
-
-        # FILTER 2: Projekttypen (HART) - z.B. nur "tender"
-        if kriterien.get('projekt_typen') and 'project_type' in df.columns:
-            filtered = filtered[filtered['project_type'].isin(kriterien['projekt_typen'])]
-            print(f"✓ Projekttyp-Filter: {len(filtered)}/{original_count} Projekte übrig")
-
-        # FILTER 3: Auftragsarten (HART) - z.B. nur "service"
-        if kriterien.get('auftrags_arten') and 'order_type' in df.columns:
-            filtered = filtered[filtered['order_type'].isin(kriterien['auftrags_arten'])]
-            print(f"✓ Auftragsart-Filter: {len(filtered)}/{original_count} Projekte übrig")
-
-        # FILTER 4: CPV-Codes (HART) - z.B. nur "79"
-        if kriterien.get('cpv_codes') and 'cpv_code' in df.columns:
-            cpv_mask = pd.Series([False] * len(filtered), index=filtered.index)
-            for code in kriterien['cpv_codes']:
-                # Prüfe ob cpv_code ein Dictionary ist (nested structure)
-                if filtered['cpv_code'].dtype == 'object':
-                    # Versuche als String oder Dictionary zu behandeln
-                    cpv_mask |= filtered['cpv_code'].astype(str).str.contains(str(code), na=False)
-                else:
-                    cpv_mask |= filtered['cpv_code'].astype(str).str.startswith(str(code), na=False)
-            filtered = filtered[cpv_mask]
-            print(f"✓ CPV-Code-Filter: {len(filtered)}/{original_count} Projekte übrig")
-
-        # FILTER 5: Budget (HART)
-        if 'estimated_amount' in df.columns:
-            if kriterien.get('min_budget'):
-                filtered = filtered[filtered['estimated_amount'] >= kriterien['min_budget']]
-                print(f"✓ Min-Budget-Filter: {len(filtered)}/{original_count} Projekte übrig")
-            if kriterien.get('max_budget'):
-                filtered = filtered[(filtered['estimated_amount'] <= kriterien['max_budget']) 
-                                  (filtered['estimated_amount'] > 0)]
-                print(f"✓ Max-Budget-Filter: {len(filtered)}/{original_count} Projekte übrig")
-
-        print(f"\n→ {len(filtered)}/{original_count} Projekte nach harten Filtern")
-        return filtered
-
-    def erstelle_labels_aus_kriterien(self, df, kriterien):
-        """
-        STUFE 2: ML-Labels - NUR für Keywords/Text-Matching
-        Wird auf BEREITS GEFILTERTE Daten angewendet!
-        """
-        labels = np.zeros(len(df), dtype=int)
-
-        # NUR Keywords für ML-Bewertung - Rest wurde schon hart gefiltert!
-        if kriterien.get('keywords'):
-            print("\n" + "="*70)
-            print("STUFE 2: ML-BEWERTUNG (Keywords in Titel/Beschreibung)")
-            print("="*70)
-
-            keyword_scores = []
-            for i, (idx, row) in enumerate(df.iterrows()):
-                title_score = self.berechne_keyword_score(
-                    str(row.get('title', '')),
-                    kriterien['keywords']
-                )
-                desc_score = self.berechne_keyword_score(
-                    str(row.get('description', '')),
-                    kriterien['keywords']
-                )
-
-                total_score = title_score * 2.0 + desc_score
-                keyword_scores.append(total_score)
-
-                # Wenn guter Keyword-Match, als interessant markieren
-                if total_score > 0.5:  # Schwelle gesenkt - Rest wurde ja schon gefiltert
-                    labels[i] = 1  # Verwende i (0-basierter Index) statt idx (DataFrame-Index)
-
-            # Statistik
-            n_matched = np.sum(labels == 1)
-            n_total = len(labels)
-            print(f"  Keywords gefunden in: {n_matched}/{n_total} Projekten ({n_matched/n_total*100:.1f}%)")
-        else:
-            # Keine Keywords? Dann alles als interessant markieren (wurde ja hart gefiltert)
-            labels = np.ones(len(df), dtype=int)
-
-        return labels
-
-    def trainieren(self, df, labels):
-        """Trainiert das Modell"""
-        print("\n" + "="*70)
-        print("TRAINING GESTARTET")
-        print("="*70)
+    def trainieren(self, df, labels, model_name=None, model_version="v1.0"):
+        print("\n" + "="*60)
+        print("TRAINING")
+        print("="*60)
 
         df = self.daten_vorbereiten(df)
         X = self.erstelle_features(df, fit=True)
         y = labels
 
+        self._last_training_size = len(df)
+        self._training_df = df.copy()
+
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.1, random_state=42, stratify=y
+            X, y, test_size=0.15, random_state=42, stratify=y
         )
 
-        print(f"\nTrainings-Set: {X_train.shape[0]} Projekte")
-        print(f"Test-Set: {X_test.shape[0]} Projekte")
-        print(f"Interessant: {np.sum(y_train == 1)} / Nicht interessant: {np.sum(y_train == 0)}")
+        print(f"Train: {len(X_train)}, Test: {len(X_test)}")
+        print(f"Train positives: {y_train.sum()} ({y_train.mean()*100:.1f}%)")
 
-        print("\nTrainiere Random Forest Classifier...")
-        self.rf_classifier = RandomForestClassifier(
-            n_estimators=222,  # Mehr Bäume für bessere Performance
-            max_depth=25,
-            min_samples_split=5,
-            min_samples_leaf=2,
+        base_clf = GradientBoostingClassifier(
+            n_estimators=150,
+            max_depth=5,
+            min_samples_split=10,
+            min_samples_leaf=5,
+            subsample=0.8,
             random_state=42,
-            n_jobs=-1,
-            class_weight='balanced'  # Wichtig für unbalancierte Daten
+            validation_fraction=0.1,
+            n_iter_no_change=10
         )
-        self.rf_classifier.fit(X_train, y_train)
 
-        y_pred = self.rf_classifier.predict(X_test)
-        accuracy = accuracy_score(y_test, y_pred)
-
-        print("\n" + "="*70)
-        print("TRAINING ABGESCHLOSSEN")
-        print("="*70)
-        print(f"\nAccuracy: {accuracy:.2%}")
-
-        # Classification Report nur wenn beide Klassen vorhanden
-        unique_classes = np.unique(np.concatenate([y_test, y_pred]))
-        if len(unique_classes) >= 2:
-            print("\nClassification Report:")
-            print(classification_report(y_test, y_pred,
-                                       target_names=['Nicht interessant', 'Interessant']))
+        if len(X_train) > 100:
+            print("Using calibrated classifier...")
+            self.classifier = CalibratedClassifierCV(base_clf, method='isotonic', cv=3)
         else:
-            print("\n⚠️  Nur eine Klasse im Test-Set - Classification Report übersprungen")
-            print(f"   Vorhandene Klasse: {'Interessant' if unique_classes[0] == 1 else 'Nicht interessant'}")
+            self.classifier = base_clf
+
+        self.classifier.fit(X_train, y_train)
+
+        y_pred = self.classifier.predict(X_test)
+        y_prob = self.classifier.predict_proba(X_test)[:, 1]
+
+        print("\nClassification Report:")
+        print(classification_report(y_test, y_pred, target_names=['Not interesting', 'Interesting']))
+
+        precision, recall, thresholds = precision_recall_curve(y_test, y_prob)
+        ap = average_precision_score(y_test, y_prob)
+        print(f"Average Precision: {ap:.3f}")
+
+        f1_scores = 2 * (precision * recall) / (precision + recall + 1e-8)
+        optimal_idx = np.argmax(f1_scores[:-1])
+        optimal_threshold = thresholds[optimal_idx]
+        print(f"Optimal threshold: {optimal_threshold:.3f}")
+
+        accuracy = (y_pred == y_test).mean()
+
+        if model_name:
+            self.speichern(
+                pfad=model_name,
+                zu_supabase=True,
+                model_version=model_version,
+                accuracy=accuracy
+            )
+            self._erstelle_und_speichere_empfehlungen(model_name, model_version)
 
         return accuracy
 
     def vorhersagen(self, df):
-        """Macht Vorhersagen"""
-        if self.rf_classifier is None:
-            raise ValueError("Modell muss erst trainiert oder geladen werden!")
+        if self.classifier is None:
+            raise ValueError("Model must be trained or loaded first")
 
         df = self.daten_vorbereiten(df)
+        df = self.berechne_semantic_scores(df)
         X = self.erstelle_features(df, fit=False)
-        predictions = self.rf_classifier.predict(X)
 
-        # Prüfe ob beide Klassen vorhanden sind
-        proba = self.rf_classifier.predict_proba(X)
-        if proba.shape[1] == 2:
-            # Normal: beide Klassen (0 und 1)
-            probabilities = proba[:, 1]
-        else:
-            # Nur eine Klasse trainiert - verwende diese Wahrscheinlichkeit
-            probabilities = proba[:, 0]
-            print("\n⚠️  Warnung: Modell kennt nur eine Klasse!")
-            print("    Empfehlung: Trainiere das Modell neu mit spezifischeren Kriterien.")
+        predictions = self.classifier.predict(X)
+        probabilities = self.classifier.predict_proba(X)[:, 1]
 
         return predictions, probabilities
 
-    def finde_interessante(self, df, min_prob=0.7, top_n=None):
-        """
-        Findet interessante Projekte mit 2-Stufen-Filterung:
-        1. Harte Filter (CPV, Kanton, Typ, etc.)
-        2. ML-Vorhersage (Keywords/Text-Match)
-        """
-        print("\n[STUFE 1] Wende harte Filter an...")
-        if self.kriterien_config:
-            df_gefiltert = self.wende_harte_filter_an(df, self.kriterien_config)
-            print(f"  {len(df)} → {len(df_gefiltert)} Projekte (nach harten Filtern)")
-        else:
-            df_gefiltert = df
-            print("  (Keine Kriterien gespeichert - überspringe harte Filter)")
+    def finde_interessante(self, df, min_prob=0.6, top_n=None):
+        print("\n" + "="*60)
+        print("FINDING INTERESTING PROJECTS")
+        print("="*60)
 
-        if len(df_gefiltert) == 0:
-            print("  ⚠️  Keine Projekte nach harten Filtern - Kriterien zu streng!")
+        df = self.daten_vorbereiten(df)
+
+        df_filtered = self.wende_harte_filter_an(df)
+
+        if len(df_filtered) == 0:
+            print("No projects after hard filter")
             return pd.DataFrame()
 
-        print("\n[STUFE 2] Führe ML-Vorhersage durch...")
-        predictions, probabilities = self.vorhersagen(df_gefiltert)
+        df_scored = self.berechne_semantic_scores(df_filtered)
 
-        result_df = df_gefiltert.copy()
-        result_df['interessant_vorhersage'] = predictions
-        result_df['interessant_wahrscheinlichkeit'] = probabilities
+        X = self.erstelle_features(df_scored, fit=False)
+        probabilities = self.classifier.predict_proba(X)[:, 1]
 
-        # Berechne auch Keyword-Scores für die Anzeige
-        if self.kriterien_config.get('keywords'):
-            keyword_scores = []
-            for idx, row in result_df.iterrows():
-                title_score = self.berechne_keyword_score(
-                    str(row.get('title', '')),
-                    self.kriterien_config['keywords']
-                )
-                desc_score = self.berechne_keyword_score(
-                    str(row.get('description', '')),
-                    self.kriterien_config['keywords']
-                )
-                keyword_scores.append(title_score * 2.0 + desc_score)
+        df_scored['interessant_wahrscheinlichkeit'] = probabilities
+        df_scored['interessant_vorhersage'] = (probabilities >= min_prob).astype(int)
 
-            result_df['keyword_match_score'] = keyword_scores
-
-        interesting = result_df[result_df['interessant_wahrscheinlichkeit'] >= min_prob]
-        interesting = interesting.sort_values('interessant_wahrscheinlichkeit', ascending=False)
+        result = df_scored[df_scored['interessant_wahrscheinlichkeit'] >= min_prob].copy()
+        result = result.sort_values('interessant_wahrscheinlichkeit', ascending=False)
 
         if top_n:
-            interesting = interesting.head(top_n)
+            result = result.head(top_n)
 
-        return interesting
+        print(f"\nResult: {len(result)} projects with probability >= {min_prob:.0%}")
 
-    def speichern(self, pfad, zu_supabase=False, bucket_name="models"):
-        """
-        Speichert das Modell lokal oder zu Supabase Storage
+        return result
 
-        Args:
-            pfad: Lokaler Pfad oder Remote-Pfad (z.B. "production/model_v1.pkl")
-            zu_supabase: True = zu Supabase Storage hochladen, False = lokal speichern
-            bucket_name: Supabase Bucket Name (default: "models")
-        """
-        if self.rf_classifier is None:
-            raise ValueError("Kein Modell zum Speichern!")
+    def speichern(self, pfad, zu_supabase=False, bucket_name="ml_models", model_version="v1.0", accuracy=None):
+        if self.classifier is None:
+            raise ValueError("No model to save")
 
         model_data = {
-            'rf_classifier': self.rf_classifier,
+            'classifier': self.classifier,
             'label_encoders': self.label_encoders,
-            'kriterien_config': self.kriterien_config
+            'kriterien_config': self.kriterien_config,
+            'kw_must_emb': self._kw_must_emb,
+            'kw_should_emb': self._kw_should_emb,
+            'kw_exclude_emb': self._kw_exclude_emb
         }
 
         if zu_supabase:
-            # Speichere direkt zu Supabase Storage
-            if speichere_modell_zu_storage(model_data, pfad, bucket_name):
-                print(f"✓ Modell zu Supabase Storage gespeichert: {bucket_name}/{pfad}")
+            try:
+                import requests
+                import io
+                from datetime import datetime
+
+                buffer = io.BytesIO()
+                joblib.dump(model_data, buffer)
+                file_content = buffer.getvalue()
+
+                supabase_url = os.getenv('SUPABASE_URL')
+                supabase_key = os.getenv('SUPABASE_SERVICE_KEY') or os.getenv('SUPABASE_KEY')
+
+                if not supabase_url or not supabase_key:
+                    print("SUPABASE credentials not found")
+                    return
+
+                storage_path = f"models/{datetime.now().strftime('%Y-%m-%d')}/{Path(pfad).stem}_{model_version}.pkl"
+                upload_url = f"{supabase_url}/storage/v1/object/{bucket_name}/{storage_path}"
+
+                headers = {
+                    'apikey': supabase_key,
+                    'Authorization': f'Bearer {supabase_key}',
+                    'Content-Type': 'application/octet-stream',
+                    'x-upsert': 'true'
+                }
+
+                response = requests.post(upload_url, headers=headers, data=file_content, timeout=30)
+
+                if response.status_code in [200, 201]:
+                    print(f"Model saved to Supabase: {storage_path}")
+                    self._speichere_modell_metadaten(Path(pfad).stem, model_version, storage_path, accuracy)
+                else:
+                    print(f"Upload error: {response.status_code}")
+
+            except Exception as e:
+                print(f"Error saving to Supabase: {e}")
+
+    def _speichere_modell_metadaten(self, model_name, model_version, storage_path, accuracy=None):
+        try:
+            import requests
+
+            supabase_url = os.getenv('SUPABASE_URL')
+            supabase_key = os.getenv('SUPABASE_SERVICE_KEY') or os.getenv('SUPABASE_KEY')
+
+            headers = {
+                'apikey': supabase_key,
+                'Authorization': f'Bearer {supabase_key}',
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            }
+
+            url = f"{supabase_url}/rest/v1/ml_modelle"
+
+            kriterien_dict = None
+            if self.kriterien_config:
+                kriterien_dict = {
+                    'keywords_must': self.kriterien_config.keywords_must,
+                    'keywords_should': self.kriterien_config.keywords_should,
+                    'keywords_exclude': self.kriterien_config.keywords_exclude,
+                    'kantone': self.kriterien_config.kantone,
+                    'order_types': self.kriterien_config.order_types,
+                    'project_types': self.kriterien_config.project_types,
+                    'cpv_codes': self.kriterien_config.cpv_codes
+                }
+
+            metadata = {
+                'model_name': model_name,
+                'model_version': model_version,
+                'storage_path': storage_path,
+                'accuracy': float(accuracy) if accuracy else None,
+                'trained_with_projects': getattr(self, '_last_training_size', 0),
+                'kriterien': kriterien_dict,
+                'is_active': True
+            }
+
+            requests.patch(
+                url + '?is_active=eq.true',
+                headers=headers,
+                json={'is_active': False},
+                timeout=10
+            )
+
+            response = requests.post(url, headers=headers, json=metadata, timeout=10)
+
+            if response.status_code in [200, 201]:
+                print("Model metadata saved")
+                result = response.json()
+                if isinstance(result, list) and len(result) > 0:
+                    self._current_model_id = result[0].get('id')
+
+        except Exception as e:
+            print(f"Error saving metadata: {e}")
+
+    def _erstelle_und_speichere_empfehlungen(self, model_name, model_version):
+        try:
+            import requests
+            from datetime import datetime
+            import re
+
+            if not hasattr(self, '_training_df') or self._training_df is None:
+                return
+
+            predictions, probabilities = self.vorhersagen(self._training_df)
+
+            min_probability = 0.7
+            df_empfehlungen = self._training_df.copy()
+            df_empfehlungen['prediction'] = predictions
+            df_empfehlungen['probability'] = probabilities
+            df_empfehlungen = df_empfehlungen[df_empfehlungen['probability'] >= min_probability]
+            df_empfehlungen = df_empfehlungen.sort_values('probability', ascending=False)
+
+            print(f"Found {len(df_empfehlungen)} recommendations")
+
+            if len(df_empfehlungen) == 0:
+                return
+
+            supabase_url = os.getenv('SUPABASE_URL')
+            supabase_key = os.getenv('SUPABASE_SERVICE_KEY') or os.getenv('SUPABASE_KEY')
+
+            if not supabase_url or not supabase_key:
+                return
+
+            headers = {
+                'apikey': supabase_key,
+                'Authorization': f'Bearer {supabase_key}',
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            }
+
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            clean_model_name = model_name.replace('.pkl', '').replace(' ', '_').replace('-', '_').lower()
+            clean_model_name = re.sub(r'[^a-z0-9_]', '', clean_model_name)[:20]
+            clean_version = model_version.replace('.', '').replace('_', '').replace(' ', '').lower()[:5]
+
+            table_name = f"emp_{clean_model_name}_{clean_version}_{timestamp}"
+            if table_name[0].isdigit():
+                table_name = 'tbl_' + table_name
+
+            if not self._erstelle_empfehlungs_tabelle(table_name):
+                return
+
+            url = f"{supabase_url}/rest/v1/{table_name}"
+            stats = {'inserted': 0, 'errors': 0}
+
+            for idx, row in df_empfehlungen.iterrows():
+                data = {
+                    'model_name': model_name,
+                    'model_version': model_version,
+                    'model_id': getattr(self, '_current_model_id', None),
+                    'project_id': str(row.get('id', idx)),
+                    'simap_project_id': str(row.get('simap_project_id', '')) if pd.notna(row.get('simap_project_id')) else None,
+                    'simap_publication_id': str(row.get('simap_publication_id', '')) if pd.notna(row.get('simap_publication_id')) else None,
+                    'title': str(row.get('title', ''))[:500],
+                    'description': str(row.get('description', ''))[:1000],
+                    'canton': str(row.get('canton', '')),
+                    'project_type': str(row.get('project_type', '')),
+                    'cpv_code': str(row.get('cpv_code', '')),
+                    'publication_date': row.get('publication_date'),
+                    'deadline': row.get('deadline'),
+                    'probability': float(row['probability']),
+                    'prediction': int(row['prediction']),
+                    'created_at': datetime.now().isoformat()
+                }
+
+                try:
+                    response = requests.post(url, headers=headers, json=data, timeout=10)
+                    if response.status_code in [200, 201]:
+                        stats['inserted'] += 1
+                    else:
+                        stats['errors'] += 1
+                except:
+                    stats['errors'] += 1
+
+            print(f"Recommendations saved: {stats['inserted']}, errors: {stats['errors']}")
+
+        except Exception as e:
+            print(f"Error creating recommendations: {e}")
+
+    def _erstelle_empfehlungs_tabelle(self, table_name):
+        try:
+            import requests
+
+            supabase_url = os.getenv('SUPABASE_URL')
+            supabase_key = os.getenv('SUPABASE_SERVICE_KEY') or os.getenv('SUPABASE_KEY')
+
+            headers = {
+                'apikey': supabase_key,
+                'Authorization': f'Bearer {supabase_key}',
+                'Content-Type': 'application/json'
+            }
+
+            url = f"{supabase_url}/rest/v1/rpc/create_empfehlungen_table"
+            response = requests.post(url, headers=headers, json={'table_name': table_name}, timeout=10)
+
+            if response.status_code in [200, 201, 204]:
+                print(f"Table {table_name} created")
+                return True
             else:
-                raise Exception("Fehler beim Speichern zu Supabase Storage")
-        else:
-            # Speichere lokal
-            joblib.dump(model_data, pfad)
-            print(f"✓ Modell lokal gespeichert: {pfad}")
+                print(f"Table creation failed: {response.status_code}")
+                return False
 
-    def laden(self, pfad, von_supabase=False, bucket_name="models"):
-        """
-        Lädt ein gespeichertes Modell von lokal oder Supabase Storage
+        except Exception as e:
+            print(f"Error creating table: {e}")
+            return False
 
-        Args:
-            pfad: Lokaler Pfad oder Remote-Pfad (z.B. "production/model_v1.pkl")
-            von_supabase: True = von Supabase Storage laden, False = lokal laden
-            bucket_name: Supabase Bucket Name (default: "models")
-        """
+    def laden(self, pfad, von_supabase=False, bucket_name="ml_models"):
         if von_supabase:
-            # Lade von Supabase Storage
-            model_data = lade_modell_von_storage(pfad, bucket_name)
-            if model_data is None:
-                raise Exception("Fehler beim Laden von Supabase Storage")
-            print(f"✓ Modell von Supabase Storage geladen: {bucket_name}/{pfad}")
+            try:
+                import requests
+                import io
+
+                supabase_url = os.getenv('SUPABASE_URL')
+                supabase_key = os.getenv('SUPABASE_KEY')
+
+                download_url = f"{supabase_url}/storage/v1/object/{bucket_name}/{pfad}"
+
+                headers = {
+                    'apikey': supabase_key,
+                    'Authorization': f'Bearer {supabase_key}'
+                }
+
+                response = requests.get(download_url, headers=headers, timeout=30)
+
+                if response.status_code != 200:
+                    raise Exception(f"Download error: {response.status_code}")
+
+                model_data = joblib.load(io.BytesIO(response.content))
+
+            except Exception as e:
+                print(f"Error loading from Supabase: {e}")
+                raise
         else:
-            # Lade lokal
             model_data = joblib.load(pfad)
-            print(f"✓ Modell lokal geladen: {pfad}")
 
-        self.rf_classifier = model_data['rf_classifier']
+        self.classifier = model_data['classifier']
         self.label_encoders = model_data['label_encoders']
-        self.kriterien_config = model_data.get('kriterien_config', {})
+        self.kriterien_config = model_data.get('kriterien_config')
+        self._kw_must_emb = model_data.get('kw_must_emb')
+        self._kw_should_emb = model_data.get('kw_should_emb')
+        self._kw_exclude_emb = model_data.get('kw_exclude_emb')
 
-    def lade_daten_von_supabase(self, tage_zurueck=10, kantone=None, projekt_typen=None, auftrags_arten=None):
-        """Lädt Daten direkt aus Supabase"""
-        print(f"\nLade Daten aus Supabase (letzte {tage_zurueck} Tage)...")
+        print(f"Model loaded")
+
+    def lade_daten_von_supabase(self, tage_zurueck=365, kantone=None, projekt_typen=None, auftrags_arten=None, limit=20000):
+        print(f"\nLoading data from Supabase (last {tage_zurueck} days)...")
 
         try:
             loader = SupabaseAPILoader()
@@ -445,479 +676,348 @@ class ProjektKlassifikator:
                 tage_zurueck=tage_zurueck,
                 kantone=kantone,
                 projekt_typen=projekt_typen,
-                auftrags_arten=auftrags_arten
+                auftrags_arten=auftrags_arten,
+                limit=limit
             )
 
             if len(df) > 0:
-                print(f"✓ {len(df)} Projekte aus Supabase geladen")
-            else:
-                print("⚠ Keine Projekte gefunden")
+                print(f"{len(df)} projects loaded")
 
             return df
         except Exception as e:
-            print(f"❌ Fehler beim Laden aus Supabase: {e}")
+            print(f"Error loading: {e}")
             return pd.DataFrame()
+
+    def speichere_interessante_projekte_zu_supabase(self, df_interessant, kriterien=None, model_version="v1.0"):
+        print(f"\nSaving {len(df_interessant)} projects to Supabase...")
+
+        if len(df_interessant) == 0:
+            return {'inserted': 0, 'skipped': 0, 'errors': 0}
+
+        try:
+            import requests
+            import json
+            from datetime import datetime
+
+            supabase_url = os.getenv('SUPABASE_URL')
+            supabase_key = os.getenv('SUPABASE_SERVICE_KEY') or os.getenv('SUPABASE_KEY')
+
+            headers = {
+                'apikey': supabase_key,
+                'Authorization': f'Bearer {supabase_key}',
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            }
+
+            url = f"{supabase_url}/rest/v1/interessante_projekte"
+            stats = {'inserted': 0, 'skipped': 0, 'errors': 0}
+
+            kriterien_dict = None
+            if kriterien:
+                kriterien_dict = {
+                    'keywords_must': kriterien.keywords_must,
+                    'keywords_should': kriterien.keywords_should,
+                    'keywords_exclude': kriterien.keywords_exclude
+                }
+
+            for idx, row in df_interessant.iterrows():
+                data = {
+                    'project_id': str(row.get('id', idx)),
+                    'simap_project_id': str(row.get('simap_project_id', '')) if pd.notna(row.get('simap_project_id')) else None,
+                    'simap_publication_id': str(row.get('simap_publication_id', '')) if pd.notna(row.get('simap_publication_id')) else None,
+                    'title': str(row.get('title', '')),
+                    'title_de': str(row.get('title_de', row.get('title', ''))),
+                    'title_fr': str(row.get('title_fr', '')),
+                    'description': str(row.get('description', '')),
+                    'description_de': str(row.get('description_de', row.get('description', ''))),
+                    'description_fr': str(row.get('description_fr', '')),
+                    'canton': str(row.get('canton', '')),
+                    'cpv_code': str(row.get('cpv_code', '')),
+                    'cpv_code_main': str(row.get('cpv_code_main', row.get('cpv_code', ''))),
+                    'project_type': str(row.get('project_type', '')),
+                    'publication_date': row.get('publication_date'),
+                    'deadline': row.get('deadline'),
+                    'submission_deadline': row.get('submission_deadline'),
+                    'estimated_amount': float(row.get('estimated_amount', 0)) if pd.notna(row.get('estimated_amount')) else None,
+                    'contract_value': float(row.get('contract_value', 0)) if pd.notna(row.get('contract_value')) else None,
+                    'interessant_wahrscheinlichkeit': float(row['interessant_wahrscheinlichkeit']),
+                    'model_version': model_version,
+                    'kriterien': json.dumps(kriterien_dict) if kriterien_dict else None,
+                    'url': str(row.get('url', ''))
+                }
+
+                try:
+                    response = requests.post(url, headers=headers, json=data, timeout=10)
+                    if response.status_code in [200, 201]:
+                        stats['inserted'] += 1
+                    elif response.status_code == 409:
+                        stats['skipped'] += 1
+                    else:
+                        stats['errors'] += 1
+                except:
+                    stats['errors'] += 1
+
+            print(f"Inserted: {stats['inserted']}, Skipped: {stats['skipped']}, Errors: {stats['errors']}")
+            return stats
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return {'inserted': 0, 'skipped': 0, 'errors': len(df_interessant)}
 
 
 def interaktive_kriterien_eingabe():
-    """Interaktive Eingabe der Kriterien"""
-    print("\n" + "="*70)
-    print("SCHRITT 1: KRITERIEN DEFINIEREN")
-    print("="*70)
-    print("\nDefinieren Sie, welche Projekte für Sie interessant sind.")
-    print("(Leere Eingabe = Kriterium überspringen)\n")
+    print("\n" + "="*60)
+    print("DEFINE CRITERIA")
+    print("="*60)
 
-    kriterien = {}
+    kriterien = FilterKriterien()
 
-    # Kantone
-    print("─" * 70)
-    print("KANTONE")
-    print("Welche Kantone interessieren Sie?")
-    kantone_input = input("Komma-getrennt (z.B. ZH,BE,GR) oder leer: ").strip().upper()
-    if kantone_input:
-        kriterien['kantone'] = [k.strip() for k in kantone_input.split(',') if k.strip()]
-        print(f"✓ Kantone: {', '.join(kriterien['kantone'])}")
+    print("\n--- ORDER TYPES ---")
+    print("Options: construction, service, supply")
+    print("This is the most important filter to prevent wrong results")
+    order_input = input("Order types (comma-separated): ").strip().lower()
+    if order_input:
+        kriterien.order_types = [o.strip() for o in order_input.split(',') if o.strip()]
+        print(f"Set: {kriterien.order_types}")
 
-    # Projekttypen
-    print("\n" + "─" * 70)
-    print("PROJEKTTYPEN")
-    print("Optionen: tender (Ausschreibung), direct_award (Direktvergabe), planning_procedure (Planungsverfahren)")
-    projekt_input = input("Komma-getrennt oder leer: ").strip().lower()
-    if projekt_input:
-        kriterien['projekt_typen'] = [p.strip() for p in projekt_input.split(',') if p.strip()]
-        print(f"✓ Projekttypen: {', '.join(kriterien['projekt_typen'])}")
-
-    # Auftragsarten
-    print("\n" + "─" * 70)
-    print("AUFTRAGSARTEN")
-    print("Optionen: construction (Bau), service (Dienstleistung), supply (Lieferung)")
-    auftrags_input = input("Komma-getrennt oder leer: ").strip().lower()
-    if auftrags_input:
-        kriterien['auftrags_arten'] = [a.strip() for a in auftrags_input.split(',') if a.strip()]
-        print(f"✓ Auftragsarten: {', '.join(kriterien['auftrags_arten'])}")
-
-    # Schlüsselwörter - VERBESSERT!
-    print("\n" + "─" * 70)
-    print("SCHLÜSSELWÖRTER / PROJEKT-TITEL (⭐ WICHTIG!)")
-    print("\nGeben Sie Projekte ein, die Sie bereits haben oder gerne möchten:")
-    print("\n📋 Trennzeichen-Optionen:")
-    print("  1. Komma (,):        brücke,tunnel,Sanierung Hauptstrasse")
-    print("  2. Semikolon (;):    brücke;tunnel;Sanierung Hauptstrasse")
-    print("  3. Neue Zeile:       Jeder Eintrag auf eigener Zeile (Ende mit leerer Zeile)")
-    print("  4. Mit Quotes ('):   brücke,'Sanierung, Umbau Brücke',tunnel")
-
-    trennung = input("\nWelche Trennung? (1=Komma, 2=Semikolon, 3=Zeilen, Enter=Komma): ").strip()
-
-    kriterien['keywords'] = []
-
-    if trennung == '3':
-        # Mehrzeilige Eingabe
-        print("\nGeben Sie Keywords/Titel ein (leere Zeile zum Beenden):")
-        while True:
-            line = input("  > ").strip()
-            if not line:
-                break
-            kriterien['keywords'].append(line)
-    else:
-        # Einzeilige Eingabe mit Trennzeichen
-        if trennung == '2':
-            separator = ';'
-            print("\nEingabe (Semikolon-getrennt):")
-        else:
-            separator = ','
-            print("\nEingabe (Komma-getrennt):")
-
-        keywords_input = input("> ").strip()
-
-        if keywords_input:
-            # Parse mit Quote-Support
-            current = ""
-            in_quotes = False
-
-            for char in keywords_input:
-                if char in ['"', "'"]:
-                    in_quotes = not in_quotes
-                elif char == separator and not in_quotes:
-                    if current.strip():
-                        kriterien['keywords'].append(current.strip())
-                    current = ""
-                else:
-                    current += char
-
-            if current.strip():
-                kriterien['keywords'].append(current.strip())
-
-    if kriterien['keywords']:
-        print(f"\n✓ {len(kriterien['keywords'])} Schlüsselwörter/Phrasen erfasst:")
-        for i, kw in enumerate(kriterien['keywords'], 1):
-            print(f"    {i}. '{kw}'")
-
-    # Budget
-    print("\n" + "─" * 70)
-    print("BUDGET-BEREICH")
-    min_budget = input("Minimales Budget (CHF) oder leer: ").strip()
-    if min_budget:
-        try:
-            kriterien['min_budget'] = float(min_budget)
-            print(f"✓ Min. Budget: CHF {kriterien['min_budget']:,.0f}")
-        except:
-            print("⚠ Ungültige Eingabe, übersprungen")
-
-    max_budget = input("Maximales Budget (CHF) oder leer: ").strip()
-    if max_budget:
-        try:
-            kriterien['max_budget'] = float(max_budget)
-            print(f"✓ Max. Budget: CHF {kriterien['max_budget']:,.0f}")
-        except:
-            print("⚠ Ungültige Eingabe, übersprungen")
-
-    # CPV-Codes
-    print("\n" + "─" * 70)
-    print("CPV-CODES (Branchencodes)")
-    print("Beispiele: 45 (Bau), 71 (Ingenieur), 72 (IT)")
-    cpv_input = input("Komma-getrennt oder leer: ").strip()
+    print("\n--- CPV CODES ---")
+    print("Examples: 45 (Construction), 72 (IT), 71 (Engineering)")
+    cpv_input = input("CPV prefixes (comma-separated): ").strip()
     if cpv_input:
-        kriterien['cpv_codes'] = [c.strip() for c in cpv_input.split(',') if c.strip()]
-        print(f"✓ CPV-Codes: {', '.join(kriterien['cpv_codes'])}")
+        kriterien.cpv_codes = [c.strip() for c in cpv_input.split(',') if c.strip()]
+        print(f"Set: {kriterien.cpv_codes}")
+
+    print("\n--- MUST KEYWORDS ---")
+    print("Projects must match at least one of these semantically")
+    must_input = input("MUST keywords (comma-separated): ").strip()
+    if must_input:
+        kriterien.keywords_must = [k.strip() for k in must_input.split(',') if k.strip()]
+        print(f"Set: {len(kriterien.keywords_must)} keywords")
+
+    print("\n--- SHOULD KEYWORDS (optional) ---")
+    print("Bonus score if matched")
+    should_input = input("SHOULD keywords (comma-separated): ").strip()
+    if should_input:
+        kriterien.keywords_should = [k.strip() for k in should_input.split(',') if k.strip()]
+        print(f"Set: {len(kriterien.keywords_should)} keywords")
+
+    print("\n--- EXCLUDE KEYWORDS ---")
+    print("Projects matching these are excluded")
+    exclude_input = input("EXCLUDE keywords (comma-separated): ").strip()
+    if exclude_input:
+        kriterien.keywords_exclude = [k.strip() for k in exclude_input.split(',') if k.strip()]
+        print(f"Set: {len(kriterien.keywords_exclude)} keywords")
+
+    print("\n--- CANTONS (optional) ---")
+    kantone_input = input("Cantons (e.g. ZH,BE,AG): ").strip().upper()
+    if kantone_input:
+        kriterien.kantone = [k.strip() for k in kantone_input.split(',') if k.strip()]
+        print(f"Set: {kriterien.kantone}")
+
+    print("\n--- PROJECT TYPES (optional) ---")
+    print("Options: tender, direct_award, planning_procedure")
+    projekt_input = input("Project types: ").strip().lower()
+    if projekt_input:
+        kriterien.project_types = [p.strip() for p in projekt_input.split(',') if p.strip()]
+        print(f"Set: {kriterien.project_types}")
+
+    print("\n--- BUDGET (optional) ---")
+    min_budget = input("Min budget (CHF): ").strip()
+    if min_budget:
+        kriterien.min_budget = float(min_budget)
+
+    max_budget = input("Max budget (CHF): ").strip()
+    if max_budget:
+        kriterien.max_budget = float(max_budget)
+
+    print("\n--- THRESHOLDS ---")
+    print("Default: MUST=0.55, EXCLUDE=0.50")
+    th_must = input("MUST threshold (0.4-0.7, Enter=0.55): ").strip()
+    if th_must:
+        kriterien.semantic_threshold_must = float(th_must)
+
+    th_exclude = input("EXCLUDE threshold (0.4-0.6, Enter=0.50): ").strip()
+    if th_exclude:
+        kriterien.semantic_threshold_exclude = float(th_exclude)
+
+    print("\n--- SUMMARY ---")
+    print(f"Order Types: {kriterien.order_types}")
+    print(f"CPV Codes: {kriterien.cpv_codes}")
+    print(f"MUST Keywords: {len(kriterien.keywords_must)}")
+    print(f"SHOULD Keywords: {len(kriterien.keywords_should)}")
+    print(f"EXCLUDE Keywords: {len(kriterien.keywords_exclude)}")
+    print(f"Cantons: {kriterien.kantone}")
+    print(f"Project Types: {kriterien.project_types}")
+    print(f"Budget: {kriterien.min_budget} - {kriterien.max_budget}")
+    print(f"Thresholds: MUST={kriterien.semantic_threshold_must}, EXCLUDE={kriterien.semantic_threshold_exclude}")
 
     return kriterien
 
 
-def interaktive_filter_eingabe():
-    """Interaktive Eingabe zusätzlicher Filter"""
-    print("\n" + "="*70)
-    print("ZUSÄTZLICHE FILTER (nach ML-Vorhersage)")
-    print("="*70)
-    print("\nMöchten Sie zusätzliche Filter anwenden? (j/n)")
-
-    if input("> ").strip().lower() not in ['j', 'ja', 'y', 'yes']:
-        return {'aktiv': False}
-
-    filter_config = {'aktiv': True}
-
-    # Kantone
-    print("\nFilter nach Kantonen?")
-    kantone = input("Komma-getrennt oder leer: ").strip().upper()
-    if kantone:
-        filter_config['kantone'] = [k.strip() for k in kantone.split(',') if k.strip()]
-
-    # Projekttypen
-    print("\nFilter nach Projekttypen?")
-    typen = input("Komma-getrennt oder leer: ").strip().lower()
-    if typen:
-        filter_config['projekt_typen'] = [t.strip() for t in typen.split(',') if t.strip()]
-
-    # Auftragsarten
-    print("\nFilter nach Auftragsarten?")
-    arten = input("Komma-getrennt oder leer: ").strip().lower()
-    if arten:
-        filter_config['auftrags_arten'] = [a.strip() for a in arten.split(',') if a.strip()]
-
-    # Keywords
-    print("\nFilter nach Schlüsselwörtern?")
-    keywords = input("Komma-getrennt oder leer: ").strip().lower()
-    if keywords:
-        filter_config['keywords'] = [k.strip() for k in keywords.split(',') if k.strip()]
-
-    return filter_config
-
-
-def wende_filter_an(df, filter_config):
-    """Wendet zusätzliche Filter an"""
-    if not filter_config.get('aktiv', False):
-        return df
-
-    filtered = df.copy()
-    original_count = len(filtered)
-
-    # Kantone
-    if filter_config.get('kantone') and 'canton' in filtered.columns:
-        filtered = filtered[filtered['canton'].isin(filter_config['kantone'])]
-        print(f"  Nach Kanton-Filter: {len(filtered)} ({len(filtered)-original_count:+d})")
-
-    # Projekttypen
-    if filter_config.get('projekt_typen') and 'project_type' in filtered.columns:
-        filtered = filtered[filtered['project_type'].isin(filter_config['projekt_typen'])]
-        print(f"  Nach Projekttyp-Filter: {len(filtered)}")
-
-    # Auftragsarten
-    if filter_config.get('auftrags_arten') and 'order_type' in filtered.columns:
-        filtered = filtered[filtered['order_type'].isin(filter_config['auftrags_arten'])]
-        print(f"  Nach Auftragsart-Filter: {len(filtered)}")
-
-    # Keywords
-    if filter_config.get('keywords'):
-        keyword_mask = pd.Series([False] * len(filtered), index=filtered.index)
-        for keyword in filter_config['keywords']:
-            if 'title' in filtered.columns:
-                keyword_mask |= filtered['title'].str.contains(keyword, case=False, na=False)
-            if 'description' in filtered.columns:
-                keyword_mask |= filtered['description'].str.contains(keyword, case=False, na=False)
-        filtered = filtered[keyword_mask]
-        print(f"  Nach Keyword-Filter: {len(filtered)}")
-
-    return filtered
-
-
 def zeige_ergebnisse(df, max_anzahl=10):
-    """Zeigt Ergebnisse an"""
-    print("\n" + "="*70)
-    print(f"TOP {min(max_anzahl, len(df))} INTERESSANTE PROJEKTE")
-    print("="*70)
+    print("\n" + "="*60)
+    print(f"TOP {min(max_anzahl, len(df))} RESULTS")
+    print("="*60)
 
     for idx, row in df.head(max_anzahl).iterrows():
-        print(f"\n{'─'*70}")
-        print(f"Titel: {row.get('title', 'N/A')}")
-        print(f"Match-Score: {row['interessant_wahrscheinlichkeit']:.1%}", end='')
-
-        # Zeige Keyword-Score wenn verfügbar
-        if 'keyword_match_score' in row and row['keyword_match_score'] > 0:
-            print(f" | Keyword-Score: {row['keyword_match_score']:.1f} ⭐")
-        else:
-            print()
+        print(f"\n{'-'*60}")
+        print(f"Title: {row.get('title', 'N/A')}")
+        print(f"Probability: {row['interessant_wahrscheinlichkeit']:.1%}")
 
         details = []
         if 'canton' in row and pd.notna(row['canton']):
-            details.append(f"Kanton: {row['canton']}")
-        if 'project_type' in row and pd.notna(row['project_type']):
-            details.append(f"Typ: {row['project_type']}")
+            details.append(f"Canton: {row['canton']}")
         if 'order_type' in row and pd.notna(row['order_type']):
-            details.append(f"Art: {row['order_type']}")
-        if 'submission_deadline' in row and pd.notna(row['submission_deadline']):
-            details.append(f"Deadline: {row['submission_deadline']}")
-        if 'estimated_amount' in row and pd.notna(row['estimated_amount']):
-            details.append(f"Budget: CHF {row['estimated_amount']:,.0f}")
+            details.append(f"Type: {row['order_type']}")
+        if 'cpv_code' in row and pd.notna(row['cpv_code']):
+            details.append(f"CPV: {row['cpv_code']}")
 
         if details:
             print(" | ".join(details))
 
-        if 'description' in row and pd.notna(row['description']):
-            desc = str(row['description'])[:150]
-            print(f"Beschreibung: {desc}...")
-
 
 def main():
-    """Hauptprogramm"""
-    print("="*70)
-    print("PROJEKT-KLASSIFIKATOR - SUPABASE-VERSION")
-    print("="*70)
-    print("ML-basierte Identifikation interessanter Ausschreibungen")
-    print("🎯 Direkte Anbindung an Supabase-Datenbank!")
-    print()
+    print("="*60)
+    print("PROJECT CLASSIFIER")
+    print("="*60)
 
-    # ========================================================================
-    # HAUPTMENÜ
-    # ========================================================================
-    print("\n" + "="*70)
-    print("HAUPTMENÜ")
-    print("="*70)
-    print("1. Neues Modell trainieren")
-    print("2. Gespeichertes Modell laden und Projekte finden")
-    print("3. Beenden")
+    print("\n1. Train new model")
+    print("2. Load model and find projects")
+    print("3. Exit")
 
-    wahl = input("\nWählen Sie (1-3): ").strip()
+    wahl = input("\nChoice (1-3): ").strip()
 
     if wahl == '3':
-        print("\nAuf Wiedersehen!")
         return
 
-    # ========================================================================
-    # DATEN AUS SUPABASE LADEN
-    # ========================================================================
-    print("\n" + "="*70)
-    print("DATEN AUS SUPABASE LADEN")
-    print("="*70)
-
-    # Teste Verbindung
-    print("\nTeste Supabase-Verbindung...")
+    print("\nTesting Supabase connection...")
     if not teste_supabase_api():
-        print("❌ Supabase-Verbindung fehlgeschlagen!")
-        print("Bitte prüfe deine .env Datei:")
-        print("  SUPABASE_URL=https://xxx.supabase.co")
-        print("  SUPABASE_KEY=dein-anon-key")
+        print("Supabase connection failed")
         return
 
-    tage = input("\nWie viele Tage zurück laden? (default: 10): ").strip()
-    tage_zurueck = int(tage) if tage else 10
+    klassifikator = ProjektKlassifikator()
 
-    # Temporärer Klassifikator zum Laden
-    temp_klassifikator = ProjektKlassifikator()
-    df = temp_klassifikator.lade_daten_von_supabase(tage_zurueck=tage_zurueck)
-
-    if len(df) == 0:
-        print("\n❌ FEHLER: Keine Daten aus Supabase geladen")
-        return
-
-    print(f"✓ {len(df)} Projekte geladen")
-    print(f"✓ Spalten: {', '.join(df.columns.tolist()[:5])}...")
-
-    # ========================================================================
-    # WORKFLOW 1: NEUES MODELL TRAINIEREN
-    # ========================================================================
     if wahl == '1':
-        klassifikator = ProjektKlassifikator()
+        tage = input("Days to load for training (default 365): ").strip()
+        tage_zurueck = int(tage) if tage else 365
 
-        # Kriterien eingeben
+        df = klassifikator.lade_daten_von_supabase(tage_zurueck=tage_zurueck)
+
+        if len(df) == 0:
+            print("No data loaded")
+            return
+
         kriterien = interaktive_kriterien_eingabe()
-        klassifikator.kriterien_config = kriterien
+        klassifikator.set_kriterien(kriterien)
 
-        # ====================================================================
-        # STUFE 1: HARTE FILTER ANWENDEN
-        # ====================================================================
-        print("\n" + "="*70)
-        print("STUFE 1: HARTE FILTER ANWENDEN")
-        print("="*70)
-        print("Filtere nach: Kanton, Projekttyp, Auftragsart, CPV-Code, Budget")
+        df = klassifikator.daten_vorbereiten(df)
+        df_filtered = klassifikator.wende_harte_filter_an(df)
 
-        df_gefiltert = klassifikator.wende_harte_filter_an(df, kriterien)
-
-        print(f"\n✓ Originale Projekte: {len(df)}")
-        print(f"✓ Nach harten Filtern: {len(df_gefiltert)}")
-        print(f"✓ Reduziert um: {len(df) - len(df_gefiltert)} Projekte ({(1 - len(df_gefiltert)/len(df))*100:.1f}%)")
-
-        if len(df_gefiltert) < 50:
-            print("\n⚠️  WARNUNG: Sehr wenige Projekte nach Filterung!")
-            print("Die harten Filter sind sehr streng - das Modell hat wenig Trainingsdaten.")
-            print("\nMöchten Sie die Kriterien lockern? (j/n)")
-            if input("> ").strip().lower() in ['j', 'ja', 'y', 'yes']:
-                return
-
-        # ====================================================================
-        # STUFE 2: ML-LABELS ERSTELLEN (nur für Keywords)
-        # ====================================================================
-        print("\n" + "="*70)
-        print("STUFE 2: ML-LABELS ERSTELLEN")
-        print("="*70)
-        print("Bewerte Titel/Beschreibung anhand von Keywords")
-
-        labels = klassifikator.erstelle_labels_aus_kriterien(df_gefiltert, kriterien)
-
-        n_interessant = np.sum(labels == 1)
-        n_nicht = np.sum(labels == 0)
-
-        print(f"\n✓ Interessant (Keywords passen): {n_interessant} ({n_interessant/len(labels)*100:.1f}%)")
-        print(f"✓ Nicht interessant (Keywords fehlen): {n_nicht} ({n_nicht/len(labels)*100:.1f}%)")
-
-        if n_interessant < 20:
-            print("\n⚠️  WARNUNG: Sehr wenige interessante Projekte!")
-            print("Das Modell braucht mindestens 20-30 positive Beispiele.")
-            print("\nMöchten Sie trotzdem fortfahren? (j/n)")
-            if input("> ").strip().lower() not in ['j', 'ja', 'y', 'yes']:
-                return
-
-        if n_nicht < 10:
-            print("\n⚠️  WARNUNG: Zu wenige NICHT-interessante Projekte!")
-            print("Das Modell braucht beide Klassen zum Trainieren.")
-            print("Problem: Deine Keywords sind zu breit - fast alles passt.")
-            print("\nTipps:")
-            print("- Verwende spezifischere Keywords")
-            print("- Kombiniere mehrere Keywords mit UND-Logik")
-            print("\nMöchten Sie die Kriterien neu eingeben? (j/n)")
-            if input("> ").strip().lower() in ['j', 'ja', 'y', 'yes']:
-                return
-            print("\nFahre trotzdem fort (kann zu schlechten Ergebnissen führen)...")
-
-        # Training mit gefilterten Daten
-        klassifikator.trainieren(df_gefiltert, labels)
-
-        # Modell speichern
-        print("\n" + "="*70)
-        print("MODELL SPEICHERN")
-        print("="*70)
-        save_path = input("Speichern unter (z.B. mein_modell.pkl): ").strip()
-        if save_path:
-            if not save_path.endswith('.pkl'):
-                save_path += '.pkl'
-            klassifikator.speichern(save_path)
-
-        # Weiter zu Vorhersagen?
-        print("\nMöchten Sie direkt interessante Projekte suchen? (j/n)")
-        if input("> ").strip().lower() not in ['j', 'ja', 'y', 'yes']:
-            print("\nFertig! Starten Sie das Programm erneut mit Option 2.")
+        if len(df_filtered) < 50:
+            print(f"Only {len(df_filtered)} projects after filter - too few for training")
             return
 
-    # ========================================================================
-    # WORKFLOW 2: MODELL LADEN
-    # ========================================================================
+        df_scored = klassifikator.berechne_semantic_scores(df_filtered)
+        labels = klassifikator.erstelle_labels(df_scored)
+
+        model_name = input("Model name (e.g. my_model.pkl): ").strip()
+        if not model_name:
+            model_name = "model.pkl"
+        if not model_name.endswith('.pkl'):
+            model_name += '.pkl'
+
+        model_version = input("Model version (default v1.0): ").strip()
+        if not model_version:
+            model_version = "v1.0"
+
+        klassifikator.trainieren(df_scored, labels, model_name=model_name, model_version=model_version)
+
+        print("\nSearch for projects now? (y/n)")
+        if input("> ").strip().lower() not in ['y', 'yes', 'j', 'ja']:
+            return
+
     elif wahl == '2':
-        print("\n" + "="*70)
-        print("MODELL LADEN")
-        print("="*70)
+        try:
+            import requests
+            supabase_url = os.getenv('SUPABASE_URL')
+            supabase_key = os.getenv('SUPABASE_KEY')
 
-        model_path = input("Pfad zum Modell (z.B. mein_modell.pkl): ").strip()
+            list_url = f"{supabase_url}/storage/v1/object/list/ml_models"
+            headers = {
+                'apikey': supabase_key,
+                'Authorization': f'Bearer {supabase_key}'
+            }
 
-        if not os.path.exists(model_path):
-            print(f"\n❌ FEHLER: Modell nicht gefunden: {model_path}")
+            response = requests.post(list_url, headers=headers, json={"limit": 100}, timeout=10)
+
+            if response.status_code == 200:
+                files = response.json()
+                models = [f for f in files if f.get('name', '').endswith('.pkl')]
+
+                if models:
+                    print("\nAvailable models:")
+                    for i, f in enumerate(models, 1):
+                        print(f"  [{i}] {f['name']}")
+
+                    auswahl = input("\nModel number or name: ").strip()
+
+                    if auswahl.isdigit() and 1 <= int(auswahl) <= len(models):
+                        model_name = models[int(auswahl) - 1]['name']
+                    else:
+                        model_name = auswahl
+                        if not model_name.endswith('.pkl'):
+                            model_name += '.pkl'
+
+                    klassifikator.laden(model_name, von_supabase=True)
+                else:
+                    print("No models found - train a model first")
+                    return
+            else:
+                print("Error listing models")
+                return
+
+        except Exception as e:
+            print(f"Error: {e}")
             return
 
-        klassifikator = ProjektKlassifikator()
-        klassifikator.laden(model_path)
+    tage = input("\nDays to load for prediction (default 30): ").strip()
+    tage_zurueck = int(tage) if tage else 30
 
-        if klassifikator.kriterien_config:
-            print("\nGespeicherte Kriterien:")
-            for key, value in klassifikator.kriterien_config.items():
-                print(f"  {key}: {value}")
+    df = klassifikator.lade_daten_von_supabase(tage_zurueck=tage_zurueck)
 
-    else:
-        print("\n❌ Ungültige Auswahl")
-        return
+    if 'submission_deadline' in df.columns:
+        df['submission_deadline'] = pd.to_datetime(df['submission_deadline'], errors='coerce')
+        heute = pd.Timestamp.now(tz='UTC')
+        df = df[df['submission_deadline'] >= heute]
+        print(f"{len(df)} projects with open deadline")
 
-    # ========================================================================
-    # INTERESSANTE PROJEKTE FINDEN
-    # ========================================================================
-    print("\n" + "="*70)
-    print("PROJEKTE SUCHEN")
-    print("="*70)
+    min_prob = input("Minimum probability (0.0-1.0, default 0.6): ").strip()
+    min_prob = float(min_prob) if min_prob else 0.6
 
-    min_prob_input = input("Minimale Wahrscheinlichkeit (0.0-1.0, default 0.7): ").strip()
-    min_prob = float(min_prob_input) if min_prob_input else 0.7
+    top_n = input("Max results (empty = all): ").strip()
+    top_n = int(top_n) if top_n else None
 
-    top_n_input = input("Maximale Anzahl Ergebnisse (leer = alle): ").strip()
-    top_n = int(top_n_input) if top_n_input else None
-
-    print("\nSuche interessante Projekte...")
     interesting = klassifikator.finde_interessante(df, min_prob=min_prob, top_n=top_n)
 
-    print(f"✓ {len(interesting)} Projekte mit Wahrscheinlichkeit >= {min_prob:.0%} gefunden")
-
-    # Zusätzliche Filter
-    filter_config = interaktive_filter_eingabe()
-
-    if filter_config.get('aktiv'):
-        print("\nWende Filter an...")
-        interesting = wende_filter_an(interesting, filter_config)
-        print(f"✓ {len(interesting)} Projekte nach Filterung")
-
-    # ========================================================================
-    # ERGEBNISSE ANZEIGEN UND SPEICHERN
-    # ========================================================================
     if len(interesting) > 0:
-        zeige_ergebnisse(interesting, max_anzahl=10)
+        zeige_ergebnisse(interesting)
 
-        # Speichern
-        print("\n" + "="*70)
-        print("ERGEBNISSE SPEICHERN")
-        print("="*70)
+        output_file = input("\nSave as CSV (e.g. results.csv): ").strip()
+        if output_file:
+            if not output_file.endswith('.csv'):
+                output_file += '.csv'
+            interesting.to_csv(output_file, sep='\t', index=False)
+            print(f"Saved: {output_file}")
 
-        output_file = input("Speichern unter (z.B. ergebnisse.csv): ").strip()
-        if not output_file:
-            output_file = "interessante_projekte.csv"
-
-        if not output_file.endswith('.csv'):
-            output_file += '.csv'
-
-        interesting.to_csv(output_file, sep='\t', index=False)
-        print(f"\n✓ {len(interesting)} Projekte gespeichert: {output_file}")
+        print("\nSave to Supabase? (y/n)")
+        if input("> ").strip().lower() in ['y', 'yes', 'j', 'ja']:
+            klassifikator.speichere_interessante_projekte_zu_supabase(
+                interesting,
+                kriterien=klassifikator.kriterien_config
+            )
     else:
-        print("\n⚠️  Keine Projekte gefunden!")
-        print("\nTipps:")
-        print("- Minimale Wahrscheinlichkeit senken")
-        print("- Filter lockern")
-        print("- Modell mit anderen Kriterien neu trainieren")
-
-    print("\n" + "="*70)
-    print("FERTIG!")
-    print("="*70)
+        print("\nNo interesting projects found")
+        print("Try lowering min_prob or adjusting criteria")
 
 
 if __name__ == "__main__":
