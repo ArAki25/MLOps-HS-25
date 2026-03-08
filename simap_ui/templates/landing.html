@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}SAJF Strategies – Schweizer Ausschreibungen, intelligenter entdecken{% endblock %}
+{% block extra_css %}
+<style>
+    .hero{position:relative;padding:5rem 2rem 4.5rem;overflow:hidden;background:#000 !important}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 40% at 60% 50%,rgba(37,99,235,.07),transparent);pointer-events:none}
+    .hero-inner{max-width:1200px;margin:0 auto;position:relative;z-index:2;display:grid;grid-template-columns:1.1fr .9fr;gap:3rem;align-items:center;overflow:visible}
+    .hero-badge{display:inline-flex;align-items:center;gap:.5rem;padding:.4rem 1rem;background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);border-radius:100px;font-size:.8125rem;color:#7db8ff;font-weight:600;margin-bottom:1.5rem}
+    .hero-badge-dot{width:7px;height:7px;background:#3b82f6;border-radius:50%;animation:pd 2s infinite}
+    @keyframes pd{0%,100%{opacity:1}50%{opacity:.3}}
+    .hero h1{font-size:3.25rem;font-weight:700;color:#fff !important;line-height:1.15;letter-spacing:-.03em;margin-bottom:1.25rem}
+    .hero h1 .accent{color:#5ba3ff !important}
+    .hero-desc{font-size:1.0625rem;color:#b0bec5 !important;line-height:1.75;margin-bottom:2.25rem;max-width:500px}
+    .hero-actions{display:flex;gap:1rem;flex-wrap:wrap}
+    .btn-hero{padding:.8rem 1.75rem;border-radius:10px;font-weight:600;font-size:.9375rem;text-decoration:none;transition:all .2s;display:inline-flex;align-items:center;gap:.5rem;font-family:inherit;border:none;cursor:pointer}
+    .btn-hero-primary{background:#2563eb;color:#fff !important;box-shadow:0 4px 16px rgba(37,99,235,.4)}
+    .btn-hero-primary:hover{background:#1d4ed8;transform:translateY(-1px)}
+    .btn-hero-secondary{background:rgba(255,255,255,.08);color:#fff !important;border:1.5px solid rgba(255,255,255,.3)}
+    .btn-hero-secondary:hover{background:rgba(255,255,255,.14)}
+    .hero-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:1.5rem}
+    .hero-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid rgba(255,255,255,.08)}
+    .hero-card-title{font-size:.75rem;color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.1em}
+    .hero-tender{padding:.875rem 1rem;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);margin-bottom:.5rem}
+    .hero-tender:last-of-type{margin-bottom:0}
+    .hero-tender-title{font-size:.875rem;color:#fff !important;font-weight:600;margin-bottom:.375rem}
+    .hero-tender-meta{font-size:.75rem;color:rgba(255,255,255,.6);display:flex;gap:.75rem;align-items:center}
+    .hero-tender-tag{padding:.125rem .5rem;background:rgba(59,130,246,.2);color:#7db8ff;border-radius:4px;font-size:.6875rem;font-weight:600}
+    .hero-tender-time{color:#34d399 !important;font-weight:600}
+    .hero-visual{position:relative}
+    .hero-float{position:absolute;background:rgba(10,10,30,.85);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:.875rem 1.25rem;backdrop-filter:blur(16px);z-index:10;animation:hfloat 5s ease-in-out infinite;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+    .hero-float.top-left{top:-1rem;left:-1rem;animation-delay:-1.5s}
+    .hero-float.bottom-right{bottom:-0.5rem;right:-1rem;animation-delay:-3.5s}
+    @keyframes hfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .hero-float-val{font-size:1.75rem;font-weight:700;color:#fff !important;font-family:'Space Mono',monospace;line-height:1}
+    .hero-float-lbl{font-size:.625rem;color:rgba(255,255,255,.65) !important;text-transform:uppercase;letter-spacing:.08em;margin-top:.2rem}
+    .trust-bar{padding:2.5rem 2rem;background:#fff;border-bottom:1px solid var(--border)}
+    .trust-inner{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:4rem;align-items:center}
+    .trust-item{display:flex;align-items:center;gap:.75rem}
+    .trust-icon{width:40px;height:40px;background:var(--accent-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.125rem;flex-shrink:0}
+    .trust-text{font-size:.875rem;color:var(--text-secondary);font-weight:500}
+    .trust-text strong{display:block;color:var(--text-primary);font-size:1rem}
+    .features{padding:5rem 2rem;background:var(--background)}
+    .section-header{text-align:center;max-width:600px;margin:0 auto 3.5rem}
+    .section-label{font-size:.8125rem;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem}
+    .section-header h2{font-size:2.125rem;font-weight:700;letter-spacing:-.02em;margin-bottom:.75rem;line-height:1.2}
+    .section-header p{font-size:1rem;color:var(--text-secondary);line-height:1.7}
+    .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;max-width:1100px;margin:0 auto}
+    .feature-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.75rem;transition:all .2s;position:relative;overflow:hidden}
+    .feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#2563eb,#7c3aed);opacity:0;transition:opacity .2s}
+    .feature-card:hover{border-color:rgba(37,99,235,.2);box-shadow:0 4px 12px rgba(0,0,0,.06);transform:translateY(-2px)}
+    .feature-card:hover::before{opacity:1}
+    .feature-icon{width:44px;height:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin-bottom:1rem}
+    .feature-card h3{font-size:1rem;font-weight:600;margin-bottom:.5rem}
+    .feature-card p{font-size:.8125rem;color:var(--text-secondary);line-height:1.7}
+    .how-section{padding:5rem 2rem;background:#fff}
+    .steps-container{max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;position:relative}
+    .steps-container::before{content:'';position:absolute;top:40px;left:16%;right:16%;height:2px;background:linear-gradient(90deg,#2563eb,#7c3aed);opacity:.12}
+    .step-card{text-align:center}
+    .step-number{width:80px;height:80px;border-radius:50%;background:var(--accent-light);border:2px solid rgba(37,99,235,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:1.75rem;font-weight:700;font-family:'Space Mono',monospace;color:#2563eb}
+    .step-card h3{font-size:1.0625rem;font-weight:600;margin-bottom:.5rem}
+    .step-card p{font-size:.8125rem;color:var(--text-secondary);line-height:1.7}
+    .stats-section{padding:3.5rem 2rem;background:#000 !important}
+    .stats-grid{max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;text-align:center}
+    .stat-value{font-size:2.5rem;font-weight:700;color:#fff !important;font-family:'Space Mono',monospace}
+    .stat-label{font-size:.75rem;color:rgba(255,255,255,.7) !important;text-transform:uppercase;letter-spacing:.1em;font-weight:500;margin-top:.25rem}
+    .cta-section{padding:5rem 2rem;background:var(--background);text-align:center}
+    .cta-inner{max-width:550px;margin:0 auto}
+    .cta-inner h2{font-size:2.125rem;font-weight:700;margin-bottom:.75rem;letter-spacing:-.02em}
+    .cta-inner p{font-size:1rem;color:var(--text-secondary);margin-bottom:2rem;line-height:1.7}
+    @media(max-width:1024px){.hero-inner{grid-template-columns:1fr}.hero-visual{display:none}.hero h1{font-size:2.75rem}}
+    @media(max-width:768px){.hero{padding:3.5rem 1.5rem 3rem}.hero h1{font-size:2.25rem}.features-grid,.steps-container{grid-template-columns:1fr}.steps-container::before{display:none}.stats-grid{grid-template-columns:repeat(2,1fr)}.trust-inner{flex-direction:column;gap:1.5rem}}
+</style>
+{% endblock %}
+{% block content %}
+<section class="hero" style="background:#000 !important;">
+    <div class="hero-inner">
+        <div>
+            <div class="hero-badge"><span class="hero-badge-dot"></span>Täglich aktualisiert</div>
+            <h1>Schweizer Ausschreibungen, <span class="accent">intelligenter</span> entdecken</h1>
+            <p class="hero-desc">Durchsuchen Sie tausende öffentliche Aufträge mit intelligenten Filtern, Echtzeit-Updates und KI-gestützter Relevanzanalyse. Gebaut für Schweizer KMU.</p>
+            <div class="hero-actions">
+                <a href="/register" class="btn-hero btn-hero-primary">Kostenlos starten <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+                <a href="/login" class="btn-hero btn-hero-secondary">Anmelden</a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-float top-left">
+                <div class="hero-float-val" id="float-total">–</div>
+                <div class="hero-float-lbl">Ausschreibungen</div>
+            </div>
+            <div class="hero-card">
+                <div class="hero-card-header"><span class="hero-card-title">Neueste Ausschreibungen</span></div>
+                <div class="hero-tender"><div class="hero-tender-title">Sanierung Schulanlage Muster</div><div class="hero-tender-meta"><span class="hero-tender-tag">Bauauftrag</span><span>Kanton Zürich</span><span class="hero-tender-time">vor 2 Std.</span></div></div>
+                <div class="hero-tender"><div class="hero-tender-title">IT-Dienstleistungen Bund 2025</div><div class="hero-tender-meta"><span class="hero-tender-tag">Dienstleistung</span><span>Bund</span><span class="hero-tender-time">vor 5 Std.</span></div></div>
+                <div class="hero-tender"><div class="hero-tender-title">Lieferung medizinischer Geräte</div><div class="hero-tender-meta"><span class="hero-tender-tag">Lieferauftrag</span><span>Kanton Bern</span><span class="hero-tender-time">vor 1 Tag</span></div></div>
+            </div>
+            <div class="hero-float bottom-right">
+                <div class="hero-float-val">26</div>
+                <div class="hero-float-lbl">Kantone</div>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="trust-bar">
+    <div class="trust-inner">
+        <div class="trust-item"><div class="trust-icon"><svg width="20" height="20" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="trust-text"><strong>Offizielle Daten</strong>Basierend auf simap.ch</div></div>
+        <div class="trust-item"><div class="trust-icon"><svg width="20" height="20" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div><div class="trust-text"><strong>Datenschutzkonform</strong>Schweizer Hosting</div></div>
+        <div class="trust-item"><div class="trust-icon"><svg width="20" height="20" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div class="trust-text"><strong>Echtzeit-Updates</strong>Tägliche Synchronisation</div></div>
+    </div>
+</section>
+<section class="features">
+    <div class="section-header"><div class="section-label">Features</div><h2>Alles, was Sie für öffentliche Aufträge brauchen</h2><p>Eine Plattform, die den Zugang zu Schweizer Ausschreibungen radikal vereinfacht.</p></div>
+    <div class="features-grid">
+        <div class="feature-card"><div class="feature-icon"><svg width="22" height="22" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><h3>Intelligente Suche</h3><p>Volltextsuche über alle Ausschreibungen mit Filtern nach Kanton, Auftragsart, Verfahrenstyp und mehr.</p></div>
+        <div class="feature-card"><div class="feature-icon"><svg width="22" height="22" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L12 22l-.75-12.07A4.001 4.001 0 0 1 12 2z"/><path d="M9 6.5a2.5 2.5 0 0 1 5 0"/><circle cx="12" cy="19" r="2"/></svg></div><h3>KI-Relevanzanalyse</h3><p>Unser ML-Modell bewertet automatisch, welche Ausschreibungen für Ihr Unternehmen relevant sind.</p></div>
+        <div class="feature-card"><div class="feature-icon"><svg width="22" height="22" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><h3>Echtzeit-Updates</h3><p>Neue Ausschreibungen werden sofort angezeigt – Sie sehen immer, was aktuell ist.</p></div>
+        <div class="feature-card"><div class="feature-icon"><svg width="22" height="22" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><h3>Merkliste</h3><p>Speichern Sie interessante Ausschreibungen und behalten Sie den Überblick über alle Fristen.</p></div>
+        <div class="feature-card"><div class="feature-icon"><svg width="22" height="22" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h3>Dashboard</h3><p>Ihr persönliches Cockpit mit Statistiken, empfohlenen Aufträgen und Marktübersicht.</p></div>
+        <div class="feature-card"><div class="feature-icon"><svg width="22" height="22" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h3>Mehrsprachig</h3><p>Ausschreibungen in Deutsch, Französisch, Italienisch und Englisch durchsuchbar.</p></div>
+    </div>
+</section>
+<section class="how-section">
+    <div class="section-header"><div class="section-label">So funktioniert's</div><h2>In 3 Schritten zu relevanten Aufträgen</h2></div>
+    <div class="steps-container">
+        <div class="step-card"><div class="step-number"><svg width="28" height="28" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div><h3>Registrieren</h3><p>Erstellen Sie kostenlos Ihr Konto und hinterlegen Sie Ihr Unternehmensprofil.</p></div>
+        <div class="step-card"><div class="step-number"><svg width="28" height="28" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg></div><h3>Entdecken</h3><p>Durchsuchen und filtern Sie tagesaktuelle Ausschreibungen aus allen 26 Kantonen.</p></div>
+        <div class="step-card"><div class="step-number"><svg width="28" height="28" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><h3>Bewerben</h3><p>Finden Sie passende Aufträge und bewerben Sie sich direkt über simap.ch.</p></div>
+    </div>
+</section>
+<section class="stats-section" style="background:#000 !important;">
+    <div class="stats-grid">
+        <div><div class="stat-value" id="stat-total">–</div><div class="stat-label">Ausschreibungen</div></div>
+        <div><div class="stat-value">26</div><div class="stat-label">Kantone</div></div>
+        <div><div class="stat-value" id="stat-today">–</div><div class="stat-label">Neue heute</div></div>
+        <div><div class="stat-value">100%</div><div class="stat-label">Kostenlos</div></div>
+    </div>
+</section>
+<section class="cta-section">
+    <div class="cta-inner">
+        <h2>Bereit, loszulegen?</h2>
+        <p>Registrieren Sie sich kostenlos und entdecken Sie täglich neue Chancen für Ihr Unternehmen.</p>
+        <a href="/register" class="btn-hero btn-hero-primary" style="background:#2563eb;">Kostenlos registrieren <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+    </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded',async()=>{try{const r=await fetch('/api/statistics');const s=await r.json();const t=s.total||0;document.getElementById('stat-total').textContent=t.toLocaleString('de-CH');document.getElementById('stat-today').textContent=s.today||0;const fl=document.getElementById('float-total');if(fl)fl.textContent=t.toLocaleString('de-CH');}catch(e){console.error(e);}});
+</script>
+{% endblock %}
