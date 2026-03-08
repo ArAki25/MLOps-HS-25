@@ -358,8 +358,23 @@
             </div>
             <div>
                 <h4>Kontakt</h4>
-                <a href="/cdn-cgi/l/email-protection#86efe8e0e9c6f5e7ece0abf5f2f4e7f2e3e1efe3f5a8e5ee"><span class="__cf_email__" data-cfemail="a1c8cfc7cee1d2c0cbc78cd2d5d3c0d5c4c6c8c4d28fc2c9">[email&#160;protected]</span></a>
+                <a href="mailto:support@sajf-strategies.ch">support@sajf-strategies.ch</a>
             </div>
         </div>
         <div class="footer-bottom">
-            <span>&copy; 2025 SAJF Strategies. Alle Rechte vorbehalt
+            <span>&copy; 2025 SAJF Strategies. Alle Rechte vorbehalten.</span>
+        </div>
+    </footer>
+
+    <!-- DIESER BLOCK HAT GEFEHLT: Er lädt das JS von Login/Register -->
+    {% block extra_js %}{% endblock %}
+
+    <script>
+        // Kleiner Helfer für das Mobile-Menü
+        function toggleMenu() {
+            const nav = document.getElementById('nav');
+            nav.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>
