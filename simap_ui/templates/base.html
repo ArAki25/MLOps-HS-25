@@ -14,13 +14,18 @@
     <header class="header">
         <div class="header-content">
             <div class="header-left">
-                <a href="/" class="logo">
-                    <div class="logo-mark">S</div>
-                    <div class="logo-text-group">
-                        <span class="logo-text">SAJF</span>
-                        <span class="logo-subtitle">Strategies</span>
-                    </div>
-                </a>
+            <!-- LOGO -->
+            <a href="/" class="logo">
+                <svg width="36" height="36" viewBox="0 0 44 44" fill="none">
+                    <path d="M22 6L38 15L22 24L6 15L22 6Z" fill="#06b6d4" opacity="0.9"/>
+                    <path d="M22 14L38 23L22 32L6 23L22 14Z" fill="#2563eb" opacity="0.7"/>
+                    <path d="M22 22L38 31L22 40L6 31L22 22Z" fill="#3b82f6" opacity="0.5"/>
+                </svg>
+                <div style="display:flex; flex-direction:column; line-height:1.1;">
+                    <span style="font-family:'DM Sans', sans-serif; font-weight:700; font-size:1.4rem; color:#f4f4f5; letter-spacing:-0.3px;">SAJF</span>
+                    <span style="font-family:'DM Sans', sans-serif; font-size:0.6rem; color:#71717a; text-transform:uppercase; letter-spacing:0.2em; font-weight:600;">Strategies</span>
+                </div>
+            </a>
                 <nav class="nav" id="nav">
                     <a href="/" class="{% if request.path == '/' %}active{% endif %}">Home</a>
                     <a href="/how-it-works" class="{% if request.path == '/how-it-works' %}active{% endif %}">So funktioniert's</a>
@@ -50,7 +55,11 @@
         <div class="footer-content">
             <div class="footer-brand">
                 <div style="display:flex;align-items:center;gap:0.5rem;">
-                    <div class="logo-mark" style="width:32px;height:32px;font-size:0.75rem;">S</div>
+                    <svg width="24" height="24" viewBox="0 0 44 44" fill="none">
+                        <path d="M22 6L38 15L22 24L6 15L22 6Z" fill="#06b6d4" opacity="0.9"/>
+                        <path d="M22 14L38 23L22 32L6 23L22 14Z" fill="#2563eb" opacity="0.7"/>
+                        <path d="M22 22L38 31L22 40L6 31L22 22Z" fill="#3b82f6" opacity="0.5"/>
+                    </svg>
                     <span style="font-weight:700;font-size:1.125rem;">SAJF Strategies</span>
                 </div>
                 <p>Ihre intelligente Plattform für öffentliche Ausschreibungen in der Schweiz. KI-gestützt, aktuell, übersichtlich.</p>

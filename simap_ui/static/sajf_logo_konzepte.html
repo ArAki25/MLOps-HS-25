@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAJF Logo Konzepte</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: #09090b; color: #f4f4f5; padding: 3rem 2rem; }
+        h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .subtitle { color: #71717a; font-size: 0.9375rem; margin-bottom: 3rem; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; max-width: 1100px; margin: 0 auto; }
+        .logo-card {
+            background: #121214;
+            border: 1px solid #27272a;
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .logo-card:hover { border-color: rgba(6,182,212,0.3); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+        .logo-display { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 1rem; 
+            margin-bottom: 2rem;
+            min-height: 80px;
+        }
+        .logo-name { font-size: 1rem; font-weight: 600; color: #a1a1aa; margin-bottom: 0.5rem; }
+        .logo-desc { font-size: 0.8125rem; color: #52525b; line-height: 1.6; }
+        .dark-preview, .light-preview {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+        }
+        .dark-preview { background: #09090b; border: 1px solid #27272a; }
+        .light-preview { background: #f4f4f5; border: 1px solid #e4e4e7; }
+        .section-label { font-size: 0.625rem; color: #52525b; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 0.5rem; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div style="max-width:1100px;margin:0 auto;">
+        <h1>SAJF Logo Konzepte</h1>
+        <p class="subtitle">6 Varianten – jede auf Dark und Light Hintergrund. Wähle dein Favorit.</p>
+
+        <div class="grid">
+
+            <!-- 1: Gradient Shield -->
+            <div class="logo-card">
+                <div class="logo-name">1. Gradient Shield</div>
+                <div class="logo-desc">Schutzschild-Form symbolisiert Vertrauen und Sicherheit im Beschaffungswesen</div>
+                <div style="margin-top:1.5rem;">
+                    <div class="section-label">Dark Mode</div>
+                    <div class="dark-preview">
+                        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+                            <defs>
+                                <linearGradient id="g1" x1="0" y1="0" x2="44" y2="44">
+                                    <stop offset="0%" stop-color="#06b6d4"/>
+                                    <stop offset="100%" stop-color="#3b82f6"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M22 2L6 10v12c0 11 16 18 16 18s16-7 16-18V10L22 2z" fill="url(#g1)" rx="4"/>
+                            <text x="22" y="28" text-anchor="middle" font-family="Space Mono" font-weight="700" font-size="16" fill="#fff">S</text>
+                        </svg>
+                        <div>
+                            <div style="font-family:'DM Sans';font-weight:700;font-size:1.5rem;color:#f4f4f5;letter-spacing:-0.5px;">SAJF</div>
+                            <div style="font-family:'DM Sans';font-size:0.625rem;color:#71717a;text-transform:uppercase;letter-spacing:0.2em;font-weight:600;">Strategies</div>
+                        </div>
+                    </div>
+                    <div class="section-label" style="margin-top:1rem;">Light Mode</div>
+                    <div class="light-preview">
+                        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+                            <path d="M22 2L6 10v12c0 11 16 18 16 18s16-7 16-18V10L22 2z" fill="url(#g1)"/>
+                            <text x="22" y="28" text-anchor="middle" font-family="Space Mono" font-weight="700" font-size="16" fill="#fff">S</text>
+                        </svg>
+                        <div>
+                            <div style="font-family:'DM Sans';font-weight:700;font-size:1.5rem;color:#09090b;letter-spacing:-0.5px;">SAJF</div>
+                            <div style="font-family:'DM Sans';font-size:0.625rem;color:#71717a;text-transform:uppercase;letter-spacing:0.2em;font-weight:600;">Strategies</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2: Rounded Square -->
+            <div class="logo-card">
+                <div class="logo-name">2. Rounded Square</div>
+                <div class="logo-desc">Modernes App-Icon mit Gradient – clean und tech-forward</div>
+                <div style="margin-top:1.5rem;">
+                    <div class="section-label">Dark Mode</div>
+                    <div class="dark-preview">
+                        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+                            <rect x="2" y="2" width="40" height="40" rx="12" fill="url(#g1)"/>
+                            <text x="22" y="28" text-anchor="middle" font-family="Space Mono" font-weight="700" font-size="18" fill="#fff">S</text>
+                        </svg>
+                        <div>
+                            <div style="font-family:'Outfit';font-weight:700;font-size:1.5rem;color:#f4f4f5;letter-spacing:-0.5px;">SAJF</div>
+                            <div style="font-family:'Outfit';font-size:0.65rem;color:#71717a;text-transform:uppercase;letter-spacing:0.2em;font-weight:500;">Strategies</div>
+                        </div>
+                    </div>
+                    <div class="section-label" style="margin-top:1rem;">Light Mode</div>
+                    <div class="light-preview">
+                        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+                            <rect x="2" y="2" width="40" height="40" rx="12" fill="url(#g1)"/>
+                            <text x="22" y="28" text-anchor="middle" font-family="Space Mono" font-weight="700" font-size="18" fill="#fff">S</text>
+                        </svg>
+                        <div>
+                            <div style="font-family:'Outfit';font-weight:700;font-size:1.5rem;color:#09090b;letter-spacing:-0.5px;">SAJF</div>
+                            <div style="font-family:'Outfit';font-size:0.65rem;color:#71717a;text-transform:uppercase;letter-spacing:0.2em;font-weight:500;">Strategies</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3: Hexagon Data -->
+            <div class="logo-card">
+                <div class="logo-name">3. Hexagon Data</div>
+                <div class="logo-desc">Hexagon steht für Datenstruktur und Vernetzung – technisch und präzise</div>
+                <div style="margin-top:1.5rem;">
+                    <div class="section-label">Dark Mode</div>
+                    <div class="dark-preview">
+                        <svg width="48" height="44" viewBox="0 0 48 44" fill="none">
+                            <defs>
+                                <linearGradient id="g3" x1="0" y1="0" x2="48" y2="44">
+                                    <stop offset="0%" stop-color="#06b6d4"/>
+                                    <stop offset="100%" stop-color="#3b82f6"/>
+                                </linearGradient>
+                            </defs>
+                            <polygon points="24,2 44,13 44,31 24,42 4,31 4,13" fill="url(#g3)"/>
+                            <text x="24" y="28" text-anchor="middle" font-family="Space Mono" font-weight="700" font-size="18" fill="#fff">S</text>
+                        </svg>
+                        <div>
+                            <div style="font-family:'Space Grotesk';font-weight:700;font-size:1.5rem;color:#f4f4f5;letter-spacing:-0.3px;">SAJF</div>
+                            <div style="font-family:'Space Grotesk';font-size:0.65rem;color:#06b6d4;text-transform:uppercase;letter-spacing:0.15em;font-weight:500;">Strategies</div>
+                        </div>
+                    </div>
+                    <div class="section-label" style="margin-top:1rem;">Light Mode</div>
+                    <div class="light-preview">
+                        <svg width="48" height="44" viewBox="0 0 48 44" fill="none">
+                            <polygon points="24,2 44,13 44,31 24,42 4,31 4,13" fill="url(#g3)"/>
+                            <text x="24" y="28" text-anchor="middle" font-family="Space Mono" font-weight="700" font-size="18" fill="#fff">S</text>
+                        </svg>
+                        <div>
+                            <div style="font-family:'Space Grotesk';font-weight:700;font-size:1.5rem;color:#09090b;letter-spacing:-0.3px;">SAJF</div>
+                            <div style="font-family:'Space Grotesk';font-size:0.65rem;color:#0891b2;text-transform:uppercase;letter-spacing:0.15em;font-weight:500;">Strategies</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4: Monogram Stack -->
+            <div class="logo-card">
+                <div class="logo-name">4. Monogram Stack</div>
+                <div class="logo-desc">Alle 4 Buchstaben SAJF gestapelt – einzigartig und markant</div>
+                <div style="margin-top:1.5rem;">
+                    <div class="section-label">Dark Mode</div>
+                    <div class="dark-preview">
+                        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+                            <rect x="2" y="2" width="40" height="40" rx="10" fill="#121214" stroke="url(#g1)" stroke-width="2"/>
+                            <text x="12" y="20" font-family="Space Mono" font-weight="700" font-size="11" fill="#06b6d4">S</text>
+                            <text x="24" y="20" font-family="Space Mono" font-weight="700" font-size="11" fill="#22d3ee">A</text>
+                            <text x="12" y="34" font-family="Space Mono" font-weight="700" font-size="11" fill="#3b82f6">J</text>
+                            <text x="24" y="34" font-family="Space Mono" font-weight="700" font-size="11" fill="#60a5fa">F</text>
+                        </svg>
+                        <div>
+                            <div style="font-family:'DM Sans';font-weight:800;font-size:1.5rem;letter-spacing:-0.5px;">
+                                <span style="color:#06b6d4;">S</span><span style="color:#22d3ee;">A</span><span style="color:#3b82f6;">J</span><span style="color:#60a5fa;">F</span>
+                            </div>
+                            <div style="font-family:'DM Sans';font-size:0.65rem;color:#71717a;text-transform:uppercase;letter-spacing:0.2em;font-weight:600;">Strategies</div>
+                        </div>
+                    </div>
+                    <div class="section-label" style="margin-top:1rem;">Light Mode</div>
+                    <div class="light-preview">
+                        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+                            <rect x="2" y="2" width="40" height="40" rx="10" fill="#fff" stroke="url(#g1)" stroke-width="2"/>
+                            <text x="12" y="20" font-family="Space Mono" font-weight="700" font-size="11" fill="#06b6d4">S</text>
+                            <text x="24" y="20" font-family="Space Mono" font-weight="700" font-size="11" fill="#0891b2">A</text>
+                            <text x="12" y="34" font-family="Space Mono" font-weight="700" font-size="11" fill="#2563eb">J</text>
+                            <text x="24" y="34" font-family="Space Mono" font-weight="700" font-size="11" fill="#3b82f6">F</text>
+                        </svg>
+                        <div>
+                            <div style="font-family:'DM Sans';font-weight:800;font-size:1.5rem;letter-spacing:-0.5px;">
+                                <span style="color:#06b6d4;">S</span><span style="color:#0891b2;">A</span><span style="color:#2563eb;">J</span><span style="color:#3b82f6;">F</span>
+                            </div>
+                            <div style="font-family:'DM Sans';font-size:0.65rem;color:#71717a;text-transform:uppercase;letter-spacing:0.2em;font-weight:600;">Strategies</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5: Crosshair Target -->
+            <div class="logo-card">
+                <div class="logo-name">5. Crosshair Target</div>
+                <div class="logo-desc">Zielscheibe symbolisiert präzise Ausschreibungs-Suche und ML-Targeting</div>
+                <div style="margin-top:1.5rem;">
+                    <div class="section-label">Dark Mode</div>
+                    <div class="dark-preview">
+                        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+                            <circle cx="22" cy="22" r="19" stroke="url(#g1)" stroke-width="2.5" fill="none"/>
+                            <circle cx="22" cy="22" r="11" stroke="url(#g1)" stroke-width="2" fill="none"/>
+                            <circle cx="22" cy="22" r="4" fill="url(#g1)"/>
+                            <line x1="22" y1="1" x2="22" y2="9" stroke="#06b6d4" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="22" y1="35" x2="22" y2="43" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="1" y1="22" x2="9" y2="22" stroke="#06b6d4" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="35" y1="22" x2="43" y2="22" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <div>
+                            <div style="font-family:'Outfit';font-weight:700;font-size:1.5rem;color:#f4f4f5;letter-spacing:2px;">SAJF</div>
+                            <div style="font-family:'Outfit';font-size:0.65rem;color:#71717a;text-transform:uppercase;letter-spacing:0.2em;font-weight:500;">Strategies</div>
+                        </div>
+                    </div>
+                    <div class="section-label" style="margin-top:1rem;">Light Mode</div>
+                    <div class="light-preview">
+                        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+                            <circle cx="22" cy="22" r="19" stroke="url(#g1)" stroke-width="2.5" fill="none"/>
+                            <circle cx="22" cy="22" r="11" stroke="url(#g1)" stroke-width="2" fill="none"/>
+                            <circle cx="22" cy="22" r="4" fill="url(#g1)"/>
+                            <line x1="22" y1="1" x2="22" y2="9" stroke="#06b6d4" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="22" y1="35" x2="22" y2="43" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="1" y1="22" x2="9" y2="22" stroke="#06b6d4" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="35" y1="22" x2="43" y2="22" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <div>
+                            <div style="font-family:'Outfit';font-weight:700;font-size:1.5rem;color:#09090b;letter-spacing:2px;">SAJF</div>
+                            <div style="font-family:'Outfit';font-size:0.65rem;color:#71717a;text-transform:uppercase;letter-spacing:0.2em;font-weight:500;">Strategies</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6: Abstract Layers -->
+            <div class="logo-card">
+                <div class="logo-name">6. Abstract Layers</div>
+                <div class="logo-desc">Gestapelte Ebenen symbolisieren Daten-Schichten und Filter-Tiefe</div>
+                <div style="margin-top:1.5rem;">
+                    <div class="section-label">Dark Mode</div>
+                    <div class="dark-preview">
+                        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+                            <path d="M22 6L38 15L22 24L6 15L22 6Z" fill="#06b6d4" opacity="0.9"/>
+                            <path d="M22 14L38 23L22 32L6 23L22 14Z" fill="#2563eb" opacity="0.7"/>
+                            <path d="M22 22L38 31L22 40L6 31L22 22Z" fill="#3b82f6" opacity="0.5"/>
+                        </svg>
+                        <div>
+                            <div style="font-family:'DM Sans';font-weight:700;font-size:1.5rem;color:#f4f4f5;letter-spacing:-0.3px;">SAJF</div>
+                            <div style="font-family:'DM Sans';font-size:0.65rem;color:#71717a;text-transform:uppercase;letter-spacing:0.2em;font-weight:600;">Strategies</div>
+                        </div>
+                    </div>
+                    <div class="section-label" style="margin-top:1rem;">Light Mode</div>
+                    <div class="light-preview">
+                        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+                            <path d="M22 6L38 15L22 24L6 15L22 6Z" fill="#06b6d4" opacity="0.9"/>
+                            <path d="M22 14L38 23L22 32L6 23L22 14Z" fill="#2563eb" opacity="0.7"/>
+                            <path d="M22 22L38 31L22 40L6 31L22 22Z" fill="#3b82f6" opacity="0.5"/>
+                        </svg>
+                        <div>
+                            <div style="font-family:'DM Sans';font-weight:700;font-size:1.5rem;color:#09090b;letter-spacing:-0.3px;">SAJF</div>
+                            <div style="font-family:'DM Sans';font-size:0.65rem;color:#71717a;text-transform:uppercase;letter-spacing:0.2em;font-weight:600;">Strategies</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

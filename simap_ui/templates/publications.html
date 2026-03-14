@@ -11,23 +11,25 @@
             --accent-hover: #0891b2;
             --accent-light: rgba(6,182,212,.1);
             --accent-bg: rgba(6,182,212,.08);
+            --accent-secondary: #3b82f6;
             --success: #10b981;
             --success-bg: rgba(16,185,129,.12);
             --warning: #f59e0b;
             --warning-bg: rgba(245,158,11,.12);
-            --text-primary: #e4e4e7;
+            --text-primary: #f4f4f5;
             --text-secondary: #a1a1aa;
             --text-muted: #71717a;
-            --bg: #111113;
-            --surface: #18181b;
+            --bg: #09090b;
+            --surface: #121214;
             --surface-hover: #1f1f23;
             --border: #27272a;
             --border-light: #1f1f23;
-            --sidebar-bg: #141416;
-            --radius: 8px;
-            --radius-lg: 12px;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,.2);
-            --shadow: 0 1px 3px rgba(0,0,0,.3), 0 1px 2px rgba(0,0,0,.2);
+            --sidebar-bg: #0c0c0e;
+            --radius: 10px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+            --shadow: 0 4px 12px rgba(0,0,0,.5);
+            --shadow-glow: 0 0 20px rgba(6,182,212,.15);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -44,16 +46,18 @@
 
         /* ========== TOP HEADER ========== */
         .top-header {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
+            background: rgba(9,9,11,0.85);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
             padding: 0 1.5rem;
-            height: 56px;
+            height: 60px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 100;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
 
         .header-left {
@@ -65,7 +69,7 @@
         .logo-mark {
             width: 32px;
             height: 32px;
-            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -230,6 +234,7 @@
             color: var(--accent);
             border-left-color: var(--accent);
             font-weight: 600;
+            box-shadow: inset 3px 0 0 var(--accent), 0 0 15px rgba(6,182,212,0.05);
         }
 
         .sidebar-icon {
@@ -595,6 +600,80 @@
 
         .pub-row:hover { background: var(--surface-hover); }
 
+        /* Expandable detail panel */
+        .pub-detail {
+            display: none;
+            padding: 0 1.25rem 1.25rem 1.25rem;
+            border-bottom: 1px solid var(--border-light);
+            animation: slideOpen 0.2s ease;
+        }
+
+        .pub-detail.open { display: block; }
+
+        @keyframes slideOpen {
+            from { opacity: 0; max-height: 0; }
+            to { opacity: 1; max-height: 300px; }
+        }
+
+        .pub-detail-inner {
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+        }
+
+        .pub-detail-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 1rem;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .pub-detail-desc:empty::after {
+            content: 'Keine Beschreibung verfügbar.';
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .pub-detail-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn-simap {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--accent);
+            color: #000;
+            border-radius: 8px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+
+        .btn-simap:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(6,182,212,0.3);
+        }
+
+        .pub-detail-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .pub-row.expanded {
+            background: var(--surface-hover);
+            border-bottom-color: transparent;
+        }
+
         /* Title column */
         .pub-title-col {
             display: flex;
@@ -610,6 +689,7 @@
             line-height: 1.4;
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -785,13 +865,45 @@
             .pub-office, .pub-date-col { text-align: left; }
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    <!-- Glossary Sidebar Overlay -->
+    <div class="glossary-overlay" id="glossary-overlay" onclick="toggleGlossary()"></div>
+    
+    <!-- Glossary Sidebar -->
+    <div class="glossary-sidebar" id="glossary-sidebar">
+        <div class="glossary-header">
+            <h2 class="glossary-title">Begriffslexikon</h2>
+            <button class="glossary-close" onclick="toggleGlossary()">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div class="glossary-search-wrap">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input type="text" class="glossary-search" id="glossary-search" placeholder="Begriff suchen..." oninput="filterGlossary(this.value)">
+        </div>
+        <div class="glossary-content" id="glossary-content">
+            <!-- Glossary Items will be injected here via JS -->
+        </div>
+    </div>
+
     <!-- Top Header -->
     <div class="top-header">
         <div class="header-left">
-            <a href="/" class="logo-mark">S</a>
-            <a href="/publications" class="logo-name">SAJF <span>Strategies</span></a>
+            <a href="/publications" class="logo" style="display:flex; align-items:center; gap:0.75rem; text-decoration:none;">
+                <svg width="36" height="36" viewBox="0 0 44 44" fill="none">
+                    <path d="M22 6L38 15L22 24L6 15L22 6Z" fill="#06b6d4" opacity="0.9"/>
+                    <path d="M22 14L38 23L22 32L6 23L22 14Z" fill="#2563eb" opacity="0.7"/>
+                    <path d="M22 22L38 31L22 40L6 31L22 22Z" fill="#3b82f6" opacity="0.5"/>
+                </svg>
+                <div style="display:flex; flex-direction:column; line-height:1.1;">
+                    <span style="font-family:'DM Sans', sans-serif; font-weight:700; font-size:1.4rem; color:#f4f4f5; letter-spacing:-0.3px;">SAJF</span>
+                    <span style="font-family:'DM Sans', sans-serif; font-size:0.6rem; color:#71717a; text-transform:uppercase; letter-spacing:0.2em; font-weight:600;">Strategies</span>
+                </div>
+            </a>
         </div>
         <div class="header-right">
             <div style="position:relative;">
@@ -878,6 +990,10 @@
                     <h1 class="page-title">Ausschreibungen</h1>
                     <p class="page-subtitle">Öffentliche Aufträge der Schweiz durchsuchen</p>
                 </div>
+                <button class="btn btn-ghost glass-panel" onclick="toggleGlossary()" style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color: var(--accent);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    Lexikon
+                </button>
             </div>
 
             <!-- Search Section -->
@@ -887,7 +1003,7 @@
                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
-                        <input type="text" class="search-input" id="search-input" 
+                        <input type="text" class="search-input" id="search-input"
                                placeholder="Stichwort, Projekt-ID, Organisation...">
                     </div>
                     <select class="lang-select" id="language-select">
@@ -909,13 +1025,13 @@
                         </svg>
                     </button>
                     <button class="filter-chip" data-filter="order_type" onclick="toggleFilter('order_type')">
-                        <span>Auftragsart</span>
+                        <span class="tooltip" data-tooltip="Kategorie der beschafften Leistung (z.B. Bau, Dienstleistung)">Auftragsart</span>
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
                     <button class="filter-chip" data-filter="process_type" onclick="toggleFilter('process_type')">
-                        <span>Verfahrensart</span>
+                        <span class="tooltip" data-tooltip="Wie das Vergabeverfahren abläuft (Offen, Selektiv, Freihändig)">Verfahrensart</span>
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
@@ -1036,7 +1152,7 @@
                 renderAll();
             } catch (e) {
                 console.error('Load error:', e);
-                document.getElementById('pub-list').innerHTML = 
+                document.getElementById('pub-list').innerHTML =
                     '<div class="empty-state"><div class="empty-state-icon"><svg width="48" height="48" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>Fehler beim Laden. Bitte erneut versuchen.</div>';
             }
         }
@@ -1225,7 +1341,7 @@
         function renderActiveFilters() {
             const container = document.getElementById('active-filters');
             const clearBtn = document.getElementById('filter-clear-btn');
-            const allActive = Object.entries(activeFilters).flatMap(([key, vals]) => 
+            const allActive = Object.entries(activeFilters).flatMap(([key, vals]) =>
                 vals.map(v => ({ key, value: v }))
             );
 
@@ -1238,8 +1354,8 @@
             clearBtn.style.display = 'inline-flex';
             container.innerHTML = allActive.map(function(item) {
                 var safeVal = item.value.replace(/'/g, '');
-                return '<span class="active-filter-tag">' + 
-                    item.value + 
+                return '<span class="active-filter-tag">' +
+                    item.value +
                     ' <button onclick="removeFilter(\'' + item.key + '\', \'' + safeVal + '\')">&times;</button>' +
                     '</span>';
             }).join('');
@@ -1288,15 +1404,17 @@
                 var timeAgo = getTimeAgo(p.publication_date);
                 var isRecent = isWithin48h(p.publication_date);
                 var ptClass = getPubTypeClass(p.pub_type);
-                var url = p.simap_url || '#';
+                var url = p.simap_url || 'https://www.simap.ch';
                 var loc = (p.city || '') + (p.city && p.canton ? ', ' : '') + (p.canton || '');
-                
+                var desc = p.description || '';
+                var rowId = 'row-' + i;
+
                 var tags = '<span class="pub-tag">#' + (p.project_number || '-') + '</span>';
                 if (p.pub_type) tags += '<span class="pub-tag ' + ptClass + '">' + capitalize(p.pub_type) + '</span>';
                 if (p.order_type) tags += '<span class="pub-tag">' + capitalize(p.order_type) + '</span>';
                 if (p.process_type) tags += '<span class="pub-tag">' + capitalize(p.process_type) + '</span>';
 
-                html += '<div class="pub-row" onclick="openPublication(\'' + url.replace(/'/g,'') + '\')">' +
+                html += '<div class="pub-row" id="' + rowId + '" onclick="toggleDetail(\'' + rowId + '\')">' +
                     '<div class="pub-title-col">' +
                         '<div class="pub-title">' + escapeHtml(p.title) + '</div>' +
                         '<div class="pub-location">' + loc + '</div>' +
@@ -1314,9 +1432,41 @@
                             (isFav ? starFilled : starEmpty) +
                         '</button>' +
                     '</div>' +
+                '</div>' +
+                '<div class="pub-detail" id="detail-' + rowId + '">' +
+                    '<div class="pub-detail-inner">' +
+                        '<div class="pub-detail-desc">' + escapeHtml(desc) + '</div>' +
+                        '<div class="pub-detail-actions">' +
+                            '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener" class="btn-simap" onclick="event.stopPropagation();">' +
+                                '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>' +
+                                'Auf simap.ch ansehen' +
+                            '</a>' +
+                            '<span class="pub-detail-meta">Projekt #' + (p.project_number || '-') + '</span>' +
+                        '</div>' +
+                    '</div>' +
                 '</div>';
             }
             container.innerHTML = html;
+        }
+
+        function toggleDetail(rowId) {
+            var row = document.getElementById(rowId);
+            var detail = document.getElementById('detail-' + rowId);
+            if (!detail) return;
+
+            var wasOpen = detail.classList.contains('open');
+
+            // Close all open details
+            var allDetails = document.querySelectorAll('.pub-detail.open');
+            var allRows = document.querySelectorAll('.pub-row.expanded');
+            for (var i = 0; i < allDetails.length; i++) allDetails[i].classList.remove('open');
+            for (var i = 0; i < allRows.length; i++) allRows[i].classList.remove('expanded');
+
+            // Toggle this one (if it wasn't already open)
+            if (!wasOpen) {
+                detail.classList.add('open');
+                row.classList.add('expanded');
+            }
         }
 
         function renderPagination() {
@@ -1456,6 +1606,66 @@
             d.textContent = text;
             return d.innerHTML;
         }
+
+        // ==========================================
+        // GLOSSARY FUNCTIONALITY
+        // ==========================================
+        const glossaryData = [
+            { term: 'BKP', def: 'Baukostenplan. Eine standardisierte Struktur zur Gliederung von Baukosten in der Schweiz. Hilft bei der einheitlichen Budgetierung und Abrechnung.' },
+            { term: 'CPV', def: 'Common Procurement Vocabulary (Gemeinsames Vokabular für öffentliche Aufträge). Ein Klassifikationssystem der EU, um den Gegenstand von Beschaffungsverhältnissen europaweit einheitlich zu beschreiben.' },
+            { term: 'Offenes Verfahren', def: 'Ein Vergabeverfahren, bei dem alle interessierten Anbieter ein Angebot einreichen können. Es findet keine Vorauswahl (Selektion) statt.' },
+            { term: 'Selektives Verfahren', def: 'Ein zweistufiges Verfahren. In der ersten Stufe können alle Anbieter einen Antrag auf Teilnahme einreichen. Erst in der zweiten Stufe werden die Eignungsstärksten (oft 3 bis 5) eingeladen, ein konkretes Angebot abzugeben.' },
+            { term: 'Freihändiges Verfahren', def: 'Ein Verfahren ohne öffentliche Ausschreibung. Die Vergabestelle vergibt den Auftrag direkt an einen Anbieter. Nur unter strengen, gesetzlich definierten Ausnahmebedingungen zulässig (z.B. Monopolstellung).' },
+            { term: 'Einladungsverfahren', def: 'Die Vergabestelle lädt direkt mehrere (in der Regel mindestens drei) von ihr ausgewählte Anbieter zur Angebotsabgabe ein, ohne öffentliche Ausschreibung. Gilt meist für Aufträge unterhalb bestimmter Schwellenwerte.' },
+            { term: 'WTO / GATT', def: 'Beschaffungen, die den Abkommen der Welthandelsorganisation (WTO) bzw. dem Government Procurement Agreement (GPA) unterliegen. Diese Schwellenwerte verlangen zwingend internationale Gleichbehandlung.' },
+            { term: 'Zuschlag', def: 'Die formelle Entscheidung der Vergabestelle, welcher Anbieter den Auftrag erhält. Der Zuschlag wird publiziert und kann unter bestimmten Bedingungen gerichtlich angefochten werden.' },
+            { term: 'Eignungskriterien', def: 'Kriterien, die ein Anbieter erfüllen muss, um überhaupt für den Auftrag infrage zu kommen (z.B. finanzielle Leistungsfähigkeit, Referenzen). Sie werden mit Ja/Nein bewertet.' },
+            { term: 'Zuschlagskriterien', def: 'Die Kriterien, anhand derer das wirtschaftlich günstigste Angebot aus den geeigneten Angeboten ermittelt wird (z.B. Preis, Qualität, Nachhaltigkeit, Lieferfrist).' }
+        ];
+
+        function renderGlossary(data) {
+            const container = document.getElementById('glossary-content');
+            if(data.length === 0) {
+                container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 2rem;">Keine Begriffe gefunden.</div>';
+                return;
+            }
+            container.innerHTML = data.sort((a,b) => a.term.localeCompare(b.term)).map(item => `
+                <div class="glossary-item">
+                    <div class="glossary-term">${item.term}</div>
+                    <div class="glossary-def">${item.def}</div>
+                </div>
+            `).join('');
+        }
+
+        function filterGlossary(query) {
+            const lowerQuery = query.toLowerCase();
+            const filtered = glossaryData.filter(item => 
+                item.term.toLowerCase().includes(lowerQuery) || 
+                item.def.toLowerCase().includes(lowerQuery)
+            );
+            renderGlossary(filtered);
+        }
+
+        function toggleGlossary() {
+            const sidebar = document.getElementById('glossary-sidebar');
+            const overlay = document.getElementById('glossary-overlay');
+            const isOpen = sidebar.classList.contains('open');
+            
+            if (isOpen) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('open');
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('open');
+                // Auto-focus search input shortly after opening
+                setTimeout(() => document.getElementById('glossary-search').focus(), 300);
+            }
+        }
+
+        // Initialize Glossary
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGlossary(glossaryData);
+        });
     </script>
 </body>
 </html>
