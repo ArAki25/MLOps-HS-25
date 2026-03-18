@@ -9,7 +9,9 @@ import os
 from dotenv import load_dotenv
 from supabase_client import (
     init_supabase, 
-    get_all_projects, 
+    get_all_projects,
+    get_projects_paginated,
+    get_filter_options,
     get_project_by_id, 
     search_projects, 
     filter_projects, 
@@ -478,9 +480,30 @@ def admin_team_delete(member_id):
 
 @app.route('/api/projects', methods=['GET'])
 def api_get_projects():
-    limit = request.args.get('limit', 50, type=int)
-    projects = get_all_projects(limit=limit)
-    return jsonify(projects)
+    """API: Projekte mit Server-Side Pagination, Filter und Suche"""
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 30, type=int)
+    search = request.args.get('search', '').strip()
+    canton = request.args.get('canton', '').strip()
+    order_type = request.args.get('order_type', '').strip()
+    process_type = request.args.get('process_type', '').strip()
+    pub_type = request.args.get('pub_type', '').strip()
+    sort = request.args.get('sort', 'newest')
+
+    result = get_projects_paginated(
+        page=page, per_page=per_page, search=search,
+        canton=canton, order_type=order_type,
+        process_type=process_type, pub_type=pub_type,
+        sort=sort
+    )
+    return jsonify(result)
+
+
+@app.route('/api/filter-options', methods=['GET'])
+def api_filter_options():
+    """API: Unique Filter-Werte aus DB"""
+    options = get_filter_options()
+    return jsonify(options)
 
 
 @app.route('/api/projects/<project_id>', methods=['GET'])

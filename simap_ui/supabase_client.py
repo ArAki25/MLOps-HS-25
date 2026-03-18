@@ -49,7 +49,7 @@ def get_client():
 # ============================================
 
 def get_all_projects(limit: int = 50) -> List[Dict]:
-    """Hole alle Projekte, neueste zuerst"""
+    """Hole Projekte (einfache Version für Kompatibilität)"""
     sb = get_client()
     if not sb:
         return []
@@ -63,6 +63,121 @@ def get_all_projects(limit: int = 50) -> List[Dict]:
     except Exception as e:
         print(f"❌ get_all_projects Fehler: {e}")
         return []
+
+
+def get_projects_paginated(page=1, per_page=30, search='', canton='',
+                           order_type='', process_type='', pub_type='',
+                           sort='newest') -> Dict:
+    """Server-Side Pagination mit Filter und Suche"""
+    sb = get_client()
+    if not sb:
+        return {'data': [], 'total': 0, 'page': page, 'per_page': per_page, 'pages': 0}
+
+    try:
+        # Count-Query (gleiche Filter, aber nur count)
+        count_q = sb.table('projects_ui').select('id', count='exact')
+        # Data-Query
+        data_q = sb.table('projects_ui').select('*')
+
+        # Search
+        if search:
+            search_filter = (
+                f'title_de.ilike.%{search}%,'
+                f'description_de.ilike.%{search}%,'
+                f'project_number.ilike.%{search}%,'
+                f'proc_office_name_de.ilike.%{search}%'
+            )
+            count_q = count_q.or_(search_filter)
+            data_q = data_q.or_(search_filter)
+
+        # Filters
+        if canton:
+            count_q = count_q.ilike('canton', canton)
+            data_q = data_q.ilike('canton', canton)
+        if order_type:
+            count_q = count_q.eq('order_type', order_type)
+            data_q = data_q.eq('order_type', order_type)
+        if process_type:
+            count_q = count_q.eq('process_type', process_type)
+            data_q = data_q.eq('process_type', process_type)
+        if pub_type:
+            count_q = count_q.eq('pub_type', pub_type)
+            data_q = data_q.eq('pub_type', pub_type)
+
+        # Sort
+        if sort == 'oldest':
+            data_q = data_q.order('publication_date', desc=False)
+        elif sort == 'alpha':
+            data_q = data_q.order('title_de', desc=False)
+        else:
+            data_q = data_q.order('publication_date', desc=True)
+
+        # Execute count
+        count_result = count_q.execute()
+        total = count_result.count if count_result.count else 0
+
+        # Pagination
+        offset = (page - 1) * per_page
+        data_q = data_q.range(offset, offset + per_page - 1)
+
+        # Execute data
+        data_result = data_q.execute()
+        projects = [transform_project(row) for row in (data_result.data or [])]
+
+        import math
+        pages = math.ceil(total / per_page) if per_page > 0 else 0
+
+        return {
+            'data': projects,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'pages': pages
+        }
+
+    except Exception as e:
+        print(f"❌ get_projects_paginated Fehler: {e}")
+        return {'data': [], 'total': 0, 'page': page, 'per_page': per_page, 'pages': 0}
+
+
+def get_filter_options() -> Dict:
+    """Hole unique Werte für alle Filter aus der DB"""
+    sb = get_client()
+    if not sb:
+        return {'cantons': [], 'order_types': [], 'process_types': [], 'pub_types': []}
+
+    try:
+        # Lade alle Spalten in Batches
+        all_rows = []
+        batch_size = 1000
+        offset = 0
+        while True:
+            r = sb.table('projects_ui') \
+                .select('canton,order_type,process_type,pub_type') \
+                .range(offset, offset + batch_size - 1) \
+                .execute()
+            if not r.data:
+                break
+            all_rows.extend(r.data)
+            if len(r.data) < batch_size:
+                break
+            offset += batch_size
+
+        cantons = sorted(set(r.get('canton') for r in all_rows if r.get('canton') and r.get('canton').strip()))
+        order_types = sorted(set(r.get('order_type') for r in all_rows if r.get('order_type') and r.get('order_type').strip()))
+        process_types = sorted(set(r.get('process_type') for r in all_rows if r.get('process_type') and r.get('process_type').strip()))
+        pub_types = sorted(set(r.get('pub_type') for r in all_rows if r.get('pub_type') and r.get('pub_type').strip()))
+
+        print(f"✅ Filter-Optionen: {len(cantons)} Kantone, {len(order_types)} Auftragsarten, {len(process_types)} Verfahren, {len(pub_types)} Pub-Typen")
+        return {
+            'cantons': cantons,
+            'order_types': order_types,
+            'process_types': process_types,
+            'pub_types': pub_types
+        }
+    except Exception as e:
+        print(f"❌ get_filter_options Fehler: {e}")
+        return {'cantons': [], 'order_types': [], 'process_types': [], 'pub_types': []}
 
 
 def get_project_by_id(project_id: str) -> Optional[Dict]:
