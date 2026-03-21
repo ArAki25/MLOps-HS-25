@@ -69,15 +69,9 @@
         .logo-mark {
             width: 32px;
             height: 32px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
-            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 0.75rem;
-            font-family: 'Space Mono', monospace;
             text-decoration: none;
         }
 
@@ -869,7 +863,16 @@
     <!-- Top Header -->
     <div class="top-header">
         <div class="header-left">
-            <a href="/" class="logo-mark">S</a>
+            <a href="/" class="logo-mark">
+                <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="5" width="90" height="90" rx="24" stroke="#06b6d4" stroke-width="8" fill="transparent"/>
+                    <path d="M 35 15 H 65 V 35 H 85 V 65 H 65 V 85 H 35 V 65 H 15 V 35 H 35 V 15 Z" fill="#1f1f23"/>
+                    <text x="25" y="32" fill="#06b6d4" font-family="'DM Sans', sans-serif" font-weight="800" font-size="22" text-anchor="middle" dominant-baseline="central">S</text>
+                    <text x="75" y="32" fill="#06b6d4" font-family="'DM Sans', sans-serif" font-weight="800" font-size="22" text-anchor="middle" dominant-baseline="central">A</text>
+                    <text x="25" y="68" fill="#3b82f6" font-family="'DM Sans', sans-serif" font-weight="800" font-size="22" text-anchor="middle" dominant-baseline="central">J</text>
+                    <text x="75" y="68" fill="#3b82f6" font-family="'DM Sans', sans-serif" font-weight="800" font-size="22" text-anchor="middle" dominant-baseline="central">F</text>
+                </svg>
+            </a>
             <a href="/publications" class="logo-name">SAJF <span>Strategies</span></a>
         </div>
         <div class="header-right">
