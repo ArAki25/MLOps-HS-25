@@ -1,6 +1,7 @@
 """
 supabase_client.py - Supabase Datenbank Client
-SAJF Strategies - Bulletproof Version
+SAJF Strategies - Schema: ui
+Alle Website-Tabellen liegen im 'ui' Schema.
 """
 
 from supabase import create_client, Client
@@ -12,17 +13,19 @@ from datetime import datetime, timezone
 # GLOBAL CLIENT
 # ============================================
 supabase: Client = None
+supabase_auth: Client = None
+
+# Schema-Name für alle UI-Tabellen
+UI_SCHEMA = 'ui'
 
 
 def init_supabase():
     """Initialisiere Supabase Client"""
-    global supabase
+    global supabase, supabase_auth
 
-    # .env hat Priorität, sonst Hardcoded Fallback
     url = os.getenv('SUPABASE_URL')
     key = os.getenv('SUPABASE_KEY')
 
-    # Fallback falls .env nicht geladen wird
     if not url:
         url = 'https://rkfwuxocuojkjswigoss.supabase.co'
     if not key:
@@ -32,7 +35,8 @@ def init_supabase():
     print(f"🔑 Key: {key[:20]}...{key[-10:]}")
 
     supabase = create_client(url, key)
-    print(f"✅ Supabase verbunden! Client: {type(supabase).__name__}")
+    supabase_auth = create_client(url, key)
+    print(f"✅ Supabase verbunden! Clients initialisiert.")
     return supabase
 
 
@@ -43,6 +47,21 @@ def get_client():
         init_supabase()
     return supabase
 
+def get_auth_client():
+    """Hole separaten Auth Client, um Session-Pollution zu vermeiden"""
+    global supabase_auth
+    if supabase_auth is None:
+        init_supabase()
+    return supabase_auth
+
+
+def ui(table_name: str):
+    """Helper: Zugriff auf eine Tabelle im 'ui' Schema.
+    Verwendung: ui('projects_ui').select('*')...
+    """
+    sb = get_client()
+    return sb.schema(UI_SCHEMA).table(table_name)
+
 
 # ============================================
 # PROJECTS (Tenders)
@@ -50,11 +69,8 @@ def get_client():
 
 def get_all_projects(limit: int = 50) -> List[Dict]:
     """Hole Projekte (einfache Version für Kompatibilität)"""
-    sb = get_client()
-    if not sb:
-        return []
     try:
-        response = sb.table('projects_ui') \
+        response = ui('projects_ui') \
             .select('*') \
             .order('publication_date', desc=True) \
             .limit(limit) \
@@ -69,15 +85,11 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
                            order_type='', process_type='', pub_type='',
                            sort='newest') -> Dict:
     """Server-Side Pagination mit Filter und Suche"""
-    sb = get_client()
-    if not sb:
-        return {'data': [], 'total': 0, 'page': page, 'per_page': per_page, 'pages': 0}
-
     try:
-        # Count-Query (gleiche Filter, aber nur count)
-        count_q = sb.table('projects_ui').select('id', count='exact')
+        # Count-Query
+        count_q = ui('projects_ui').select('id', count='exact')
         # Data-Query
-        data_q = sb.table('projects_ui').select('*')
+        data_q = ui('projects_ui').select('*')
 
         # Search
         if search:
@@ -142,17 +154,12 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
 
 def get_filter_options() -> Dict:
     """Hole unique Werte für alle Filter aus der DB"""
-    sb = get_client()
-    if not sb:
-        return {'cantons': [], 'order_types': [], 'process_types': [], 'pub_types': []}
-
     try:
-        # Lade alle Spalten in Batches
         all_rows = []
         batch_size = 1000
         offset = 0
         while True:
-            r = sb.table('projects_ui') \
+            r = ui('projects_ui') \
                 .select('canton,order_type,process_type,pub_type') \
                 .range(offset, offset + batch_size - 1) \
                 .execute()
@@ -181,11 +188,8 @@ def get_filter_options() -> Dict:
 
 
 def get_project_by_id(project_id: str) -> Optional[Dict]:
-    sb = get_client()
-    if not sb:
-        return None
     try:
-        response = sb.table('projects_ui').select('*').eq('id', project_id).execute()
+        response = ui('projects_ui').select('*').eq('id', project_id).execute()
         if response.data and len(response.data) > 0:
             return transform_project(response.data[0], include_details=True)
         return None
@@ -195,11 +199,10 @@ def get_project_by_id(project_id: str) -> Optional[Dict]:
 
 
 def search_projects(query: str, limit: int = 50) -> List[Dict]:
-    sb = get_client()
-    if not sb or not query:
+    if not query:
         return []
     try:
-        response = sb.table('projects_ui') \
+        response = ui('projects_ui') \
             .select('*') \
             .or_(f'title_de.ilike.%{query}%,description_de.ilike.%{query}%,project_number.ilike.%{query}%,proc_office_name_de.ilike.%{query}%') \
             .order('publication_date', desc=True) \
@@ -212,11 +215,8 @@ def search_projects(query: str, limit: int = 50) -> List[Dict]:
 
 
 def filter_projects(canton=None, process_type=None, order_type=None, limit=50) -> List[Dict]:
-    sb = get_client()
-    if not sb:
-        return []
     try:
-        query = sb.table('projects_ui').select('*')
+        query = ui('projects_ui').select('*')
         if canton:
             query = query.ilike('canton', canton)
         if process_type:
@@ -231,15 +231,12 @@ def filter_projects(canton=None, process_type=None, order_type=None, limit=50) -
 
 
 def get_cantons() -> List[str]:
-    sb = get_client()
-    if not sb:
-        return []
     try:
         all_cantons = []
         batch_size = 1000
         offset = 0
         while True:
-            response = sb.table('projects_ui').select('canton').range(offset, offset + batch_size - 1).execute()
+            response = ui('projects_ui').select('canton').range(offset, offset + batch_size - 1).execute()
             if not response.data:
                 break
             all_cantons.extend(response.data)
@@ -255,13 +252,10 @@ def get_cantons() -> List[str]:
 
 
 def get_statistics() -> Dict:
-    sb = get_client()
-    if not sb:
-        return {'total': 0, 'today': 0}
     try:
-        total = sb.table('projects_ui').select('id', count='exact').execute()
+        total = ui('projects_ui').select('id', count='exact').execute()
         today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-        today_count = sb.table('projects_ui').select('id', count='exact').eq('publication_date', today).execute()
+        today_count = ui('projects_ui').select('id', count='exact').eq('publication_date', today).execute()
         return {
             'total': total.count if total.count else 0,
             'today': today_count.count if today_count.count else 0
@@ -351,24 +345,23 @@ def calculate_time_ago(date_str: str) -> str:
 # ============================================
 
 def get_content(page: str) -> Dict:
-    sb = get_client()
-    if not sb: return {}
     try:
-        r = sb.table('site_content').select('*').eq('page', page).execute()
+        r = ui('site_content').select('*').eq('page', page).execute()
         return r.data[0].get('content', {}) if r.data else {}
-    except: return {}
+    except:
+        return {}
+
 
 def update_content(page: str, content: Dict) -> bool:
-    sb = get_client()
-    if not sb: return False
     try:
-        existing = sb.table('site_content').select('id').eq('page', page).execute()
+        existing = ui('site_content').select('id').eq('page', page).execute()
         if existing.data:
-            sb.table('site_content').update({'content': content}).eq('page', page).execute()
+            ui('site_content').update({'content': content}).eq('page', page).execute()
         else:
-            sb.table('site_content').insert({'page': page, 'content': content}).execute()
+            ui('site_content').insert({'page': page, 'content': content}).execute()
         return True
-    except: return False
+    except:
+        return False
 
 
 # ============================================
@@ -376,43 +369,42 @@ def update_content(page: str, content: Dict) -> bool:
 # ============================================
 
 def get_team_members() -> List[Dict]:
-    sb = get_client()
-    if not sb: return []
     try:
-        r = sb.table('team_members').select('*').order('display_order').execute()
+        r = ui('team_members').select('*').order('display_order').execute()
         return r.data or []
-    except: return []
+    except:
+        return []
+
 
 def add_team_member(data: Dict):
-    sb = get_client()
-    if not sb: return None
     try:
-        return sb.table('team_members').insert({
+        return ui('team_members').insert({
             'name': data.get('name'), 'role': data.get('role'),
             'bio': data.get('bio'), 'photo_url': data.get('photo_url'),
             'display_order': data.get('order', 0)
         }).execute()
-    except: return None
+    except:
+        return None
+
 
 def update_team_member(member_id: str, data: Dict):
-    sb = get_client()
-    if not sb: return False
     try:
-        sb.table('team_members').update({
+        ui('team_members').update({
             'name': data.get('name'), 'role': data.get('role'),
             'bio': data.get('bio'), 'photo_url': data.get('photo_url'),
             'display_order': data.get('order', 0)
         }).eq('id', member_id).execute()
         return True
-    except: return False
+    except:
+        return False
+
 
 def delete_team_member(member_id: str):
-    sb = get_client()
-    if not sb: return False
     try:
-        sb.table('team_members').delete().eq('id', member_id).execute()
+        ui('team_members').delete().eq('id', member_id).execute()
         return True
-    except: return False
+    except:
+        return False
 
 
 # ============================================
@@ -420,22 +412,21 @@ def delete_team_member(member_id: str):
 # ============================================
 
 def get_admin_by_email(email: str):
-    sb = get_client()
-    if not sb: return None
     try:
-        r = sb.table('admins').select('*').eq('email', email).execute()
+        r = ui('admins').select('*').eq('email', email).execute()
         return r.data[0] if r.data else None
-    except: return None
+    except:
+        return None
+
 
 def get_pro_user(username: str, password: str):
-    sb = get_client()
-    if not sb: return None
     try:
-        r = sb.table('pro_users').select('*') \
+        r = ui('pro_users').select('*') \
             .or_(f'email.eq.{username},company_name.eq.{username}') \
             .eq('password', password).execute()
         return r.data[0] if r.data else None
-    except: return None
+    except:
+        return None
 
 
 # ============================================
@@ -443,8 +434,10 @@ def get_pro_user(username: str, password: str):
 # ============================================
 
 def get_recommended_projects(table_name: str, limit: int = 50) -> List[Dict]:
+    """ML-Predictions — diese Tabellen bleiben ggf. in public"""
     sb = get_client()
-    if not sb or not table_name: return []
+    if not sb or not table_name:
+        return []
     try:
         r = sb.table(table_name).select('*').order('probability', desc=True).limit(limit).execute()
         return [{
@@ -457,7 +450,8 @@ def get_recommended_projects(table_name: str, limit: int = 50) -> List[Dict]:
             'cpv_code': row.get('cpv_code'),
             'simap_url': f"https://www.simap.ch/de/project-detail/{row.get('project_id')}" if row.get('project_id') else "https://www.simap.ch"
         } for row in (r.data or [])]
-    except: return []
+    except:
+        return []
 
 
 # ============================================
@@ -465,72 +459,79 @@ def get_recommended_projects(table_name: str, limit: int = 50) -> List[Dict]:
 # ============================================
 
 def get_user_favorites(user_id: str) -> List[Dict]:
-    sb = get_client()
-    if not sb or not user_id: return []
+    if not user_id:
+        return []
     try:
-        r = sb.table('favorites').select('*').eq('user_id', user_id).order('created_at', desc=True).execute()
+        r = ui('favorites').select('*').eq('user_id', user_id).order('created_at', desc=True).execute()
         return r.data or []
-    except: return []
+    except:
+        return []
+
 
 def add_favorite(user_id: str, project: Dict) -> bool:
-    sb = get_client()
-    if not sb or not user_id: return False
+    if not user_id:
+        return False
     try:
-        sb.table('favorites').insert({
+        ui('favorites').insert({
             'user_id': user_id, 'project_id': project.get('id'),
             'project_title': project.get('title'), 'project_canton': project.get('canton'),
             'project_description': (project.get('description') or '')[:500],
             'simap_url': project.get('simap_url')
         }).execute()
         return True
-    except: return False
+    except:
+        return False
+
 
 def remove_favorite(user_id: str, project_id: str) -> bool:
-    sb = get_client()
-    if not sb or not user_id: return False
+    if not user_id:
+        return False
     try:
-        sb.table('favorites').delete().eq('user_id', user_id).eq('project_id', project_id).execute()
+        ui('favorites').delete().eq('user_id', user_id).eq('project_id', project_id).execute()
         return True
-    except: return False
+    except:
+        return False
+
 
 def get_user_favorites_ids(user_id: str) -> List[str]:
-    sb = get_client()
-    if not sb or not user_id: return []
+    if not user_id:
+        return []
     try:
-        r = sb.table('favorites').select('project_id').eq('user_id', user_id).execute()
+        r = ui('favorites').select('project_id').eq('user_id', user_id).execute()
         return [str(row.get('project_id')) for row in (r.data or [])]
-    except: return []
+    except:
+        return []
 
 
 # ============================================
-# SUPABASE AUTH
+# SUPABASE AUTH (auth bleibt in eigenem Schema)
 # ============================================
 
 def register_user(email: str, password: str, company_name: str) -> Dict:
-    sb = get_client()
-    if not sb:
+    sb_auth = get_auth_client()
+    if not sb_auth:
         return {'success': False, 'error': 'Datenbank nicht verbunden'}
 
     try:
         print(f"📝 Registrierung: {email}")
-        auth_response = sb.auth.sign_up({
+        auth_response = sb_auth.auth.sign_up({
             'email': email,
             'password': password,
             'options': {'data': {'company_name': company_name}}
         })
 
         if auth_response.user:
-            # User-Tabelle befüllen
+            # User in ui.users Tabelle speichern
             try:
-                sb.table('users').insert({
+                ui('users').insert({
                     'id': auth_response.user.id,
                     'email': email,
                     'company_name': company_name,
                     'created_at': datetime.utcnow().isoformat()
                 }).execute()
-                print(f"✅ User in DB gespeichert")
+                print(f"✅ User in ui.users gespeichert")
             except Exception as e:
-                print(f"⚠️ User-Tabelle: {e} (Auth war erfolgreich)")
+                print(f"⚠️ ui.users: {e} (Auth war erfolgreich)")
 
             return {
                 'success': True,
@@ -547,23 +548,22 @@ def register_user(email: str, password: str, company_name: str) -> Dict:
 
 
 def login_user(email: str, password: str) -> Dict:
-    sb = get_client()
-    if not sb:
+    sb_auth = get_auth_client()
+    if not sb_auth:
         return {'success': False, 'error': 'Datenbank nicht verbunden'}
 
     try:
         print(f"🔐 Login-Versuch: {email}")
-        auth_response = sb.auth.sign_in_with_password({
+        auth_response = sb_auth.auth.sign_in_with_password({
             'email': email,
             'password': password
         })
-        print(f"🔐 Response: user={bool(auth_response.user)}, session={bool(auth_response.session)}")
 
         if auth_response.user and auth_response.session:
-            # Company name holen
+            # Company name aus ui.users holen
             company_name = None
             try:
-                r = sb.table('users').select('company_name').eq('id', auth_response.user.id).execute()
+                r = ui('users').select('company_name').eq('id', auth_response.user.id).execute()
                 if r.data:
                     company_name = r.data[0].get('company_name')
             except:
@@ -592,19 +592,193 @@ def login_user(email: str, password: str) -> Dict:
 
 
 def logout_user() -> bool:
-    sb = get_client()
-    if not sb: return False
+    sb_auth = get_auth_client()
+    if not sb_auth:
+        return False
     try:
-        sb.auth.sign_out()
+        sb_auth.auth.sign_out()
         return True
     except:
         return False
 
 
 def get_user_by_id(user_id: str):
-    sb = get_client()
-    if not sb or not user_id: return None
+    if not user_id:
+        return None
     try:
-        r = sb.table('users').select('*').eq('id', user_id).execute()
+        r = ui('users').select('*').eq('id', user_id).execute()
         return r.data[0] if r.data else None
-    except: return None
+    except:
+        return None
+
+
+# ============================================
+# ONBOARDING (alle in ui Schema)
+# ============================================
+
+def save_user_profile(user_id, data):
+    """Speichere oder update Firmenprofil"""
+    if not user_id:
+        return {'success': False, 'error': 'Nicht verbunden'}
+
+    try:
+        profile = {
+            'user_id': user_id,
+            'company_name': data.get('company_name', ''),
+            'branche': data.get('branche', ''),
+            'kanton': data.get('kanton', ''),
+            'mitarbeiter': data.get('mitarbeiter', ''),
+            'umsatz': data.get('umsatz', ''),
+            'budget': data.get('budget', ''),
+            'cpv_tags': data.get('cpv_tags', []),
+            'updated_at': datetime.utcnow().isoformat()
+        }
+
+        # Upsert: insert or update if exists
+        existing = ui('user_profiles').select('id').eq('user_id', user_id).execute()
+        if existing.data:
+            ui('user_profiles').update(profile).eq('user_id', user_id).execute()
+        else:
+            profile['created_at'] = datetime.utcnow().isoformat()
+            ui('user_profiles').insert(profile).execute()
+
+        # Update company_name in ui.users too
+        try:
+            ui('users').update({'company_name': data.get('company_name')}).eq('id', user_id).execute()
+        except:
+            pass
+
+        print(f"✅ Profil gespeichert für User: {user_id}")
+        return {'success': True}
+
+    except Exception as e:
+        print(f"❌ Profil-Fehler: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+def save_user_simap_ids(user_id, ids):
+    """Speichere Simap Projekt-IDs"""
+    if not user_id:
+        return {'success': False, 'error': 'Nicht verbunden'}
+
+    try:
+        # Alte IDs löschen
+        ui('user_simap_ids').delete().eq('user_id', user_id).execute()
+
+        # Neue IDs einfügen
+        rows = [{'user_id': user_id, 'simap_project_id': str(pid)} for pid in ids]
+        if rows:
+            ui('user_simap_ids').insert(rows).execute()
+
+        # Onboarding als komplett markieren
+        mark_onboarding_complete(user_id)
+
+        print(f"✅ {len(ids)} Simap-IDs gespeichert für User: {user_id}")
+        return {'success': True, 'count': len(ids)}
+
+    except Exception as e:
+        print(f"❌ Simap-IDs-Fehler: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+def save_user_ratings(user_id, ratings_list):
+    """Speichere Tender-Bewertungen"""
+    if not user_id:
+        return {'success': False, 'error': 'Nicht verbunden'}
+
+    try:
+        rows = [{
+            'user_id': user_id,
+            'tender_id': str(r.get('tender_id', '')),
+            'relevant': r.get('relevant', False)
+        } for r in ratings_list]
+
+        if rows:
+            ui('user_tender_ratings').insert(rows).execute()
+
+        # Onboarding als komplett markieren
+        mark_onboarding_complete(user_id)
+
+        print(f"✅ {len(rows)} Bewertungen gespeichert für User: {user_id}")
+        return {'success': True, 'count': len(rows)}
+
+    except Exception as e:
+        print(f"❌ Ratings-Fehler: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+def get_random_archive_tenders(count=20):
+    """Hole zufällige Ausschreibungen aus dem Archiv für Rating.
+    archiv_daten_2010-2024 bleibt in public (Rohdaten).
+    Fallback auf ui.projects_ui.
+    """
+    sb = get_client()
+    if not sb:
+        return []
+
+    try:
+        # Archiv-Tabelle ist in public (Rohdaten, nicht UI)
+        response = sb.table('archiv_daten_2010-2024') \
+            .select('*') \
+            .limit(200) \
+            .execute()
+
+        if not response.data:
+            # Fallback: aus ui.projects_ui laden
+            response = ui('projects_ui') \
+                .select('*') \
+                .limit(200) \
+                .execute()
+
+        import random
+        rows = response.data or []
+        random.shuffle(rows)
+        selected = rows[:count]
+
+        tenders = []
+        for row in selected:
+            tenders.append({
+                'id': str(row.get('id', '')),
+                'title': row.get('title_de') or row.get('title') or row.get('title_fr') or 'Ohne Titel',
+                'description': (row.get('description_de') or row.get('description') or row.get('description_fr') or '')[:300],
+                'canton': row.get('canton', ''),
+                'order_type': row.get('order_type', ''),
+                'process_type': row.get('process_type', ''),
+                'organization': row.get('proc_office_name_de') or row.get('organization') or ''
+            })
+
+        return tenders
+
+    except Exception as e:
+        print(f"❌ Random-Tenders-Fehler: {e}")
+        return []
+
+
+def mark_onboarding_complete(user_id):
+    """Markiere Onboarding als abgeschlossen"""
+    try:
+        ui('user_profiles') \
+            .update({'onboarding_complete': True, 'updated_at': datetime.utcnow().isoformat()}) \
+            .eq('user_id', user_id) \
+            .execute()
+    except Exception as e:
+        print(f"⚠️ Onboarding-Complete-Fehler: {e}")
+
+
+def is_onboarding_complete(user_id):
+    """Prüfe ob User Onboarding abgeschlossen hat"""
+    if not user_id:
+        return False
+
+    try:
+        r = ui('user_profiles') \
+            .select('onboarding_complete') \
+            .eq('user_id', user_id) \
+            .execute()
+
+        if r.data and len(r.data) > 0:
+            return r.data[0].get('onboarding_complete', False)
+        return False
+
+    except:
+        return False

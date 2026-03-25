@@ -4,176 +4,236 @@
 
 {% block extra_css %}
 <style>
+    .auth-bg-blobs {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        overflow: hidden;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .auth-blob {
+        position: absolute;
+        filter: blur(100px);
+        opacity: 0.35;
+        border-radius: 50%;
+        animation: floatOrb 12s infinite ease-in-out alternate;
+    }
+    .auth-blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: rgba(37, 99, 235, 0.4); }
+    .auth-blob-2 { bottom: -10%; right: -10%; width: 40vw; height: 40vw; background: rgba(6, 182, 212, 0.3); animation-delay: -6s; }
+    
+    @keyframes floatOrb {
+        0% { transform: translate(0, 0) scale(1); }
+        100% { transform: translate(40px, 60px) scale(1.1); }
+    }
+
     .login-wrapper {
-        min-height: calc(100vh - 64px - 200px);
+        min-height: calc(100vh - 64px - 100px);
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 3rem 1.5rem;
-        background: var(--background);
+        padding: 4rem 1.5rem;
+        background: transparent;
+        position: relative;
     }
 
     .login-card {
         width: 100%;
-        max-width: 420px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-xl);
-        padding: 2.5rem;
-        box-shadow: var(--shadow-lg);
+        max-width: 440px;
+        background: rgba(18, 18, 20, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        padding: 3rem;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        position: relative;
+        z-index: 1;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+    }
+
+    .login-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
     }
 
     .login-header {
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
     }
 
     .login-logo {
-        width: 52px;
-        height: 52px;
+        width: 64px;
+        height: 64px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 1.25rem;
+        margin: 0 auto 1.5rem;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     }
 
     .login-header h1 {
-        font-size: 1.5rem;
+        font-size: 1.875rem;
         font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.375rem;
-        letter-spacing: -0.02em;
+        color: #fff;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.03em;
+        background: linear-gradient(to right, #ffffff, #a1a1aa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 
     .login-header p {
-        color: var(--text-secondary);
+        color: var(--text-secondary, #a1a1aa);
         font-size: 0.9375rem;
+        line-height: 1.5;
     }
 
     .form-group {
-        margin-bottom: 1.25rem;
+        margin-bottom: 1.5rem;
     }
 
     .form-label {
         display: block;
         font-size: 0.8125rem;
         font-weight: 600;
-        margin-bottom: 0.375rem;
-        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        color: #e4e4e7;
+        letter-spacing: 0.01em;
     }
 
     .form-input {
         width: 100%;
-        padding: 0.75rem 0.875rem;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
+        padding: 0.875rem 1rem;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 12px;
         font-size: 0.9375rem;
         font-family: inherit;
-        transition: border-color 0.15s, box-shadow 0.15s;
-        background: var(--background);
-        color: var(--text-primary);
+        transition: all 0.2s ease;
+        background: rgba(0,0,0,0.2);
+        color: #fff;
     }
 
-    .form-input::placeholder { color: var(--text-muted); }
+    .form-input::placeholder { color: #52525b; }
 
     .form-input:focus {
         outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        background: var(--surface);
+        border-color: var(--accent, #06b6d4);
+        background: rgba(0,0,0,0.4);
+        box-shadow: 0 0 0 4px rgba(6,182,212,0.15), inset 0 0 0 1px var(--accent, #06b6d4);
     }
 
     .btn-submit {
         width: 100%;
-        padding: 0.875rem;
-        background: var(--accent);
+        padding: 1rem;
+        background: linear-gradient(135deg, var(--accent, #06b6d4), #3b82f6);
         color: white;
         border: none;
-        border-radius: var(--radius);
-        font-size: 0.9375rem;
+        border-radius: 12px;
+        font-size: 1rem;
         font-weight: 600;
         cursor: pointer;
         font-family: inherit;
-        transition: all 0.15s;
-        margin-top: 0.5rem;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        margin-top: 1rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(6,182,212,0.3);
+    }
+
+    .btn-submit::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(rgba(255,255,255,0.2), transparent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
     }
 
     .btn-submit:hover {
-        background: var(--accent-hover);
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(6,182,212,0.4);
+    }
+
+    .btn-submit:hover::after {
+        opacity: 1;
+    }
+
+    .btn-submit:active {
+        transform: translateY(1px);
     }
 
     .btn-submit:disabled {
-        opacity: 0.5;
+        opacity: 0.6;
         cursor: not-allowed;
         transform: none;
+        box-shadow: none;
     }
 
     .login-footer {
         text-align: center;
-        margin-top: 1.5rem;
+        margin-top: 2rem;
         font-size: 0.875rem;
-        color: var(--text-secondary);
+        color: var(--text-secondary, #a1a1aa);
     }
 
     .login-footer a {
-        color: var(--accent);
+        color: var(--accent, #06b6d4);
         text-decoration: none;
         font-weight: 600;
+        transition: color 0.2s;
     }
 
-    .login-footer a:hover { text-decoration: underline; }
+    .login-footer a:hover {
+        color: #fff;
+        text-shadow: 0 0 8px rgba(6,182,212,0.5);
+    }
 
     .msg-error {
-        background: rgba(239,68,68,.1);
-        color: #ef4444;
-        padding: 0.75rem 1rem;
-        border-radius: var(--radius);
+        background: rgba(239,68,68,0.1);
+        color: #f87171;
+        padding: 0.875rem 1rem;
+        border-radius: 12px;
         font-size: 0.875rem;
-        margin-bottom: 1.25rem;
-        border: 1px solid rgba(239,68,68,.2);
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(239,68,68,0.2);
     }
 
     .msg-success {
-        background: rgba(16,185,129,.1);
-        color: #10b981;
-        padding: 0.75rem 1rem;
-        border-radius: var(--radius);
+        background: rgba(16,185,129,0.1);
+        color: #34d399;
+        padding: 0.875rem 1rem;
+        border-radius: 12px;
         font-size: 0.875rem;
-        margin-bottom: 1.25rem;
-        border: 1px solid rgba(16,185,129,.2);
-    }
-
-    .divider {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin: 1.5rem 0;
-        color: var(--text-muted);
-        font-size: 0.8125rem;
-    }
-
-    .divider::before, .divider::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background: var(--border);
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(16,185,129,0.2);
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="auth-bg-blobs">
+    <div class="auth-blob auth-blob-1"></div>
+    <div class="auth-blob auth-blob-2"></div>
+</div>
+
 <div class="login-wrapper">
     <div class="login-card">
         <div class="login-header">
             <div class="login-logo">
-                <svg width="52" height="52" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="5" y="5" width="90" height="90" rx="24" stroke="#06b6d4" stroke-width="8" fill="transparent"/>
-                    <path d="M 35 15 H 65 V 35 H 85 V 65 H 65 V 85 H 35 V 65 H 15 V 35 H 35 V 15 Z" fill="#1f1f23"/>
-                    <text x="25" y="32" fill="#06b6d4" font-family="'DM Sans', sans-serif" font-weight="800" font-size="22" text-anchor="middle" dominant-baseline="central">S</text>
-                    <text x="75" y="32" fill="#06b6d4" font-family="'DM Sans', sans-serif" font-weight="800" font-size="22" text-anchor="middle" dominant-baseline="central">A</text>
-                    <text x="25" y="68" fill="#3b82f6" font-family="'DM Sans', sans-serif" font-weight="800" font-size="22" text-anchor="middle" dominant-baseline="central">J</text>
-                    <text x="75" y="68" fill="#3b82f6" font-family="'DM Sans', sans-serif" font-weight="800" font-size="22" text-anchor="middle" dominant-baseline="central">F</text>
+                <svg class="sajf-logo-svg" width="52" height="52" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="5" width="90" height="90" rx="20" stroke="var(--logo-border)" stroke-width="2" fill="var(--logo-bg)"/>
+                    <path d="M 27 45 L 35 23 L 45 45 Z" fill="var(--accent)"/>
+                    <line x1="27" y1="45" x2="45" y2="45" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 15 78 L 35 23 L 60 78" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+                    <path d="M 42 78 L 62 36 L 85 78" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+                    <line x1="12" y1="78" x2="88" y2="78" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+                    <text x="21" y="91" fill="var(--logo-text-top)" font-family="'DM Sans', sans-serif" font-weight="700" font-size="12" text-anchor="middle">S</text>
+                    <text x="40" y="91" fill="var(--logo-text-top)" font-family="'DM Sans', sans-serif" font-weight="700" font-size="12" text-anchor="middle">A</text>
+                    <text x="60" y="91" fill="var(--logo-text-top)" font-family="'DM Sans', sans-serif" font-weight="700" font-size="12" text-anchor="middle">J</text>
+                    <text x="79" y="91" fill="var(--logo-text-top)" font-family="'DM Sans', sans-serif" font-weight="700" font-size="12" text-anchor="middle">F</text>
                 </svg>
             </div>
             <h1>Willkommen zurück</h1>
@@ -209,20 +269,20 @@
 
 {% block extra_js %}
 <script>
-    const submitBtn = document.getElementById('submit-btn');
-    const messageContainer = document.getElementById('message-container');
+    var submitBtn = document.getElementById('submit-btn');
+    var messageContainer = document.getElementById('message-container');
 
     // Allow Enter key
-    document.getElementById('password').addEventListener('keypress', (e) => {
+    document.getElementById('password').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') handleLogin();
     });
-    document.getElementById('email').addEventListener('keypress', (e) => {
+    document.getElementById('email').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') document.getElementById('password').focus();
     });
 
-    async function handleLogin() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+    function handleLogin() {
+        var email = document.getElementById('email').value;
+        var password = document.getElementById('password').value;
 
         if (!email || !password) {
             showMessage('Bitte füllen Sie alle Felder aus.', 'error');
@@ -232,32 +292,33 @@
         submitBtn.disabled = true;
         submitBtn.textContent = 'Anmeldung läuft...';
 
-        try {
-            const res = await fetch('/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-
-            const data = await res.json();
-
+        fetch('/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, password: password })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
             if (data.success) {
+                // Benutze redirect vom Backend (Onboarding oder Publications)
+                var redirectUrl = data.redirect || '/publications';
                 showMessage('Erfolgreich angemeldet! Weiterleitung...', 'success');
-                setTimeout(() => { window.location.href = '/publications'; }, 800);
+                setTimeout(function() { window.location.href = redirectUrl; }, 800);
             } else {
                 showMessage(data.error || 'Anmeldung fehlgeschlagen.', 'error');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Anmelden';
             }
-        } catch (e) {
+        })
+        .catch(function(e) {
             showMessage('Verbindungsfehler. Bitte erneut versuchen.', 'error');
             submitBtn.disabled = false;
             submitBtn.textContent = 'Anmelden';
-        }
+        });
     }
 
     function showMessage(msg, type) {
-        messageContainer.innerHTML = `<div class="msg-${type}">${msg}</div>`;
+        messageContainer.innerHTML = '<div class="msg-' + type + '">' + msg + '</div>';
     }
 </script>
 {% endblock %}

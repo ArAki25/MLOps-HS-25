@@ -37,6 +37,23 @@
     --radius-xl: 20px;
     --transition-fast: 0.15s ease-out;
     --transition-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* SAJF Logo Variables (Alpengipfel Dark Mode Default) */
+    --logo-border: #27272a;
+    --logo-bg: #09090b; /* Matches --background */
+    --logo-text-top: #a1a1aa;
+    --logo-text-main: #f4f4f5;
+    --logo-text-sub: #71717a;
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --logo-border: #e4e4e7;
+        --logo-bg: #ffffff;
+        --logo-text-top: #52525b;
+        --logo-text-main: #18181b;
+        --logo-text-sub: #52525b;
+    }
 }
 
 * {
