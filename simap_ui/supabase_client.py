@@ -709,26 +709,18 @@ def save_user_ratings(user_id, ratings_list):
 
 def get_random_archive_tenders(count=20):
     """Hole zufällige Ausschreibungen aus dem Archiv für Rating.
-    archiv_daten_2010-2024 bleibt in public (Rohdaten).
-    Fallback auf ui.projects_ui.
+    archiv_daten_2010-2024 liegt in public Schema.
     """
     sb = get_client()
     if not sb:
         return []
 
     try:
-        # Archiv-Tabelle ist in public (Rohdaten, nicht UI)
         response = sb.table('archiv_daten_2010-2024') \
-            .select('*') \
+            .select('simap_id,project_id,cont_name,cont_descr,location,contract_type,procedure_xml,auth_name') \
+            .not_.is_('cont_name', 'null') \
             .limit(200) \
             .execute()
-
-        if not response.data:
-            # Fallback: aus ui.projects_ui laden
-            response = ui('projects_ui') \
-                .select('*') \
-                .limit(200) \
-                .execute()
 
         import random
         rows = response.data or []
@@ -738,13 +730,13 @@ def get_random_archive_tenders(count=20):
         tenders = []
         for row in selected:
             tenders.append({
-                'id': str(row.get('id', '')),
-                'title': row.get('title_de') or row.get('title') or row.get('title_fr') or 'Ohne Titel',
-                'description': (row.get('description_de') or row.get('description') or row.get('description_fr') or '')[:300],
-                'canton': row.get('canton', ''),
-                'order_type': row.get('order_type', ''),
-                'process_type': row.get('process_type', ''),
-                'organization': row.get('proc_office_name_de') or row.get('organization') or ''
+                'id': str(row.get('simap_id') or row.get('project_id', '')),
+                'title': row.get('cont_name') or 'Ohne Titel',
+                'description': (row.get('cont_descr') or '')[:300],
+                'canton': row.get('location') or '',
+                'order_type': row.get('contract_type') or '',
+                'process_type': row.get('procedure_xml') or '',
+                'organization': row.get('auth_name') or ''
             })
 
         return tenders
