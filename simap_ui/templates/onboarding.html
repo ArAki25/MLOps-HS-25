@@ -137,116 +137,6 @@
         font-size: 1rem;
     }
 
-    /* Form */
-    .onb-form-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.25rem;
-    }
-
-    .onb-form-grid .full { grid-column: 1 / -1; }
-
-    .onb-group { margin-bottom: 0; }
-
-    .onb-label {
-        display: block;
-        font-size: 0.8125rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #e4e4e7;
-    }
-
-    .onb-input, .onb-select {
-        width: 100%;
-        padding: 0.875rem 1rem;
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 12px;
-        font-size: 0.9375rem;
-        font-family: inherit;
-        background: rgba(0,0,0,0.2);
-        color: #fff;
-        transition: all 0.2s ease;
-    }
-
-    .onb-input::placeholder { color: #52525b; }
-
-    .onb-input:focus, .onb-select:focus {
-        outline: none;
-        border-color: var(--accent, #06b6d4);
-        background: rgba(0,0,0,0.4);
-        box-shadow: 0 0 0 4px rgba(6,182,212,0.15), inset 0 0 0 1px var(--accent, #06b6d4);
-    }
-
-    .onb-select {
-        cursor: pointer;
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' fill='none' stroke='%23a1a1aa' viewBox='0 0 24 24'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 1rem center;
-        padding-right: 2.5rem;
-    }
-
-    /* Tags Input for CPV */
-    .onb-tags-wrap {
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 12px;
-        padding: 0.6rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.4rem;
-        min-height: 50px;
-        background: rgba(0,0,0,0.2);
-        cursor: text;
-        transition: all 0.2s ease;
-    }
-
-    .onb-tags-wrap:focus-within {
-        border-color: var(--accent, #06b6d4);
-        background: rgba(0,0,0,0.4);
-        box-shadow: 0 0 0 4px rgba(6,182,212,0.15), inset 0 0 0 1px var(--accent, #06b6d4);
-    }
-
-    .onb-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.35rem 0.75rem;
-        background: rgba(6,182,212,0.15);
-        color: var(--accent, #06b6d4);
-        border-radius: 8px;
-        font-size: 0.8125rem;
-        font-weight: 600;
-        border: 1px solid rgba(6,182,212,0.2);
-    }
-
-    .onb-tag button {
-        background: none;
-        border: none;
-        color: var(--accent, #06b6d4);
-        cursor: pointer;
-        font-size: 1.1rem;
-        line-height: 1;
-        opacity: 0.7;
-        padding: 0;
-        margin-left: 0.25rem;
-    }
-
-    .onb-tag button:hover { opacity: 1; }
-
-    .onb-tags-input {
-        border: none;
-        background: none;
-        color: #fff;
-        font-size: 0.875rem;
-        font-family: inherit;
-        flex: 1;
-        min-width: 120px;
-        padding: 0.2rem 0.25rem;
-        outline: none;
-    }
-
-    .onb-tags-input::placeholder { color: #52525b; }
-
     /* Buttons */
     .onb-actions {
         display: flex;
@@ -377,7 +267,7 @@
         line-height: 1.6;
     }
 
-    /* Step 3a: IDs */
+    /* Step IDs */
     .onb-ids-area {
         width: 100%;
         min-height: 140px;
@@ -475,24 +365,63 @@
     .onb-tender-desc {
         font-size: 0.9375rem;
         color: #a1a1aa;
-        line-height: 1.6;
-        margin-bottom: 1rem;
-        max-height: 90px;
+        line-height: 1.7;
+        margin-bottom: 0;
+        max-height: 72px;
         overflow: hidden;
         position: relative;
+        transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        white-space: pre-line;
     }
 
-    .onb-tender-desc::after {
+    .onb-tender-desc.collapsed::after {
         content: '';
         position: absolute;
-        bottom: 0; left: 0; right: 0; height: 30px;
-        background: linear-gradient(transparent, rgba(18, 18, 20, 0.65));
+        bottom: 0; left: 0; right: 0; height: 40px;
+        background: linear-gradient(transparent, rgba(18, 18, 20, 0.95));
+        pointer-events: none;
+    }
+
+    .onb-tender-desc.expanded {
+        max-height: 2000px;
+    }
+
+    .onb-tender-desc.expanded::after {
+        display: none;
+    }
+
+    .onb-expand-btn {
+        background: none;
+        border: none;
+        color: var(--accent, #06b6d4);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0.5rem 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-family: inherit;
+        transition: color 0.2s;
+    }
+
+    .onb-expand-btn:hover {
+        color: #fff;
+    }
+
+    .onb-expand-btn svg {
+        transition: transform 0.3s ease;
+    }
+
+    .onb-expand-btn.expanded svg {
+        transform: rotate(180deg);
     }
 
     .onb-tender-meta {
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
+        margin-top: 0.75rem;
         margin-bottom: 1.5rem;
     }
 
@@ -504,6 +433,21 @@
         font-size: 0.75rem;
         font-weight: 600;
         border: 1px solid rgba(6,182,212,0.2);
+    }
+
+    .onb-tender-org {
+        font-size: 0.8125rem;
+        color: #71717a;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.4rem;
+        line-height: 1.5;
+    }
+
+    .onb-tender-org svg {
+        flex-shrink: 0;
+        margin-top: 2px;
     }
 
     .onb-rating-btns {
@@ -561,7 +505,7 @@
         flex: 0;
         padding: 1rem 1.25rem;
     }
-    
+
     .onb-rate-skip:hover {
         background: rgba(255,255,255,0.05);
         color: #fff;
@@ -623,7 +567,7 @@
     .onb-step.active { display: block; opacity: 1; transform: translateY(0); }
 
     @media (max-width: 600px) {
-        .onb-form-grid, .onb-choice-grid { grid-template-columns: 1fr; }
+        .onb-choice-grid { grid-template-columns: 1fr; }
         .onb-card { padding: 2rem 1.5rem; }
     }
 </style>
@@ -638,122 +582,20 @@
 <div class="onb-wrapper">
     <div class="onb-container">
 
-        <!-- Progress -->
+        <!-- Progress: 3 Steps -->
         <div class="onb-progress" id="progress-bar">
             <div class="onb-step-dot active" id="dot-1">1</div>
             <div class="onb-step-line" id="line-1"></div>
             <div class="onb-step-dot" id="dot-2">2</div>
             <div class="onb-step-line" id="line-2"></div>
             <div class="onb-step-dot" id="dot-3">3</div>
-            <div class="onb-step-line" id="line-3"></div>
-            <div class="onb-step-dot" id="dot-4">4</div>
         </div>
 
         <div class="onb-card">
             <div id="msg-container"></div>
 
-            <!-- ==================== STEP 1: Firmenprofil ==================== -->
+            <!-- ==================== STEP 1: Wahl ==================== -->
             <div class="onb-step active" id="step-1">
-                <div class="onb-header">
-                    <div class="onb-icon">
-                        <svg width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                    </div>
-                    <h1>Firmenprofil</h1>
-                    <p>Erzählen Sie uns von Ihrem Unternehmen</p>
-                </div>
-
-                <div class="onb-form-grid">
-                    <div class="onb-group full">
-                        <label class="onb-label">Firmenname *</label>
-                        <input type="text" id="f-name" class="onb-input" placeholder="Muster Bau AG" value="{{ session.get('user_company_name', '') }}">
-                    </div>
-                    <div class="onb-group">
-                        <label class="onb-label">Branche *</label>
-                        <select id="f-branche" class="onb-select">
-                            <option value="">Bitte wählen...</option>
-                            <option value="Baugewerbe">Baugewerbe</option>
-                            <option value="IT & Telekommunikation">IT & Telekommunikation</option>
-                            <option value="Consulting & Beratung">Consulting & Beratung</option>
-                            <option value="Gesundheitswesen">Gesundheitswesen</option>
-                            <option value="Transport & Logistik">Transport & Logistik</option>
-                            <option value="Facility Management">Facility Management</option>
-                            <option value="Ingenieurwesen">Ingenieurwesen</option>
-                            <option value="Elektrotechnik">Elektrotechnik</option>
-                            <option value="Umwelt & Energie">Umwelt & Energie</option>
-                            <option value="Bildung & Forschung">Bildung & Forschung</option>
-                            <option value="Finanzdienstleistungen">Finanzdienstleistungen</option>
-                            <option value="Sicherheit">Sicherheit</option>
-                            <option value="Kommunikation & Marketing">Kommunikation & Marketing</option>
-                            <option value="Andere">Andere</option>
-                        </select>
-                    </div>
-                    <div class="onb-group">
-                        <label class="onb-label">Standort (Kanton) *</label>
-                        <select id="f-kanton" class="onb-select">
-                            <option value="">Bitte wählen...</option>
-                            <option>Aargau</option><option>Appenzell A.Rh.</option><option>Appenzell I.Rh.</option>
-                            <option>Basel-Landschaft</option><option>Basel-Stadt</option><option>Bern</option>
-                            <option>Freiburg</option><option>Genf</option><option>Glarus</option>
-                            <option>Graubünden</option><option>Jura</option><option>Luzern</option>
-                            <option>Neuenburg</option><option>Nidwalden</option><option>Obwalden</option>
-                            <option>Schaffhausen</option><option>Schwyz</option><option>Solothurn</option>
-                            <option>St. Gallen</option><option>Tessin</option><option>Thurgau</option>
-                            <option>Uri</option><option>Waadt</option><option>Wallis</option>
-                            <option>Zug</option><option>Zürich</option>
-                        </select>
-                    </div>
-                    <div class="onb-group">
-                        <label class="onb-label">Anzahl Mitarbeiter</label>
-                        <select id="f-mitarbeiter" class="onb-select">
-                            <option value="">Bitte wählen...</option>
-                            <option value="1-9">1–9 (Mikro)</option>
-                            <option value="10-49">10–49 (Klein)</option>
-                            <option value="50-249">50–249 (Mittel)</option>
-                            <option value="250+">250+ (Gross)</option>
-                        </select>
-                    </div>
-                    <div class="onb-group">
-                        <label class="onb-label">Jahresumsatz (CHF)</label>
-                        <select id="f-umsatz" class="onb-select">
-                            <option value="">Bitte wählen...</option>
-                            <option value="<500k">Unter 500'000</option>
-                            <option value="500k-2m">500'000 – 2 Mio.</option>
-                            <option value="2m-10m">2 – 10 Mio.</option>
-                            <option value="10m-50m">10 – 50 Mio.</option>
-                            <option value="50m+">Über 50 Mio.</option>
-                        </select>
-                    </div>
-                    <div class="onb-group">
-                        <label class="onb-label">Budget für Ausschreibungen</label>
-                        <select id="f-budget" class="onb-select">
-                            <option value="">Bitte wählen...</option>
-                            <option value="<100k">Unter 100'000 CHF</option>
-                            <option value="100k-500k">100'000 – 500'000 CHF</option>
-                            <option value="500k-1m">500'000 – 1 Mio. CHF</option>
-                            <option value="1m-5m">1 – 5 Mio. CHF</option>
-                            <option value="5m+">Über 5 Mio. CHF</option>
-                        </select>
-                    </div>
-                    <div class="onb-group full">
-                        <label class="onb-label">Tätigkeitsbereiche / CPV-Codes</label>
-                        <div class="onb-tags-wrap" id="cpv-tags" onclick="document.getElementById('cpv-input').focus()">
-                            <input type="text" class="onb-tags-input" id="cpv-input" placeholder="z.B. Hochbau, IT-Services, Reinigung...">
-                        </div>
-                        <div style="font-size:0.7rem;color:var(--text-muted,#71717a);margin-top:0.375rem;">Enter drücken zum Hinzufügen</div>
-                    </div>
-                </div>
-
-                <div class="onb-actions">
-                    <div></div>
-                    <button class="onb-btn onb-btn-primary" onclick="submitStep1()">
-                        Weiter
-                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                    </button>
-                </div>
-            </div>
-
-            <!-- ==================== STEP 2: Wahl ==================== -->
-            <div class="onb-step" id="step-2">
                 <div class="onb-header">
                     <div class="onb-icon">
                         <svg width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
@@ -780,19 +622,16 @@
                 </div>
 
                 <div class="onb-actions">
-                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(1)">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
-                        Zurück
-                    </button>
-                    <button class="onb-btn onb-btn-primary" id="btn-step2" onclick="submitStep2()" disabled>
+                    <div></div>
+                    <button class="onb-btn onb-btn-primary" id="btn-step1" onclick="submitStep1()" disabled>
                         Weiter
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                     </button>
                 </div>
             </div>
 
-            <!-- ==================== STEP 3a: Simap IDs ==================== -->
-            <div class="onb-step" id="step-3a">
+            <!-- ==================== STEP 2a: Simap IDs ==================== -->
+            <div class="onb-step" id="step-2a">
                 <div class="onb-header">
                     <div class="onb-icon">
                         <svg width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -806,7 +645,7 @@
                 <div class="onb-ids-count" id="ids-count"></div>
 
                 <div class="onb-actions">
-                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(2)">
+                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(1)">
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
                         Zurück
                     </button>
@@ -817,8 +656,8 @@
                 </div>
             </div>
 
-            <!-- ==================== STEP 3b: Rating ==================== -->
-            <div class="onb-step" id="step-3b">
+            <!-- ==================== STEP 2b: Rating ==================== -->
+            <div class="onb-step" id="step-2b">
                 <div class="onb-header" style="margin-bottom:1rem;">
                     <h1>Ausschreibungen bewerten</h1>
                     <p>Ist diese Ausschreibung für Ihr Unternehmen relevant?</p>
@@ -834,7 +673,7 @@
                 </div>
 
                 <div class="onb-actions">
-                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(2)">
+                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(1)">
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
                         Zurück
                     </button>
@@ -845,8 +684,8 @@
                 </div>
             </div>
 
-            <!-- ==================== STEP 4: Success ==================== -->
-            <div class="onb-step" id="step-4">
+            <!-- ==================== STEP 3: Success ==================== -->
+            <div class="onb-step" id="step-3">
                 <div class="onb-success">
                     <div class="onb-success-icon">
                         <svg width="40" height="40" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -869,53 +708,10 @@
 <script>
     var currentStep = 1;
     var selectedChoice = '';
-    var cpvTags = [];
     var ratingTenders = [];
     var ratings = [];
     var ratingIndex = 0;
     var RATING_TARGET = 15;
-
-    // ==========================================
-    // CPV TAGS
-    // ==========================================
-    document.getElementById('cpv-input').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' || e.key === ',') {
-            e.preventDefault();
-            var val = this.value.trim().replace(/,/g, '');
-            if (val && cpvTags.indexOf(val) === -1) {
-                cpvTags.push(val);
-                renderCpvTags();
-            }
-            this.value = '';
-        }
-    });
-
-    function renderCpvTags() {
-        var wrap = document.getElementById('cpv-tags');
-        var input = document.getElementById('cpv-input');
-        var tagsHtml = '';
-        for (var i = 0; i < cpvTags.length; i++) {
-            tagsHtml += '<span class="onb-tag">' + escapeHtml(cpvTags[i]) + ' <button onclick="removeCpvTag(' + i + ')">&times;</button></span>';
-        }
-        wrap.innerHTML = tagsHtml + '<input type="text" class="onb-tags-input" id="cpv-input" placeholder="' + (cpvTags.length ? '' : 'z.B. Hochbau, IT-Services...') + '">';
-        document.getElementById('cpv-input').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.key === ',') {
-                e.preventDefault();
-                var val = this.value.trim().replace(/,/g, '');
-                if (val && cpvTags.indexOf(val) === -1) {
-                    cpvTags.push(val);
-                    renderCpvTags();
-                }
-                this.value = '';
-            }
-        });
-        document.getElementById('cpv-input').focus();
-    }
-
-    function removeCpvTag(idx) {
-        cpvTags.splice(idx, 1);
-        renderCpvTags();
-    }
 
     // ==========================================
     // IDS COUNTER
@@ -940,24 +736,23 @@
     }
 
     // ==========================================
-    // NAVIGATION
+    // NAVIGATION (3 Steps)
     // ==========================================
     function goToStep(step) {
         var allSteps = document.querySelectorAll('.onb-step');
         for (var i = 0; i < allSteps.length; i++) allSteps[i].classList.remove('active');
 
         var stepId = 'step-' + step;
-        if (step === 3) stepId = selectedChoice === 'ids' ? 'step-3a' : 'step-3b';
+        if (step === 2) stepId = selectedChoice === 'ids' ? 'step-2a' : 'step-2b';
         document.getElementById(stepId).classList.add('active');
 
-        // Update progress dots
-        for (var d = 1; d <= 4; d++) {
+        for (var d = 1; d <= 3; d++) {
             var dot = document.getElementById('dot-' + d);
             dot.classList.remove('active', 'done');
             if (d < step) dot.classList.add('done');
             if (d === step) dot.classList.add('active');
         }
-        for (var l = 1; l <= 3; l++) {
+        for (var l = 1; l <= 2; l++) {
             var line = document.getElementById('line-' + l);
             line.classList.toggle('done', l < step);
         }
@@ -968,62 +763,25 @@
     }
 
     // ==========================================
-    // STEP 1: SUBMIT PROFILE
-    // ==========================================
-    function submitStep1() {
-        var name = document.getElementById('f-name').value.trim();
-        var branche = document.getElementById('f-branche').value;
-        var kanton = document.getElementById('f-kanton').value;
-
-        if (!name) { showMsg('Bitte Firmenname eingeben.'); return; }
-        if (!branche) { showMsg('Bitte Branche wählen.'); return; }
-        if (!kanton) { showMsg('Bitte Kanton wählen.'); return; }
-
-        var data = {
-            company_name: name,
-            branche: branche,
-            kanton: kanton,
-            mitarbeiter: document.getElementById('f-mitarbeiter').value,
-            umsatz: document.getElementById('f-umsatz').value,
-            budget: document.getElementById('f-budget').value,
-            cpv_tags: cpvTags
-        };
-
-        fetch('/api/onboarding/profile', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
-        }).then(function(r) { return r.json(); }).then(function(res) {
-            if (res.success) {
-                goToStep(2);
-            } else {
-                showMsg(res.error || 'Fehler beim Speichern.');
-            }
-        }).catch(function(e) {
-            showMsg('Verbindungsfehler.');
-        });
-    }
-
-    // ==========================================
-    // STEP 2: CHOICE
+    // STEP 1: CHOICE
     // ==========================================
     function selectChoice(choice) {
         selectedChoice = choice;
         document.getElementById('choice-ids').classList.toggle('selected', choice === 'ids');
         document.getElementById('choice-rate').classList.toggle('selected', choice === 'rate');
-        document.getElementById('btn-step2').disabled = false;
+        document.getElementById('btn-step1').disabled = false;
     }
 
-    function submitStep2() {
+    function submitStep1() {
         if (!selectedChoice) return;
-        goToStep(3);
+        goToStep(2);
         if (selectedChoice === 'rate') {
             loadRatingTenders();
         }
     }
 
     // ==========================================
-    // STEP 3a: SIMAP IDS
+    // STEP 2a: SIMAP IDS
     // ==========================================
     function submitIds() {
         var ids = parseIds(document.getElementById('simap-ids').value);
@@ -1034,13 +792,13 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ids: ids})
         }).then(function(r) { return r.json(); }).then(function(res) {
-            if (res.success) goToStep(4);
+            if (res.success) goToStep(3);
             else showMsg(res.error || 'Fehler beim Speichern.');
         }).catch(function() { showMsg('Verbindungsfehler.'); });
     }
 
     // ==========================================
-    // STEP 3b: RATING
+    // STEP 2b: RATING (expandable cards)
     // ==========================================
     function loadRatingTenders() {
         fetch('/api/onboarding/random-tenders?count=20')
@@ -1071,10 +829,28 @@
         if (t.order_type) tags += '<span class="onb-tender-tag">' + escapeHtml(t.order_type) + '</span>';
         if (t.process_type) tags += '<span class="onb-tender-tag">' + escapeHtml(t.process_type) + '</span>';
 
+        var fullDesc = escapeHtml(t.full_description || t.description || '');
+        var isLong = fullDesc.length > 150;
+
         var html = '<div class="onb-tender-card">' +
             '<div class="onb-tender-title">' + escapeHtml(t.title || 'Ohne Titel') + '</div>' +
-            '<div class="onb-tender-desc">' + escapeHtml(t.description || '') + '</div>' +
-            '<div class="onb-tender-meta">' + tags + '</div>' +
+            '<div class="onb-tender-desc ' + (isLong ? 'collapsed' : '') + '" id="tender-desc">' + fullDesc + '</div>';
+
+        if (isLong) {
+            html += '<button class="onb-expand-btn" id="expand-btn" onclick="toggleExpand()">' +
+                '<span id="expand-text">Mehr anzeigen</span>' +
+                '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>' +
+            '</button>';
+        }
+
+        if (t.organization) {
+            html += '<div class="onb-tender-org">' +
+                '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>' +
+                '<span>' + escapeHtml(t.organization) + '</span>' +
+            '</div>';
+        }
+
+        html += '<div class="onb-tender-meta">' + tags + '</div>' +
             '<div class="onb-rating-btns">' +
                 '<button class="onb-rate-btn onb-rate-no" onclick="rateTender(false)">' +
                     '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
@@ -1089,6 +865,24 @@
         '</div>';
 
         document.getElementById('rating-card-container').innerHTML = html;
+    }
+
+    function toggleExpand() {
+        var desc = document.getElementById('tender-desc');
+        var btn = document.getElementById('expand-btn');
+        var text = document.getElementById('expand-text');
+
+        if (desc.classList.contains('collapsed')) {
+            desc.classList.remove('collapsed');
+            desc.classList.add('expanded');
+            btn.classList.add('expanded');
+            text.textContent = 'Weniger anzeigen';
+        } else {
+            desc.classList.remove('expanded');
+            desc.classList.add('collapsed');
+            btn.classList.remove('expanded');
+            text.textContent = 'Mehr anzeigen';
+        }
     }
 
     function rateTender(isRelevant) {
@@ -1121,7 +915,7 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ratings: ratings})
         }).then(function(r) { return r.json(); }).then(function(res) {
-            if (res.success) goToStep(4);
+            if (res.success) goToStep(3);
             else showMsg(res.error || 'Fehler beim Speichern.');
         }).catch(function() { showMsg('Verbindungsfehler.'); });
     }

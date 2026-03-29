@@ -733,6 +733,7 @@ def get_random_archive_tenders(count=20):
                 'id': str(row.get('simap_id') or row.get('project_id', '')),
                 'title': row.get('cont_name') or 'Ohne Titel',
                 'description': (row.get('cont_descr') or '')[:300],
+                'full_description': row.get('cont_descr') or '',
                 'canton': row.get('location') or '',
                 'order_type': row.get('contract_type') or '',
                 'process_type': row.get('procedure_xml') or '',
