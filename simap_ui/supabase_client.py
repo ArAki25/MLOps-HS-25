@@ -747,6 +747,66 @@ def get_random_archive_tenders(count=20):
         return []
 
 
+def find_similar_tenders(simap_ids, limit=20):
+    """Finde ähnliche Tender via Embedding-API.
+    1. Simap-IDs -> DB-IDs nachschlagen (public.projects)
+    2. FastAPI /similar/{id} aufrufen pro ID
+    3. Ergebnisse mergen und nach Similarity sortieren
+    """
+    import requests as req
+
+    sb = get_client()
+    if not sb:
+        return {'success': False, 'error': 'DB nicht verbunden'}
+
+    try:
+        # Simap-IDs -> DB-IDs (public.projects Tabelle)
+        id_list = ','.join(str(sid) for sid in simap_ids)
+        response = sb.table('projects') \
+            .select('id,simap_project_id') \
+            .or_(f'simap_project_id.in.({id_list}),id.in.({id_list})') \
+            .execute()
+
+        db_ids = [row['id'] for row in (response.data or [])]
+
+        if not db_ids:
+            return {'success': False, 'error': 'Keine Projekte zu diesen IDs gefunden'}
+
+        # FastAPI aufrufen pro ID, Ergebnisse mergen
+        SIMILARITY_API = os.getenv('SIMILARITY_API_URL', 'http://127.0.0.1:8000')
+        seen = {}
+
+        for db_id in db_ids:
+            try:
+                r = req.get(
+                    f'{SIMILARITY_API}/similar/{db_id}',
+                    params={'limit': limit},
+                    timeout=30
+                )
+                if r.status_code != 200:
+                    continue
+                for item in r.json():
+                    pid = item.get('id')
+                    score = item.get('similarity_score', 0)
+                    if pid not in seen or score > seen[pid]['similarity_score']:
+                        seen[pid] = item
+            except Exception as e:
+                print(f"  Similarity API Fehler fuer {db_id}: {e}")
+                continue
+
+        results = sorted(
+            seen.values(),
+            key=lambda x: x.get('similarity_score', 0),
+            reverse=True
+        )[:limit]
+
+        return {'success': True, 'results': results, 'input_count': len(db_ids)}
+
+    except Exception as e:
+        print(f"Similar-Tenders-Fehler: {e}")
+        return {'success': False, 'error': str(e)}
+
+
 def mark_onboarding_complete(user_id):
     """Markiere Onboarding als abgeschlossen"""
     try:

@@ -296,6 +296,55 @@
         margin-top: 0.75rem;
     }
 
+    .sim-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        transition: border-color 0.2s;
+    }
+    .sim-card:hover {
+        border-color: rgba(6,182,212,0.3);
+    }
+    .sim-card-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #f4f4f5;
+        margin-bottom: 0.4rem;
+    }
+    .sim-card-meta {
+        display: flex;
+        gap: 0.75rem;
+        font-size: 0.75rem;
+        color: #a1a1aa;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .sim-score {
+        background: rgba(6,182,212,0.15);
+        color: var(--accent,#06b6d4);
+        padding: 0.15rem 0.5rem;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.7rem;
+    }
+    .sim-loading {
+        text-align: center;
+        padding: 2rem;
+        color: #71717a;
+    }
+    .sim-loading .spinner {
+        display: inline-block;
+        width: 20px; height: 20px;
+        border: 2px solid rgba(6,182,212,0.2);
+        border-top-color: var(--accent,#06b6d4);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-right: 0.5rem;
+        vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     .onb-ids-count {
         font-size: 0.875rem;
         color: var(--accent, #06b6d4);
@@ -644,6 +693,19 @@
                 <div class="onb-ids-hint">Eine ID pro Zeile oder mit Komma getrennt. Mindestens 3 IDs empfohlen.</div>
                 <div class="onb-ids-count" id="ids-count"></div>
 
+                <!-- Ähnliche Tender suchen -->
+                <button class="onb-btn onb-btn-primary" id="btn-find-similar" onclick="findSimilarTenders()" style="margin-top:1rem;width:100%;justify-content:center;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    Ähnliche Ausschreibungen finden
+                </button>
+
+                <div id="similar-results" style="display:none; margin-top:1.5rem;">
+                    <div style="font-size:0.8125rem; color:var(--accent,#06b6d4); font-weight:600; margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.1em;">
+                        Ähnliche Ausschreibungen
+                    </div>
+                    <div id="similar-list" style="display:flex; flex-direction:column; gap:0.5rem; max-height:400px; overflow-y:auto; padding-right:0.5rem;"></div>
+                </div>
+
                 <div class="onb-actions">
                     <button class="onb-btn onb-btn-ghost" onclick="goToStep(1)">
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
@@ -781,8 +843,59 @@
     }
 
     // ==========================================
-    // STEP 2a: SIMAP IDS
+    // STEP 2a: SIMILAR TENDERS
     // ==========================================
+    function findSimilarTenders() {
+        var ids = parseIds(document.getElementById('simap-ids').value);
+        if (ids.length === 0) { showMsg('Bitte mindestens eine ID eingeben.'); return; }
+
+        var btn = document.getElementById('btn-find-similar');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Suche läuft...';
+
+        var container = document.getElementById('similar-results');
+        var list = document.getElementById('similar-list');
+        container.style.display = 'block';
+        list.innerHTML = '<div class="sim-loading"><span class="spinner"></span> Ähnliche Ausschreibungen werden gesucht...</div>';
+
+        fetch('/api/onboarding/similar-tenders', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ids: ids, limit: 15})
+        }).then(function(r) { return r.json(); }).then(function(res) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Ähnliche Ausschreibungen finden';
+
+            if (!res.success || !res.results || res.results.length === 0) {
+                list.innerHTML = '<div class="sim-loading">Keine ähnlichen Ausschreibungen gefunden. Versuchen Sie andere IDs.</div>';
+                return;
+            }
+
+            var html = '';
+            res.results.forEach(function(item) {
+                var title = item.title_de || item.title_fr || 'Ohne Titel';
+                var score = item.similarity_score ? (item.similarity_score * 100).toFixed(0) + '%' : '';
+                var canton = item.canton || '';
+                var orderType = item.order_type || '';
+
+                html += '<div class="sim-card">'
+                    + '<div class="sim-card-title">' + title.substring(0, 100) + '</div>'
+                    + '<div class="sim-card-meta">'
+                    + (score ? '<span class="sim-score">' + score + ' Match</span>' : '')
+                    + (canton ? '<span>' + canton + '</span>' : '')
+                    + (orderType ? '<span>' + orderType + '</span>' : '')
+                    + '</div>'
+                    + '</div>';
+            });
+            list.innerHTML = html;
+
+        }).catch(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Ähnliche Ausschreibungen finden';
+            list.innerHTML = '<div class="sim-loading" style="color:#ef4444;">Fehler bei der Suche. Ist die Embedding-API erreichbar?</div>';
+        });
+    }
+
     function submitIds() {
         var ids = parseIds(document.getElementById('simap-ids').value);
         if (ids.length === 0) { showMsg('Bitte mindestens eine ID eingeben.'); return; }

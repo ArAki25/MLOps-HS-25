@@ -38,6 +38,7 @@ from supabase_client import (
     save_user_simap_ids,
     save_user_ratings,
     get_random_archive_tenders,
+    find_similar_tenders,
 )
 
 load_dotenv()
@@ -122,6 +123,23 @@ def api_onboarding_ratings():
     data = request.get_json()
     ratings_list = data.get('ratings', [])
     result = save_user_ratings(session.get('user_id'), ratings_list)
+    return jsonify(result)
+
+
+@app.route('/api/onboarding/similar-tenders', methods=['POST'])
+def api_similar_tenders():
+    """API: Finde ähnliche Ausschreibungen via Embedding-Similarity"""
+    if not session.get('user_logged_in'):
+        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
+
+    data = request.get_json()
+    ids = data.get('ids', [])
+    limit = data.get('limit', 20)
+
+    if not ids:
+        return jsonify({'success': False, 'error': 'Keine IDs angegeben'}), 400
+
+    result = find_similar_tenders(ids, limit=limit)
     return jsonify(result)
 
 
