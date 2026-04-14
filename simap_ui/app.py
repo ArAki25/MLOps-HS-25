@@ -38,6 +38,43 @@ from supabase_client import (
     save_user_simap_ids,
     save_user_ratings,
     get_random_archive_tenders,
+    # NEU:
+    get_onboarding_filter_options,
+    get_filtered_sample_projects,
+    save_user_ratings_v2,
+    get_user_recommendations,
+)
+from supabase_client import (
+    init_supabase,
+    get_all_projects,
+    get_projects_paginated,
+    get_filter_options,
+    get_project_by_id,
+    search_projects,
+    filter_projects,
+    get_statistics,
+    get_cantons,
+    get_content,
+    update_content,
+    get_team_members,
+    add_team_member,
+    update_team_member,
+    delete_team_member,
+    get_admin_by_email,
+    get_pro_user,
+    get_user_favorites,
+    add_favorite,
+    remove_favorite,
+    get_user_favorites_ids,
+    register_user,
+    login_user,
+    logout_user,
+    get_user_by_id,
+    is_onboarding_complete,
+    save_user_profile,
+    save_user_simap_ids,
+    save_user_ratings,
+    get_random_archive_tenders,
 )
 
 load_dotenv()
@@ -388,6 +425,35 @@ def pro_recommended():
                            projects=projects,
                            company_name=company_name,
                            avg_match=avg_match)
+
+@app.route('/api/onboarding/filter-options', methods=['GET'])
+def api_onboarding_filter_options():
+    return jsonify(get_onboarding_filter_options())
+
+
+@app.route('/api/onboarding/sample-projects', methods=['GET'])
+def api_sample_projects():
+    if not session.get('user_logged_in'):
+        return jsonify({'projects': []}), 401
+    projects = get_filtered_sample_projects(session.get('user_id'), 10)
+    return jsonify({'projects': projects})
+
+
+@app.route('/api/onboarding/submit-ratings', methods=['POST'])
+def api_submit_ratings():
+    if not session.get('user_logged_in'):
+        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
+    data = request.get_json()
+    result = save_user_ratings_v2(session.get('user_id'), data.get('ratings', []))
+    return jsonify(result)
+
+
+@app.route('/api/recommendations', methods=['GET'])
+def api_recommendations():
+    if not session.get('user_logged_in'):
+        return jsonify({'recommendations': []}), 401
+    recs = get_user_recommendations(session.get('user_id'), 20)
+    return jsonify({'recommendations': recs})
 
 
 # ============================================

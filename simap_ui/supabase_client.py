@@ -56,11 +56,15 @@ def get_auth_client():
 
 
 def ui(table_name: str):
-    """Helper: Zugriff auf eine Tabelle im 'ui' Schema.
-    Verwendung: ui('projects_ui').select('*')...
-    """
+    """Helper: Zugriff auf eine Tabelle im 'ui' Schema."""
     sb = get_client()
     return sb.schema(UI_SCHEMA).table(table_name)
+
+
+def ui_rpc(function_name: str, params: dict):
+    """Helper: Aufruf einer Postgres-Funktion im 'ui' Schema."""
+    sb = get_client()
+    return sb.schema(UI_SCHEMA).rpc(function_name, params)
 
 
 # ============================================
@@ -68,7 +72,6 @@ def ui(table_name: str):
 # ============================================
 
 def get_all_projects(limit: int = 50) -> List[Dict]:
-    """Hole Projekte (einfache Version für Kompatibilität)"""
     try:
         response = ui('projects_ui') \
             .select('*') \
@@ -84,14 +87,10 @@ def get_all_projects(limit: int = 50) -> List[Dict]:
 def get_projects_paginated(page=1, per_page=30, search='', canton='',
                            order_type='', process_type='', pub_type='',
                            sort='newest') -> Dict:
-    """Server-Side Pagination mit Filter und Suche"""
     try:
-        # Count-Query
         count_q = ui('projects_ui').select('id', count='exact')
-        # Data-Query
         data_q = ui('projects_ui').select('*')
 
-        # Search
         if search:
             search_filter = (
                 f'title_de.ilike.%{search}%,'
@@ -102,7 +101,6 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
             count_q = count_q.or_(search_filter)
             data_q = data_q.or_(search_filter)
 
-        # Filters
         if canton:
             count_q = count_q.ilike('canton', canton)
             data_q = data_q.ilike('canton', canton)
@@ -116,7 +114,6 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
             count_q = count_q.eq('pub_type', pub_type)
             data_q = data_q.eq('pub_type', pub_type)
 
-        # Sort
         if sort == 'oldest':
             data_q = data_q.order('publication_date', desc=False)
         elif sort == 'alpha':
@@ -124,15 +121,12 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
         else:
             data_q = data_q.order('publication_date', desc=True)
 
-        # Execute count
         count_result = count_q.execute()
         total = count_result.count if count_result.count else 0
 
-        # Pagination
         offset = (page - 1) * per_page
         data_q = data_q.range(offset, offset + per_page - 1)
 
-        # Execute data
         data_result = data_q.execute()
         projects = [transform_project(row) for row in (data_result.data or [])]
 
@@ -140,11 +134,8 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
         pages = math.ceil(total / per_page) if per_page > 0 else 0
 
         return {
-            'data': projects,
-            'total': total,
-            'page': page,
-            'per_page': per_page,
-            'pages': pages
+            'data': projects, 'total': total, 'page': page,
+            'per_page': per_page, 'pages': pages
         }
 
     except Exception as e:
@@ -153,7 +144,6 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
 
 
 def get_filter_options() -> Dict:
-    """Hole unique Werte für alle Filter aus der DB"""
     try:
         all_rows = []
         batch_size = 1000
@@ -177,10 +167,8 @@ def get_filter_options() -> Dict:
 
         print(f"✅ Filter-Optionen: {len(cantons)} Kantone, {len(order_types)} Auftragsarten, {len(process_types)} Verfahren, {len(pub_types)} Pub-Typen")
         return {
-            'cantons': cantons,
-            'order_types': order_types,
-            'process_types': process_types,
-            'pub_types': pub_types
+            'cantons': cantons, 'order_types': order_types,
+            'process_types': process_types, 'pub_types': pub_types
         }
     except Exception as e:
         print(f"❌ get_filter_options Fehler: {e}")
@@ -430,11 +418,10 @@ def get_pro_user(username: str, password: str):
 
 
 # ============================================
-# ML / RECOMMENDED
+# ML / RECOMMENDED (alte Pro-User Logik)
 # ============================================
 
 def get_recommended_projects(table_name: str, limit: int = 50) -> List[Dict]:
-    """ML-Predictions — diese Tabellen bleiben ggf. in public"""
     sb = get_client()
     if not sb or not table_name:
         return []
@@ -504,7 +491,7 @@ def get_user_favorites_ids(user_id: str) -> List[str]:
 
 
 # ============================================
-# SUPABASE AUTH (auth bleibt in eigenem Schema)
+# SUPABASE AUTH
 # ============================================
 
 def register_user(email: str, password: str, company_name: str) -> Dict:
@@ -521,7 +508,6 @@ def register_user(email: str, password: str, company_name: str) -> Dict:
         })
 
         if auth_response.user:
-            # User in ui.users Tabelle speichern
             try:
                 ui('users').insert({
                     'id': auth_response.user.id,
@@ -560,7 +546,6 @@ def login_user(email: str, password: str) -> Dict:
         })
 
         if auth_response.user and auth_response.session:
-            # Company name aus ui.users holen
             company_name = None
             try:
                 r = ui('users').select('company_name').eq('id', auth_response.user.id).execute()
@@ -613,36 +598,34 @@ def get_user_by_id(user_id: str):
 
 
 # ============================================
-# ONBOARDING (alle in ui Schema)
+# ONBOARDING — NEU mit Embedding-Support
 # ============================================
 
 def save_user_profile(user_id, data):
-    """Speichere oder update Firmenprofil"""
+    """Speichere oder update Firmenprofil mit den neuen Filter-Feldern"""
     if not user_id:
-        return {'success': False, 'error': 'Nicht verbunden'}
+        return {'success': False, 'error': 'Nicht eingeloggt'}
 
     try:
         profile = {
             'user_id': user_id,
-            'company_name': data.get('company_name', ''),
-            'branche': data.get('branche', ''),
-            'kanton': data.get('kanton', ''),
-            'mitarbeiter': data.get('mitarbeiter', ''),
-            'umsatz': data.get('umsatz', ''),
-            'budget': data.get('budget', ''),
-            'cpv_tags': data.get('cpv_tags', []),
+            'company_name': data.get('company_name'),
+            'employee_count': data.get('employee_count'),
+            'headquarters': data.get('headquarters'),
+            'canton': data.get('canton'),
+            'project_subtype': data.get('project_subtype'),
+            'award_amount_min': data.get('award_amount_min'),
+            'award_amount_max': data.get('award_amount_max'),
             'updated_at': datetime.utcnow().isoformat()
         }
 
-        # Upsert: insert or update if exists
-        existing = ui('user_profiles').select('id').eq('user_id', user_id).execute()
+        existing = ui('user_profiles').select('user_id').eq('user_id', user_id).execute()
         if existing.data:
             ui('user_profiles').update(profile).eq('user_id', user_id).execute()
         else:
-            profile['created_at'] = datetime.utcnow().isoformat()
             ui('user_profiles').insert(profile).execute()
 
-        # Update company_name in ui.users too
+        # company_name auch in ui.users updaten
         try:
             ui('users').update({'company_name': data.get('company_name')}).eq('id', user_id).execute()
         except:
@@ -659,20 +642,14 @@ def save_user_profile(user_id, data):
 def save_user_simap_ids(user_id, ids):
     """Speichere Simap Projekt-IDs"""
     if not user_id:
-        return {'success': False, 'error': 'Nicht verbunden'}
+        return {'success': False, 'error': 'Nicht eingeloggt'}
 
     try:
-        # Alte IDs löschen
         ui('user_simap_ids').delete().eq('user_id', user_id).execute()
-
-        # Neue IDs einfügen
         rows = [{'user_id': user_id, 'simap_project_id': str(pid)} for pid in ids]
         if rows:
             ui('user_simap_ids').insert(rows).execute()
-
-        # Onboarding als komplett markieren
         mark_onboarding_complete(user_id)
-
         print(f"✅ {len(ids)} Simap-IDs gespeichert für User: {user_id}")
         return {'success': True, 'count': len(ids)}
 
@@ -681,97 +658,137 @@ def save_user_simap_ids(user_id, ids):
         return {'success': False, 'error': str(e)}
 
 
-def save_user_ratings(user_id, ratings_list):
-    """Speichere Tender-Bewertungen"""
+def get_onboarding_filter_options():
+    """Distinct project_subtypes für das Onboarding-Dropdown"""
+    try:
+        all_rows = []
+        batch_size = 1000
+        offset = 0
+        while True:
+            r = ui('projects_ui') \
+                .select('project_subtype') \
+                .not_.is_('project_subtype', 'null') \
+                .range(offset, offset + batch_size - 1) \
+                .execute()
+            if not r.data:
+                break
+            all_rows.extend(r.data)
+            if len(r.data) < batch_size:
+                break
+            offset += batch_size
+
+        subtypes = sorted(set(
+            r['project_subtype'] for r in all_rows
+            if r.get('project_subtype') and r['project_subtype'].strip()
+        ))
+        print(f"✅ {len(subtypes)} project_subtypes geladen")
+        return {'subtypes': subtypes}
+
+    except Exception as e:
+        print(f"❌ get_onboarding_filter_options Fehler: {e}")
+        return {'subtypes': []}
+
+
+def get_filtered_sample_projects(user_id, sample_size=10):
+    """Ruft die RPC sample_projects_for_rating auf — gibt 10 gefilterte Projekte zurück"""
     if not user_id:
-        return {'success': False, 'error': 'Nicht verbunden'}
+        return []
+    try:
+        result = ui_rpc('sample_projects_for_rating', {
+            'p_user_id': user_id,
+            'sample_size': sample_size
+        }).execute()
+        print(f"✅ {len(result.data or [])} sample projects für User: {user_id}")
+        return result.data or []
+    except Exception as e:
+        print(f"❌ get_filtered_sample_projects Fehler: {e}")
+        return []
+
+
+def save_user_ratings_v2(user_id, ratings_list):
+    """Speichert Ratings (project_id + rating -1/1) und schliesst Onboarding ab"""
+    if not user_id:
+        return {'success': False, 'error': 'Nicht eingeloggt'}
 
     try:
         rows = [{
             'user_id': user_id,
-            'tender_id': str(r.get('tender_id', '')),
-            'relevant': r.get('relevant', False)
-        } for r in ratings_list]
+            'project_id': r.get('project_id'),
+            'rating': r.get('rating')
+        } for r in ratings_list if r.get('project_id') and r.get('rating') in (-1, 1)]
 
         if rows:
-            ui('user_tender_ratings').insert(rows).execute()
+            # upsert mit ON CONFLICT auf (user_id, project_id)
+            ui('user_tender_ratings').upsert(rows, on_conflict='user_id,project_id').execute()
 
-        # Onboarding als komplett markieren
         mark_onboarding_complete(user_id)
-
-        print(f"✅ {len(rows)} Bewertungen gespeichert für User: {user_id}")
+        print(f"✅ {len(rows)} Ratings gespeichert für User: {user_id}")
         return {'success': True, 'count': len(rows)}
 
     except Exception as e:
-        print(f"❌ Ratings-Fehler: {e}")
+        print(f"❌ save_user_ratings_v2 Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
-def get_random_archive_tenders(count=20):
-    """Hole zufällige Ausschreibungen aus dem Archiv für Rating.
-    archiv_daten_2010-2024 liegt in public Schema.
-    """
-    sb = get_client()
-    if not sb:
+def get_user_recommendations(user_id, count=20):
+    """Personalisierte Empfehlungen via Embedding-Similarity"""
+    if not user_id:
         return []
-
     try:
-        response = sb.table('archiv_daten_2010-2024') \
-            .select('simap_id,project_id,cont_name,cont_descr,location,contract_type,procedure_xml,auth_name') \
-            .not_.is_('cont_name', 'null') \
-            .limit(200) \
-            .execute()
-
-        import random
-        rows = response.data or []
-        random.shuffle(rows)
-        selected = rows[:count]
-
-        tenders = []
-        for row in selected:
-            tenders.append({
-                'id': str(row.get('simap_id') or row.get('project_id', '')),
-                'title': row.get('cont_name') or 'Ohne Titel',
-                'description': (row.get('cont_descr') or '')[:300],
-                'full_description': row.get('cont_descr') or '',
-                'canton': row.get('location') or '',
-                'order_type': row.get('contract_type') or '',
-                'process_type': row.get('procedure_xml') or '',
-                'organization': row.get('auth_name') or ''
-            })
-
-        return tenders
-
+        result = ui_rpc('recommend_projects_for_user', {
+            'p_user_id': user_id,
+            'match_count': count
+        }).execute()
+        print(f"✅ {len(result.data or [])} recommendations für User: {user_id}")
+        return result.data or []
     except Exception as e:
-        print(f"❌ Random-Tenders-Fehler: {e}")
+        print(f"❌ get_user_recommendations Fehler: {e}")
         return []
+
+
+# ============================================
+# Alte Funktionen — bleiben für Kompatibilität, werden aber nicht mehr genutzt
+# ============================================
+
+def save_user_ratings(user_id, ratings_list):
+    """[DEPRECATED] alte Version — bitte save_user_ratings_v2 verwenden"""
+    print("⚠️ save_user_ratings (alt) aufgerufen — sollte save_user_ratings_v2 sein")
+    return save_user_ratings_v2(user_id, ratings_list)
+
+
+def get_random_archive_tenders(count=20):
+    """[DEPRECATED] wurde durch get_filtered_sample_projects ersetzt"""
+    print("⚠️ get_random_archive_tenders (alt) aufgerufen")
+    return []
 
 
 def mark_onboarding_complete(user_id):
-    """Markiere Onboarding als abgeschlossen"""
+    """Markiere Onboarding als abgeschlossen — KORRIGIERT auf 'onboarding_completed'"""
     try:
         ui('user_profiles') \
-            .update({'onboarding_complete': True, 'updated_at': datetime.utcnow().isoformat()}) \
+            .update({'onboarding_completed': True, 'updated_at': datetime.utcnow().isoformat()}) \
             .eq('user_id', user_id) \
             .execute()
+        print(f"✅ Onboarding completed für User: {user_id}")
     except Exception as e:
-        print(f"⚠️ Onboarding-Complete-Fehler: {e}")
+        print(f"⚠️ mark_onboarding_complete Fehler: {e}")
 
 
 def is_onboarding_complete(user_id):
-    """Prüfe ob User Onboarding abgeschlossen hat"""
+    """Prüfe ob User Onboarding abgeschlossen hat — KORRIGIERT auf 'onboarding_completed'"""
     if not user_id:
         return False
 
     try:
         r = ui('user_profiles') \
-            .select('onboarding_complete') \
+            .select('onboarding_completed') \
             .eq('user_id', user_id) \
             .execute()
 
         if r.data and len(r.data) > 0:
-            return r.data[0].get('onboarding_complete', False)
+            return r.data[0].get('onboarding_completed', False)
         return False
 
-    except:
+    except Exception as e:
+        print(f"⚠️ is_onboarding_complete Fehler: {e}")
         return False

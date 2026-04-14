@@ -85,7 +85,7 @@
     }
 
     .onb-step-line {
-        width: 80px;
+        width: 60px;
         height: 3px;
         background: rgba(255,255,255,0.05);
         transition: background 0.4s ease;
@@ -137,6 +137,112 @@
         font-size: 1rem;
     }
 
+    /* Form fields */
+    .onb-form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .onb-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #e4e4e7;
+        margin-bottom: 0.5rem;
+    }
+
+    .onb-label .required {
+        color: #f87171;
+        margin-left: 0.25rem;
+    }
+
+    .onb-input,
+    .onb-select {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 12px;
+        background: rgba(0,0,0,0.2);
+        color: #fff;
+        font-size: 0.9375rem;
+        font-family: inherit;
+        transition: all 0.2s;
+    }
+
+    .onb-input:focus,
+    .onb-select:focus {
+        outline: none;
+        border-color: var(--accent, #06b6d4);
+        background: rgba(0,0,0,0.4);
+        box-shadow: 0 0 0 4px rgba(6,182,212,0.15);
+    }
+
+    .onb-select option {
+        background: #18181b;
+        color: #fff;
+    }
+
+    .onb-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .onb-section-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--accent, #06b6d4);
+        margin-bottom: 1rem;
+        margin-top: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .onb-section-title:first-child {
+        margin-top: 0;
+    }
+
+    /* Volume radio cards */
+    .onb-volume-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+    }
+
+    .onb-volume-option {
+        padding: 1rem 0.75rem;
+        border: 2px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        background: rgba(0,0,0,0.2);
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .onb-volume-option:hover {
+        border-color: rgba(6,182,212,0.4);
+        background: rgba(6,182,212,0.05);
+    }
+
+    .onb-volume-option.selected {
+        border-color: var(--accent, #06b6d4);
+        background: rgba(6,182,212,0.12);
+        box-shadow: 0 0 0 1px var(--accent, #06b6d4);
+    }
+
+    .onb-volume-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .onb-volume-sub {
+        font-size: 0.7rem;
+        color: #71717a;
+        margin-top: 0.25rem;
+    }
+
     /* Buttons */
     .onb-actions {
         display: flex;
@@ -168,21 +274,10 @@
         box-shadow: 0 8px 20px rgba(6,182,212,0.3);
     }
 
-    .onb-btn-primary::after {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: linear-gradient(rgba(255,255,255,0.2), transparent);
-        opacity: 0;
-        transition: opacity 0.3s;
-    }
-
     .onb-btn-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 12px 28px rgba(6,182,212,0.4);
     }
-
-    .onb-btn-primary:hover::after { opacity: 1; }
 
     .onb-btn-ghost {
         background: rgba(255,255,255,0.03);
@@ -245,13 +340,6 @@
         background: rgba(6,182,212,0.15);
         border: 1px solid rgba(6,182,212,0.3);
         color: var(--accent, #06b6d4);
-        transition: all 0.3s;
-    }
-
-    .onb-choice:hover .onb-choice-icon {
-        background: var(--accent, #06b6d4);
-        color: #fff;
-        transform: scale(1.05);
     }
 
     .onb-choice h3 {
@@ -280,14 +368,13 @@
         color: #fff;
         resize: vertical;
         line-height: 1.8;
-        transition: all 0.2s;
     }
 
     .onb-ids-area:focus {
         outline: none;
         border-color: var(--accent, #06b6d4);
         background: rgba(0,0,0,0.4);
-        box-shadow: 0 0 0 4px rgba(6,182,212,0.15), inset 0 0 0 1px var(--accent, #06b6d4);
+        box-shadow: 0 0 0 4px rgba(6,182,212,0.15);
     }
 
     .onb-ids-hint {
@@ -340,13 +427,7 @@
         border-radius: 20px;
         padding: 2rem;
         margin-bottom: 1.5rem;
-        transition: all 0.3s;
         animation: cardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .onb-tender-card:hover {
-        background: rgba(255,255,255,0.05);
-        border-color: rgba(255,255,255,0.15);
     }
 
     @keyframes cardIn {
@@ -366,7 +447,6 @@
         font-size: 0.9375rem;
         color: #a1a1aa;
         line-height: 1.7;
-        margin-bottom: 0;
         max-height: 72px;
         overflow: hidden;
         position: relative;
@@ -402,19 +482,6 @@
         align-items: center;
         gap: 0.35rem;
         font-family: inherit;
-        transition: color 0.2s;
-    }
-
-    .onb-expand-btn:hover {
-        color: #fff;
-    }
-
-    .onb-expand-btn svg {
-        transition: transform 0.3s ease;
-    }
-
-    .onb-expand-btn.expanded svg {
-        transform: rotate(180deg);
     }
 
     .onb-tender-meta {
@@ -433,21 +500,6 @@
         font-size: 0.75rem;
         font-weight: 600;
         border: 1px solid rgba(6,182,212,0.2);
-    }
-
-    .onb-tender-org {
-        font-size: 0.8125rem;
-        color: #71717a;
-        margin-top: 0.5rem;
-        display: flex;
-        align-items: flex-start;
-        gap: 0.4rem;
-        line-height: 1.5;
-    }
-
-    .onb-tender-org svg {
-        flex-shrink: 0;
-        margin-top: 2px;
     }
 
     .onb-rating-btns {
@@ -481,7 +533,6 @@
         border-color: #ef4444;
         color: #fff;
         transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(239,68,68,0.2);
     }
 
     .onb-rate-yes {
@@ -495,7 +546,6 @@
         border-color: #10b981;
         color: #fff;
         transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(16,185,129,0.2);
     }
 
     .onb-rate-skip {
@@ -504,11 +554,6 @@
         color: #a1a1aa;
         flex: 0;
         padding: 1rem 1.25rem;
-    }
-
-    .onb-rate-skip:hover {
-        background: rgba(255,255,255,0.05);
-        color: #fff;
     }
 
     /* Success */
@@ -568,7 +613,10 @@
 
     @media (max-width: 600px) {
         .onb-choice-grid { grid-template-columns: 1fr; }
+        .onb-form-row { grid-template-columns: 1fr; }
+        .onb-volume-grid { grid-template-columns: 1fr; }
         .onb-card { padding: 2rem 1.5rem; }
+        .onb-step-line { width: 35px; }
     }
 </style>
 {% endblock %}
@@ -582,20 +630,126 @@
 <div class="onb-wrapper">
     <div class="onb-container">
 
-        <!-- Progress: 3 Steps -->
+        <!-- Progress: 4 Steps -->
         <div class="onb-progress" id="progress-bar">
             <div class="onb-step-dot active" id="dot-1">1</div>
             <div class="onb-step-line" id="line-1"></div>
             <div class="onb-step-dot" id="dot-2">2</div>
             <div class="onb-step-line" id="line-2"></div>
             <div class="onb-step-dot" id="dot-3">3</div>
+            <div class="onb-step-line" id="line-3"></div>
+            <div class="onb-step-dot" id="dot-4">4</div>
         </div>
 
         <div class="onb-card">
             <div id="msg-container"></div>
 
-            <!-- ==================== STEP 1: Wahl ==================== -->
+            <!-- ==================== STEP 1: Firmenprofil ==================== -->
             <div class="onb-step active" id="step-1">
+                <div class="onb-header">
+                    <div class="onb-icon">
+                        <svg width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    </div>
+                    <h1>Firmenprofil</h1>
+                    <p>Damit wir Ihnen passende Ausschreibungen empfehlen können</p>
+                </div>
+
+                <div class="onb-section-title">Über Ihr Unternehmen</div>
+
+                <div class="onb-form-group">
+                    <label class="onb-label">Firmenname<span class="required">*</span></label>
+                    <input type="text" class="onb-input" id="company-name" placeholder="z.B. Muster Bau AG">
+                </div>
+
+                <div class="onb-form-row">
+                    <div class="onb-form-group">
+                        <label class="onb-label">Mitarbeiteranzahl</label>
+                        <select class="onb-select" id="employee-count">
+                            <option value="">Bitte wählen</option>
+                            <option value="5">1–10</option>
+                            <option value="25">11–50</option>
+                            <option value="100">51–250</option>
+                            <option value="500">über 250</option>
+                        </select>
+                    </div>
+                    <div class="onb-form-group">
+                        <label class="onb-label">Hauptsitz</label>
+                        <input type="text" class="onb-input" id="headquarters" placeholder="z.B. Olten, SO">
+                    </div>
+                </div>
+
+                <div class="onb-section-title">Was suchen Sie?</div>
+
+                <div class="onb-form-row">
+                    <div class="onb-form-group">
+                        <label class="onb-label">Kanton<span class="required">*</span></label>
+                        <select class="onb-select" id="canton">
+                            <option value="">Bitte wählen</option>
+                            <option value="AG">Aargau</option>
+                            <option value="AI">Appenzell Innerrhoden</option>
+                            <option value="AR">Appenzell Ausserrhoden</option>
+                            <option value="BE">Bern</option>
+                            <option value="BL">Basel-Landschaft</option>
+                            <option value="BS">Basel-Stadt</option>
+                            <option value="FR">Freiburg</option>
+                            <option value="GE">Genf</option>
+                            <option value="GL">Glarus</option>
+                            <option value="GR">Graubünden</option>
+                            <option value="JU">Jura</option>
+                            <option value="LU">Luzern</option>
+                            <option value="NE">Neuenburg</option>
+                            <option value="NW">Nidwalden</option>
+                            <option value="OW">Obwalden</option>
+                            <option value="SG">St. Gallen</option>
+                            <option value="SH">Schaffhausen</option>
+                            <option value="SO">Solothurn</option>
+                            <option value="SZ">Schwyz</option>
+                            <option value="TG">Thurgau</option>
+                            <option value="TI">Tessin</option>
+                            <option value="UR">Uri</option>
+                            <option value="VD">Waadt</option>
+                            <option value="VS">Wallis</option>
+                            <option value="ZG">Zug</option>
+                            <option value="ZH">Zürich</option>
+                        </select>
+                    </div>
+                    <div class="onb-form-group">
+                        <label class="onb-label">Projekttyp<span class="required">*</span></label>
+                        <select class="onb-select" id="project-subtype">
+                            <option value="">Wird geladen...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="onb-form-group">
+                    <label class="onb-label">Auftragsvolumen<span class="required">*</span></label>
+                    <div class="onb-volume-grid">
+                        <div class="onb-volume-option" data-volume="low" onclick="selectVolume('low')">
+                            <div class="onb-volume-label">Bis 100'000</div>
+                            <div class="onb-volume-sub">CHF</div>
+                        </div>
+                        <div class="onb-volume-option" data-volume="mid" onclick="selectVolume('mid')">
+                            <div class="onb-volume-label">100'000 – 500'000</div>
+                            <div class="onb-volume-sub">CHF</div>
+                        </div>
+                        <div class="onb-volume-option" data-volume="high" onclick="selectVolume('high')">
+                            <div class="onb-volume-label">Über 500'000</div>
+                            <div class="onb-volume-sub">CHF</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="onb-actions">
+                    <div></div>
+                    <button class="onb-btn onb-btn-primary" id="btn-step1" onclick="submitProfile()" disabled>
+                        Weiter
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==================== STEP 2: Wahl ==================== -->
+            <div class="onb-step" id="step-2">
                 <div class="onb-header">
                     <div class="onb-icon">
                         <svg width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
@@ -622,16 +776,19 @@
                 </div>
 
                 <div class="onb-actions">
-                    <div></div>
-                    <button class="onb-btn onb-btn-primary" id="btn-step1" onclick="submitStep1()" disabled>
+                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(1)">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
+                        Zurück
+                    </button>
+                    <button class="onb-btn onb-btn-primary" id="btn-step2" onclick="submitChoice()" disabled>
                         Weiter
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                     </button>
                 </div>
             </div>
 
-            <!-- ==================== STEP 2a: Simap IDs ==================== -->
-            <div class="onb-step" id="step-2a">
+            <!-- ==================== STEP 3a: Simap IDs ==================== -->
+            <div class="onb-step" id="step-3a">
                 <div class="onb-header">
                     <div class="onb-icon">
                         <svg width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -645,7 +802,7 @@
                 <div class="onb-ids-count" id="ids-count"></div>
 
                 <div class="onb-actions">
-                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(1)">
+                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(2)">
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
                         Zurück
                     </button>
@@ -656,8 +813,8 @@
                 </div>
             </div>
 
-            <!-- ==================== STEP 2b: Rating ==================== -->
-            <div class="onb-step" id="step-2b">
+            <!-- ==================== STEP 3b: Rating ==================== -->
+            <div class="onb-step" id="step-3b">
                 <div class="onb-header" style="margin-bottom:1rem;">
                     <h1>Ausschreibungen bewerten</h1>
                     <p>Ist diese Ausschreibung für Ihr Unternehmen relevant?</p>
@@ -665,7 +822,7 @@
 
                 <div class="onb-rating-progress">
                     <div class="onb-rating-bar"><div class="onb-rating-fill" id="rating-fill" style="width:0%"></div></div>
-                    <div class="onb-rating-text"><strong id="rating-current">0</strong> von <strong id="rating-total">15</strong> bewertet</div>
+                    <div class="onb-rating-text"><strong id="rating-current">0</strong> von <strong id="rating-total">10</strong> bewertet</div>
                 </div>
 
                 <div id="rating-card-container">
@@ -673,7 +830,7 @@
                 </div>
 
                 <div class="onb-actions">
-                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(1)">
+                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(2)">
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
                         Zurück
                     </button>
@@ -684,8 +841,8 @@
                 </div>
             </div>
 
-            <!-- ==================== STEP 3: Success ==================== -->
-            <div class="onb-step" id="step-3">
+            <!-- ==================== STEP 4: Success ==================== -->
+            <div class="onb-step" id="step-4">
                 <div class="onb-success">
                     <div class="onb-success-icon">
                         <svg width="40" height="40" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -708,51 +865,120 @@
 <script>
     var currentStep = 1;
     var selectedChoice = '';
+    var selectedVolume = '';
     var ratingTenders = [];
     var ratings = [];
     var ratingIndex = 0;
-    var RATING_TARGET = 15;
+    var RATING_TARGET = 10;
+
+    // Volume mapping: label -> {min, max}
+    var VOLUME_MAP = {
+        'low':  { min: 0,      max: 100000 },
+        'mid':  { min: 100000, max: 500000 },
+        'high': { min: 500000, max: null   }
+    };
 
     // ==========================================
-    // IDS COUNTER
+    // ON LOAD
     // ==========================================
     document.addEventListener('DOMContentLoaded', function() {
+        loadSubtypes();
+
+        // Profile form validation
+        ['company-name', 'canton', 'project-subtype'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.addEventListener('input', validateProfile);
+            if (el) el.addEventListener('change', validateProfile);
+        });
+
+        // Simap IDs counter
         var idsArea = document.getElementById('simap-ids');
         if (idsArea) {
             idsArea.addEventListener('input', function() {
                 var ids = parseIds(this.value);
                 var el = document.getElementById('ids-count');
-                if (ids.length > 0) {
-                    el.textContent = ids.length + ' ID' + (ids.length > 1 ? 's' : '') + ' erkannt';
-                } else {
-                    el.textContent = '';
-                }
+                el.textContent = ids.length > 0 ? (ids.length + ' ID' + (ids.length > 1 ? 's' : '') + ' erkannt') : '';
             });
         }
     });
 
-    function parseIds(text) {
-        return text.split(/[\n,;]+/).map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0 && /^\d+$/.test(s); });
+    function loadSubtypes() {
+        fetch('/api/onboarding/filter-options')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var sel = document.getElementById('project-subtype');
+                sel.innerHTML = '<option value="">Bitte wählen</option>';
+                (data.subtypes || []).forEach(function(s) {
+                    var opt = document.createElement('option');
+                    opt.value = s;
+                    opt.textContent = s;
+                    sel.appendChild(opt);
+                });
+            })
+            .catch(function() {
+                document.getElementById('project-subtype').innerHTML = '<option value="">Fehler beim Laden</option>';
+            });
     }
 
     // ==========================================
-    // NAVIGATION (3 Steps)
+    // STEP 1: PROFILE
+    // ==========================================
+    function selectVolume(vol) {
+        selectedVolume = vol;
+        document.querySelectorAll('.onb-volume-option').forEach(function(el) {
+            el.classList.toggle('selected', el.dataset.volume === vol);
+        });
+        validateProfile();
+    }
+
+    function validateProfile() {
+        var ok = document.getElementById('company-name').value.trim() &&
+                 document.getElementById('canton').value &&
+                 document.getElementById('project-subtype').value &&
+                 selectedVolume;
+        document.getElementById('btn-step1').disabled = !ok;
+    }
+
+    function submitProfile() {
+        var vol = VOLUME_MAP[selectedVolume];
+        var payload = {
+            company_name: document.getElementById('company-name').value.trim(),
+            employee_count: parseInt(document.getElementById('employee-count').value) || null,
+            headquarters: document.getElementById('headquarters').value.trim() || null,
+            canton: document.getElementById('canton').value,
+            project_subtype: document.getElementById('project-subtype').value,
+            award_amount_min: vol.min,
+            award_amount_max: vol.max
+        };
+
+        fetch('/api/onboarding/profile', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        }).then(function(r) { return r.json(); }).then(function(res) {
+            if (res.success) goToStep(2);
+            else showMsg(res.error || 'Fehler beim Speichern.');
+        }).catch(function() { showMsg('Verbindungsfehler.'); });
+    }
+
+    // ==========================================
+    // NAVIGATION (4 Steps)
     // ==========================================
     function goToStep(step) {
         var allSteps = document.querySelectorAll('.onb-step');
         for (var i = 0; i < allSteps.length; i++) allSteps[i].classList.remove('active');
 
         var stepId = 'step-' + step;
-        if (step === 2) stepId = selectedChoice === 'ids' ? 'step-2a' : 'step-2b';
+        if (step === 3) stepId = selectedChoice === 'ids' ? 'step-3a' : 'step-3b';
         document.getElementById(stepId).classList.add('active');
 
-        for (var d = 1; d <= 3; d++) {
+        for (var d = 1; d <= 4; d++) {
             var dot = document.getElementById('dot-' + d);
             dot.classList.remove('active', 'done');
             if (d < step) dot.classList.add('done');
             if (d === step) dot.classList.add('active');
         }
-        for (var l = 1; l <= 2; l++) {
+        for (var l = 1; l <= 3; l++) {
             var line = document.getElementById('line-' + l);
             line.classList.toggle('done', l < step);
         }
@@ -763,26 +989,30 @@
     }
 
     // ==========================================
-    // STEP 1: CHOICE
+    // STEP 2: CHOICE
     // ==========================================
     function selectChoice(choice) {
         selectedChoice = choice;
         document.getElementById('choice-ids').classList.toggle('selected', choice === 'ids');
         document.getElementById('choice-rate').classList.toggle('selected', choice === 'rate');
-        document.getElementById('btn-step1').disabled = false;
+        document.getElementById('btn-step2').disabled = false;
     }
 
-    function submitStep1() {
+    function submitChoice() {
         if (!selectedChoice) return;
-        goToStep(2);
+        goToStep(3);
         if (selectedChoice === 'rate') {
             loadRatingTenders();
         }
     }
 
     // ==========================================
-    // STEP 2a: SIMAP IDS
+    // STEP 3a: SIMAP IDS
     // ==========================================
+    function parseIds(text) {
+        return text.split(/[\n,;]+/).map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0 && /^\d+$/.test(s); });
+    }
+
     function submitIds() {
         var ids = parseIds(document.getElementById('simap-ids').value);
         if (ids.length === 0) { showMsg('Bitte mindestens eine ID eingeben.'); return; }
@@ -792,72 +1022,69 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ids: ids})
         }).then(function(r) { return r.json(); }).then(function(res) {
-            if (res.success) goToStep(3);
+            if (res.success) goToStep(4);
             else showMsg(res.error || 'Fehler beim Speichern.');
         }).catch(function() { showMsg('Verbindungsfehler.'); });
     }
 
     // ==========================================
-    // STEP 2b: RATING (expandable cards)
+    // STEP 3b: RATING (uses filtered sample-projects)
     // ==========================================
     function loadRatingTenders() {
-        fetch('/api/onboarding/random-tenders?count=20')
+        fetch('/api/onboarding/sample-projects')
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                ratingTenders = data.tenders || [];
-                RATING_TARGET = Math.min(15, ratingTenders.length);
+                ratingTenders = data.projects || [];
+                if (ratingTenders.length === 0) {
+                    document.getElementById('rating-card-container').innerHTML =
+                        '<div style="text-align:center;padding:2rem;color:#f87171;">Keine passenden Ausschreibungen für Ihren Filter gefunden. Bitte gehen Sie zurück und passen Sie Ihr Profil an.</div>';
+                    return;
+                }
+                RATING_TARGET = Math.min(10, ratingTenders.length);
                 document.getElementById('rating-total').textContent = RATING_TARGET;
                 ratingIndex = 0;
                 ratings = [];
                 showNextTender();
             })
             .catch(function() {
-                document.getElementById('rating-card-container').innerHTML = '<div style="text-align:center;padding:2rem;color:#ef4444;">Fehler beim Laden der Ausschreibungen.</div>';
+                document.getElementById('rating-card-container').innerHTML =
+                    '<div style="text-align:center;padding:2rem;color:#ef4444;">Fehler beim Laden der Ausschreibungen.</div>';
             });
     }
 
     function showNextTender() {
         if (ratingIndex >= ratingTenders.length || ratings.length >= RATING_TARGET) {
             document.getElementById('btn-finish-rating').disabled = false;
-            document.getElementById('rating-card-container').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--accent,#06b6d4);font-weight:600;">Alle bewertet! Klicken Sie auf Abschliessen.</div>';
+            document.getElementById('rating-card-container').innerHTML =
+                '<div style="text-align:center;padding:2rem;color:var(--accent,#06b6d4);font-weight:600;">Alle bewertet! Klicken Sie auf Abschliessen.</div>';
             return;
         }
 
         var t = ratingTenders[ratingIndex];
         var tags = '';
         if (t.canton) tags += '<span class="onb-tender-tag">' + escapeHtml(t.canton) + '</span>';
-        if (t.order_type) tags += '<span class="onb-tender-tag">' + escapeHtml(t.order_type) + '</span>';
-        if (t.process_type) tags += '<span class="onb-tender-tag">' + escapeHtml(t.process_type) + '</span>';
+        if (t.project_subtype) tags += '<span class="onb-tender-tag">' + escapeHtml(t.project_subtype) + '</span>';
+        if (t.award_amount) tags += '<span class="onb-tender-tag">CHF ' + Number(t.award_amount).toLocaleString('de-CH') + '</span>';
 
-        var fullDesc = escapeHtml(t.full_description || t.description || '');
+        var fullDesc = escapeHtml(t.description_de || '');
         var isLong = fullDesc.length > 150;
 
         var html = '<div class="onb-tender-card">' +
-            '<div class="onb-tender-title">' + escapeHtml(t.title || 'Ohne Titel') + '</div>' +
+            '<div class="onb-tender-title">' + escapeHtml(t.title_de || 'Ohne Titel') + '</div>' +
             '<div class="onb-tender-desc ' + (isLong ? 'collapsed' : '') + '" id="tender-desc">' + fullDesc + '</div>';
 
         if (isLong) {
-            html += '<button class="onb-expand-btn" id="expand-btn" onclick="toggleExpand()">' +
-                '<span id="expand-text">Mehr anzeigen</span>' +
-                '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>' +
-            '</button>';
-        }
-
-        if (t.organization) {
-            html += '<div class="onb-tender-org">' +
-                '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>' +
-                '<span>' + escapeHtml(t.organization) + '</span>' +
-            '</div>';
+            html += '<button class="onb-expand-btn" onclick="toggleExpand()">Mehr anzeigen</button>';
         }
 
         html += '<div class="onb-tender-meta">' + tags + '</div>' +
             '<div class="onb-rating-btns">' +
-                '<button class="onb-rate-btn onb-rate-no" onclick="rateTender(false)">' +
+                '<button class="onb-rate-btn onb-rate-no" onclick="rateTender(-1)">' +
                     '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
                     'Nicht relevant' +
                 '</button>' +
                 '<button class="onb-rate-btn onb-rate-skip" onclick="skipTender()">Überspringen</button>' +
-                '<button class="onb-rate-btn onb-rate-yes" onclick="rateTender(true)">' +
+                '<button class="onb-rate-btn onb-rate-yes" onclick="rateTender(1)">' +
                     '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' +
                     'Relevant' +
                 '</button>' +
@@ -869,25 +1096,13 @@
 
     function toggleExpand() {
         var desc = document.getElementById('tender-desc');
-        var btn = document.getElementById('expand-btn');
-        var text = document.getElementById('expand-text');
-
-        if (desc.classList.contains('collapsed')) {
-            desc.classList.remove('collapsed');
-            desc.classList.add('expanded');
-            btn.classList.add('expanded');
-            text.textContent = 'Weniger anzeigen';
-        } else {
-            desc.classList.remove('expanded');
-            desc.classList.add('collapsed');
-            btn.classList.remove('expanded');
-            text.textContent = 'Mehr anzeigen';
-        }
+        desc.classList.toggle('collapsed');
+        desc.classList.toggle('expanded');
     }
 
-    function rateTender(isRelevant) {
+    function rateTender(rating) {
         var t = ratingTenders[ratingIndex];
-        ratings.push({tender_id: t.id, relevant: isRelevant});
+        ratings.push({project_id: t.id, rating: rating});
         ratingIndex++;
         updateRatingProgress();
         showNextTender();
@@ -902,7 +1117,7 @@
         var pct = Math.min(100, Math.round(ratings.length / RATING_TARGET * 100));
         document.getElementById('rating-fill').style.width = pct + '%';
         document.getElementById('rating-current').textContent = ratings.length;
-        if (ratings.length >= 10) {
+        if (ratings.length >= 5) {
             document.getElementById('btn-finish-rating').disabled = false;
         }
     }
@@ -910,12 +1125,12 @@
     function finishRating() {
         if (ratings.length < 5) { showMsg('Bitte mindestens 5 Ausschreibungen bewerten.'); return; }
 
-        fetch('/api/onboarding/ratings', {
+        fetch('/api/onboarding/submit-ratings', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ratings: ratings})
         }).then(function(r) { return r.json(); }).then(function(res) {
-            if (res.success) goToStep(3);
+            if (res.success) goToStep(4);
             else showMsg(res.error || 'Fehler beim Speichern.');
         }).catch(function() { showMsg('Verbindungsfehler.'); });
     }
@@ -924,7 +1139,7 @@
     // HELPERS
     // ==========================================
     function showMsg(text) {
-        document.getElementById('msg-container').innerHTML = '<div class="onb-msg onb-msg-error">' + text + '</div>';
+        document.getElementById('msg-container').innerHTML = '<div class="onb-msg-error">' + text + '</div>';
     }
 
     function clearMsg() {
