@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kantonsauswahl – Schweiz</title>
+
+    <!-- D3.js + TopoJSON (CDN) -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+
+    <!-- Font (already loaded in base.html – remove this link when embedding) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ─────────────────────────────────────────────────────────────────
+           Design Tokens  (matches simap_ui/static/css/style.css)
+           Remove this :root block when embedding – tokens are already global
+        ───────────────────────────────────────────────────────────────── */
+        :root {
+            --bg:           #09090b;
+            --surface:      #121214;
+            --surface-2:    #1f1f23;
+            --surface-h:    #27272a;
+            --border:       #27272a;
+            --border-2:     #3f3f46;
+            --border-3:     #52525b;
+            --text:         #f4f4f5;
+            --text-muted:   #a1a1aa;
+            --text-dim:     #71717a;
+            --accent:       #06b6d4;
+            --accent-low:   rgba(6, 182, 212, 0.12);
+            --accent-mid:   rgba(6, 182, 212, 0.28);
+            --accent-hover: #0891b2;
+            --radius:       10px;
+            --radius-lg:    16px;
+            --shadow:       0 4px 16px rgba(0, 0, 0, 0.55);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* Demo-only body – remove when embedding into a template */
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            padding: 2.5rem 1.5rem;
+        }
+
+        /* ─────────────────────────────────────────────────────────────────
+           Component Root
+        ───────────────────────────────────────────────────────────────── */
+        .cs-wrapper {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        /* ── Header ── */
+        .cs-header {
+            margin-bottom: 1.25rem;
+        }
+        .cs-title-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 0.35rem;
+        }
+        .cs-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .cs-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.5rem;
+            height: 1.5rem;
+            padding: 0 0.35rem;
+            border-radius: 999px;
+            background: var(--accent);
+            color: #000;
+            font-size: 0.7rem;
+            font-weight: 700;
+            opacity: 0;
+            transform: scale(0.7);
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .cs-badge.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .cs-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* ── Map Card ── */
+        .cs-map-card {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.25rem 1.25rem;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        /* subtle cyan glow in top-left when cantons selected */
+        .cs-map-card::before {
+            content: '';
+            position: absolute;
+            top: -60px; left: -60px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(6,182,212,0.1) 0%, transparent 70%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        .cs-map-card.has-selection::before { opacity: 1; }
+
+        #cs-svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* ── Canton SVG Paths ── */
+        .cs-canton {
+            fill: var(--surface-2);
+            stroke: var(--border-2);
+            stroke-width: 0.6;
+            cursor: pointer;
+            transition: fill 0.13s, stroke 0.13s, stroke-width 0.13s;
+        }
+        .cs-canton:hover {
+            fill: var(--accent-low);
+            stroke: var(--accent);
+            stroke-width: 0.9;
+        }
+        .cs-canton.cs-selected {
+            fill: var(--accent-mid);
+            stroke: var(--accent);
+            stroke-width: 1.1;
+        }
+
+        /* Outer country border layer */
+        .cs-border-outer {
+            fill: none;
+            stroke: var(--border-3);
+            stroke-width: 1.4;
+            pointer-events: none;
+        }
+
+        /* ── Canton Abbreviation Labels ── */
+        .cs-label {
+            font-size: 7.5px;
+            fill: var(--text-dim);
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+            user-select: none;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            transition: fill 0.13s;
+        }
+        .cs-label.cs-selected {
+            fill: var(--accent);
+            font-weight: 700;
+        }
+
+        /* ── Tooltip ── */
+        .cs-tooltip {
+            position: absolute;
+            background: var(--surface-h);
+            border: 1px solid var(--border-2);
+            border-radius: 8px;
+            padding: 0.3rem 0.7rem;
+            font-size: 0.78rem;
+            color: var(--text);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.1s;
+            z-index: 30;
+            white-space: nowrap;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.45);
+            transform: translateY(-2px);
+        }
+        .cs-tooltip.visible { opacity: 1; }
+
+        /* ── Loading ── */
+        .cs-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            z-index: 20;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        .cs-spinner {
+            width: 18px; height: 18px;
+            border: 2px solid var(--border-2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: cs-spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+        @keyframes cs-spin { to { transform: rotate(360deg); } }
+
+        /* ── Error ── */
+        .cs-error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .cs-error strong { color: var(--text); font-size: 0.9rem; }
+        .cs-error-icon { font-size: 2rem; margin-bottom: 0.25rem; }
+
+        /* ── Quick Region Buttons ── */
+        .cs-regions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 0.6rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .cs-region-label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            align-self: center;
+            margin-right: 0.1rem;
+        }
+        .cs-region-btn {
+            padding: 0.22rem 0.65rem;
+            border-radius: 7px;
+            font-size: 0.76rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--border-2);
+            background: transparent;
+            color: var(--text-muted);
+            font-family: inherit;
+            transition: background 0.12s, color 0.12s, border-color 0.12s;
+        }
+        .cs-region-btn:hover {
+            background: var(--surface-2);
+            color: var(--text);
+            border-color: var(--border-3);
+        }
+
+        /* ── Selection Bar ── */
+        .cs-selection-bar {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            margin-top: 0.8rem;
+            padding: 0.65rem 0.9rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            min-height: 46px;
+        }
+        .cs-sel-label {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            padding-top: 0.2rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .cs-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            flex: 1;
+            align-items: center;
+            min-height: 26px;
+        }
+        .cs-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.15rem 0.45rem 0.15rem 0.55rem;
+            background: var(--accent-low);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 6px;
+            font-size: 0.77rem;
+            font-weight: 600;
+            color: var(--accent);
+            line-height: 1.5;
+            animation: cs-tag-in 0.15s ease-out;
+        }
+        @keyframes cs-tag-in {
+            from { opacity: 0; transform: scale(0.85); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        .cs-tag-remove {
+            background: none;
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            padding: 0;
+            font-size: 1.05rem;
+            line-height: 1;
+            opacity: 0.5;
+            transition: opacity 0.1s;
+            font-family: inherit;
+        }
+        .cs-tag-remove:hover { opacity: 1; }
+
+        .cs-empty-hint {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            font-style: italic;
+        }
+
+        .cs-actions {
+            display: flex;
+            gap: 0.35rem;
+            flex-shrink: 0;
+            padding-top: 0.05rem;
+        }
+        .cs-btn {
+            padding: 0.28rem 0.75rem;
+            border-radius: 7px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--border-2);
+            background: transparent;
+            color: var(--text-muted);
+            font-family: inherit;
+            transition: background 0.12s, color 0.12s, border-color 0.12s;
+            white-space: nowrap;
+        }
+        .cs-btn:hover {
+            background: var(--surface-2);
+            color: var(--text);
+            border-color: var(--border-3);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 500px) {
+            .cs-label { font-size: 6px; }
+            .cs-selection-bar { flex-wrap: wrap; }
+            .cs-actions { width: 100%; justify-content: flex-end; }
+        }
+    </style>
+</head>
+<body>
+
+<!--
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  INTERAKTIVE KANTONSAUSWAHL – KOMPONENTE                                    ║
+║                                                                              ║
+║  Integration in Jinja2 Template:                                            ║
+║  1. <link>/<script> Tags in base.html {% block extra_js %} einfügen         ║
+║  2. Alles innerhalb von <!-- COMPONENT START --> bis <!-- COMPONENT END -->  ║
+║     direkt ins Template kopieren                                             ║
+║  3. Hidden Input "selected_cantons" im Flask-Route mit                       ║
+║     request.form.get('selected_cantons', '').split(',') auslesen            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+-->
+
+<!-- COMPONENT START ─────────────────────────────────────────────────────── -->
+<div class="cs-wrapper" id="canton-selector">
+
+    <!-- Header -->
+    <div class="cs-header">
+        <div class="cs-title-row">
+            <h2 class="cs-title">Kantone auswählen</h2>
+            <span class="cs-badge" id="cs-badge">0</span>
+        </div>
+        <p class="cs-subtitle">
+            Für welche Kantone möchten Sie Ausschreibungen erhalten?
+            Klicken Sie auf die gewünschten Kantone – Mehrfachauswahl ist möglich.
+        </p>
+    </div>
+
+    <!-- Map Card -->
+    <div class="cs-map-card" id="cs-map-card">
+
+        <!-- Loading state -->
+        <div class="cs-overlay" id="cs-loading">
+            <div class="cs-spinner"></div>
+            <span>Karte wird geladen…</span>
+        </div>
+
+        <!-- Quick region selector row (inside card, above map) -->
+        <div class="cs-regions" id="cs-regions" style="display:none">
+            <span class="cs-region-label">Schnellauswahl:</span>
+            <button class="cs-region-btn" type="button"
+                    onclick="selectRegion('ch-de')" title="ZH, BE, LU, UR, SZ, OW, NW, GL, ZG, SO, BS, BL, SH, AR, AI, SG, AG, TG, GR">
+                Deutschschweiz
+            </button>
+            <button class="cs-region-btn" type="button"
+                    onclick="selectRegion('ch-fr')" title="FR, VD, VS, NE, GE, JU">
+                Romandie
+            </button>
+            <button class="cs-region-btn" type="button"
+                    onclick="selectRegion('ch-it')" title="TI">
+                Tessin
+            </button>
+        </div>
+
+        <!-- SVG Map (viewBox matches the 600×380 projection space) -->
+        <svg id="cs-svg"
+             viewBox="0 0 600 380"
+             role="img"
+             aria-label="Interaktive Karte der Schweiz mit Kantonsauswahl">
+        </svg>
+
+        <!-- Tooltip (positioned absolute within card) -->
+        <div class="cs-tooltip" id="cs-tooltip"></div>
+
+    </div><!-- /cs-map-card -->
+
+    <!-- Selection Bar -->
+    <div class="cs-selection-bar">
+        <span class="cs-sel-label">Ausgewählt:</span>
+        <div class="cs-tags" id="cs-tags">
+            <span class="cs-empty-hint">Noch keine Kantone gewählt</span>
+        </div>
+        <div class="cs-actions">
+            <button class="cs-btn" type="button" onclick="cs_selectAll()">Alle</button>
+            <button class="cs-btn" type="button" onclick="cs_clearAll()">Leeren</button>
+        </div>
+    </div>
+
+    <!--
+        Hidden input for Flask form submission.
+        Value: comma-separated canton abbreviations, e.g. "ZH,BE,LU"
+
+        Read in Flask route:
+            cantons = request.form.get('selected_cantons', '').split(',')
+            cantons = [c for c in cantons if c]  # remove empty strings
+    -->
+    <input type="hidden" name="selected_cantons" id="cs-hidden" value="">
+
+</div>
+<!-- COMPONENT END ───────────────────────────────────────────────────────── -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     JAVASCRIPT – kann auch in {% block extra_js %} verschoben werden
+════════════════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+    /* ── Canton Data ──────────────────────────────────────────────────── */
+    const ID_TO_ABBR = {
+        1:'ZH', 2:'BE', 3:'LU', 4:'UR', 5:'SZ', 6:'OW', 7:'NW',
+        8:'GL', 9:'ZG', 10:'FR', 11:'SO', 12:'BS', 13:'BL', 14:'SH',
+        15:'AR', 16:'AI', 17:'SG', 18:'GR', 19:'AG', 20:'TG',
+        21:'TI', 22:'VD', 23:'VS', 24:'NE', 25:'GE', 26:'JU'
+    };
+
+    const NAMES = {
+        ZH:'Zürich', BE:'Bern', LU:'Luzern', UR:'Uri', SZ:'Schwyz',
+        OW:'Obwalden', NW:'Nidwalden', GL:'Glarus', ZG:'Zug', FR:'Freiburg',
+        SO:'Solothurn', BS:'Basel-Stadt', BL:'Basel-Landschaft',
+        SH:'Schaffhausen', AR:'Appenzell A.Rh.', AI:'Appenzell I.Rh.',
+        SG:'St. Gallen', GR:'Graubünden', AG:'Aargau', TG:'Thurgau',
+        TI:'Tessin', VD:'Waadt', VS:'Wallis', NE:'Neuenburg',
+        GE:'Genf', JU:'Jura'
+    };
+
+    const REGIONS = {
+        'ch-de': ['ZH','BE','LU','UR','SZ','OW','NW','GL','ZG','SO',
+                  'BS','BL','SH','AR','AI','SG','GR','AG','TG'],
+        'ch-fr': ['FR','VD','VS','NE','GE','JU'],
+        'ch-it': ['TI']
+    };
+
+    /* ── State ────────────────────────────────────────────────────────── */
+    const selected = new Set();
+
+    /* ── DOM References ───────────────────────────────────────────────── */
+    const W = 600, H = 380;
+    const svgEl    = document.getElementById('cs-svg');
+    const mapCard  = document.getElementById('cs-map-card');
+    const tooltip  = document.getElementById('cs-tooltip');
+    const svg      = d3.select(svgEl);
+
+    /* ── Helper: extract canton abbreviation from a feature ───────────── */
+    function getAbbr(feature) {
+        const p = feature.properties || {};
+        // Handle various property name conventions across TopoJSON sources
+        if (typeof p.abbr === 'string')        return p.abbr.toUpperCase();
+        if (typeof p.ABBR === 'string')         return p.ABBR.toUpperCase();
+        if (typeof p.kan_kuerzel === 'string')  return p.kan_kuerzel.toUpperCase();
+        if (typeof p.kuerzel === 'string')      return p.kuerzel.toUpperCase();
+        const numId = +(p.id ?? p.ID ?? p.BFS_NR ?? p.NUTS_ID ?? feature.id ?? 0);
+        return ID_TO_ABBR[numId] ?? null;
+    }
+
+    /* ── Selection Logic ─────────────────────────────────────────────── */
+    function toggle(abbr) {
+        if (!abbr || !NAMES[abbr]) return;
+        selected.has(abbr) ? selected.delete(abbr) : selected.add(abbr);
+        refreshUI();
+    }
+
+    function cs_selectAll() {
+        svg.selectAll('.cs-canton').each(function (d) {
+            const a = getAbbr(d);
+            if (a && NAMES[a]) selected.add(a);
+        });
+        refreshUI();
+    }
+    window.cs_selectAll = cs_selectAll;
+
+    function cs_clearAll() {
+        selected.clear();
+        refreshUI();
+    }
+    window.cs_clearAll = cs_clearAll;
+
+    window.selectRegion = function (key) {
+        const cantons = REGIONS[key] || [];
+        cantons.forEach(a => selected.add(a));
+        refreshUI();
+    };
+
+    window.cs_removeTag = function (abbr) {
+        selected.delete(abbr);
+        refreshUI();
+    };
+
+    /* ── Refresh DOM after state change ─────────────────────────────── */
+    function refreshUI() {
+        // Update SVG path classes
+        svg.selectAll('.cs-canton')
+            .classed('cs-selected', d => selected.has(getAbbr(d)));
+        svg.selectAll('.cs-label')
+            .classed('cs-selected', d => selected.has(getAbbr(d)));
+
+        // Counter badge
+        const badge = document.getElementById('cs-badge');
+        badge.textContent = selected.size;
+        badge.classList.toggle('visible', selected.size > 0);
+
+        // Map card glow
+        mapCard.classList.toggle('has-selection', selected.size > 0);
+
+        // Tags
+        const tagsEl = document.getElementById('cs-tags');
+        if (selected.size === 0) {
+            tagsEl.innerHTML = '<span class="cs-empty-hint">Noch keine Kantone gewählt</span>';
+        } else {
+            const sorted = [...selected].sort();
+            tagsEl.innerHTML = sorted.map(a =>
+                `<span class="cs-tag">${a}
+                    <button class="cs-tag-remove" type="button"
+                            onclick="cs_removeTag('${a}')"
+                            title="${NAMES[a]} entfernen">×</button>
+                </span>`
+            ).join('');
+        }
+
+        // Hidden input (comma-separated for Flask)
+        document.getElementById('cs-hidden').value = [...selected].sort().join(',');
+    }
+
+    /* ── Tooltip ─────────────────────────────────────────────────────── */
+    function showTooltip(event, abbr, name) {
+        if (!abbr) return;
+        const rect = mapCard.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        tooltip.textContent = `${name} (${abbr})`;
+        // Keep tooltip within card bounds
+        const tw = 160; // estimated max tooltip width
+        tooltip.style.left = (Math.min(x + 14, rect.width - tw)) + 'px';
+        tooltip.style.top  = (Math.max(y - 38, 6)) + 'px';
+        tooltip.classList.add('visible');
+    }
+
+    function hideTooltip() {
+        tooltip.classList.remove('visible');
+    }
+
+    /* ── Map Rendering ───────────────────────────────────────────────── */
+    // Wichtig: Wir laden zuerst eine lokale Datei (keine Internet-Abhängigkeit).
+    // Lege diese Datei ins Repo (bereits vorbereitet):
+    //   simap_ui/static/data/ch-combined.json
+    const DATA_SOURCES = [
+        // Local (works when served via Flask: /static/...)
+        '/static/data/ch-combined.json',
+
+        // Fallbacks (CDNs)
+        'https://unpkg.com/swiss-maps@4/2026/ch-combined.json',
+        'https://unpkg.com/swiss-maps@4/2025/ch-combined.json',
+        'https://unpkg.com/swiss-maps@4/2024/ch-combined.json',
+    ];
+
+    function fetchJsonWithTimeout(url, timeoutMs) {
+        return new Promise((resolve, reject) => {
+            const controller = new AbortController();
+            const t = setTimeout(() => controller.abort(), timeoutMs);
+            fetch(url, { signal: controller.signal })
+                .then(res => res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`)))
+                .then(data => { clearTimeout(t); resolve(data); })
+                .catch(err => { clearTimeout(t); reject(err); });
+        });
+    }
+
+    async function fetchTopo() {
+        for (const url of DATA_SOURCES) {
+            try {
+                return await fetchJsonWithTimeout(url, 8000);
+            } catch (_) {
+                // try next source
+            }
+        }
+        return null;
+    }
+
+    async function renderMap() {
+        const topo = await fetchTopo();
+
+        // Remove loading overlay
+        const loading = document.getElementById('cs-loading');
+        if (loading) loading.remove();
+
+        if (!topo) {
+            svg.remove();
+            mapCard.innerHTML += `
+                <div class="cs-error">
+                    <div class="cs-error-icon">🗺️</div>
+                    <strong>Karte konnte nicht geladen werden</strong>
+                    <span>Bitte Internetverbindung prüfen und die Seite neu laden.</span>
+                </div>`;
+            return;
+        }
+
+        // Detect the cantons object key in the TopoJSON (swiss-maps uses "cantons")
+        const objectKey =
+            (topo.objects && topo.objects.cantons) ? 'cantons' :
+            Object.keys(topo.objects || {}).find(k => /canton/i.test(k)) ??
+            Object.keys(topo.objects || {})[0];
+
+        const cantons = topojson.feature(topo, topo.objects[objectKey]);
+
+        // Show region quick-select now that map is loaded
+        document.getElementById('cs-regions').style.display = 'flex';
+
+        // Detect coordinate system: Swiss LV03/LV95 (large metric values) vs WGS84
+        const sampleFlat = cantons.features[0]?.geometry?.coordinates
+            ?.flat?.(Infinity) ?? [];
+        const isSwissCoords = Math.abs(sampleFlat[0] ?? 0) > 1000;
+
+        const projection = isSwissCoords
+            ? d3.geoIdentity()
+                .reflectY(true)
+                .fitExtent([[14, 8], [W - 14, H - 8]], cantons)
+            : d3.geoMercator()
+                .fitExtent([[14, 8], [W - 14, H - 8]], cantons);
+
+        const path = d3.geoPath().projection(projection);
+
+        /* ── Render canton fill paths ── */
+        svg.selectAll('.cs-canton')
+            .data(cantons.features)
+            .join('path')
+                .attr('class', 'cs-canton')
+                .attr('d', path)
+                .on('click', (_, d) => toggle(getAbbr(d)))
+                .on('mousemove', (event, d) => {
+                    const abbr = getAbbr(d);
+                    const name = NAMES[abbr] ?? (d.properties?.name ?? abbr ?? '');
+                    showTooltip(event, abbr, name);
+                })
+                .on('mouseleave', hideTooltip);
+
+        /* ── Outer country border (merged) ── */
+        try {
+            const countryGeom = topojson.merge(
+                topo, topo.objects[objectKey].geometries
+            );
+            svg.append('path')
+                .datum(countryGeom)
+                .attr('class', 'cs-border-outer')
+                .attr('d', path);
+        } catch (_) {
+            // Outer border is cosmetic – silently skip if merge fails
+        }
+
+        /* ── Canton abbreviation labels ── */
+        svg.selectAll('.cs-label')
+            .data(cantons.features)
+            .join('text')
+                .attr('class', 'cs-label')
+                .attr('x', d => path.centroid(d)[0])
+                .attr('y', d => path.centroid(d)[1])
+                .text(d => getAbbr(d) ?? '');
+    }
+
+    renderMap();
+})();
+</script>
+
+</body>
+</html>
