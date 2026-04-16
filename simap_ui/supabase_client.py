@@ -24,12 +24,20 @@ def init_supabase():
     global supabase, supabase_auth
 
     url = os.getenv('SUPABASE_URL')
-    key = os.getenv('SUPABASE_KEY')
+    # Bevorzugt: ANON Key für UI/Read-only, Service Role nur serverseitig/ETL lokal
+    key = (
+        os.getenv('SUPABASE_ANON_KEY')
+        or os.getenv('SUPABASE_KEY')
+        or os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+    )
 
     if not url:
         url = 'https://rkfwuxocuojkjswigoss.supabase.co'
     if not key:
-        key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZnd1eG9jdW9qa2pzd2lnb3NzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjc4MTUwMywiZXhwIjoyMDc4MzU3NTAzfQ.j-n-tnWaAp9WxoBxWPsYDcU1E4lcKgCYu3ukWzdtF6k'
+        raise RuntimeError(
+            "SUPABASE Key fehlt. Setze SUPABASE_ANON_KEY (empfohlen) oder "
+            "SUPABASE_SERVICE_ROLE_KEY in deiner lokalen .env Datei."
+        )
 
     print(f"🔗 URL: {url[:50]}...")
     print(f"🔑 Key: {key[:20]}...{key[-10:]}")
