@@ -706,20 +706,19 @@ def get_filtered_sample_projects(user_id, sample_size=10):
 
 
 def save_user_ratings_v2(user_id, ratings_list):
-    """Speichert Ratings (project_id + rating -1/1) und schliesst Onboarding ab"""
+    """Speichert Ratings (tender_id + rating -1/1) und schliesst Onboarding ab"""
     if not user_id:
         return {'success': False, 'error': 'Nicht eingeloggt'}
 
     try:
         rows = [{
             'user_id': user_id,
-            'project_id': r.get('project_id'),
+            'tender_id': str(r.get('project_id')),   # Frontend schickt "project_id", DB heisst "tender_id"
             'rating': r.get('rating')
         } for r in ratings_list if r.get('project_id') and r.get('rating') in (-1, 1)]
 
         if rows:
-            # upsert mit ON CONFLICT auf (user_id, project_id)
-            ui('user_tender_ratings').upsert(rows, on_conflict='user_id,project_id').execute()
+            ui('user_tender_ratings').upsert(rows, on_conflict='user_id,tender_id').execute()
 
         mark_onboarding_complete(user_id)
         print(f"✅ {len(rows)} Ratings gespeichert für User: {user_id}")

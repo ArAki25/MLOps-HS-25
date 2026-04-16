@@ -435,7 +435,7 @@ def api_onboarding_filter_options():
 def api_sample_projects():
     if not session.get('user_logged_in'):
         return jsonify({'projects': []}), 401
-    projects = get_filtered_sample_projects(session.get('user_id'), 10)
+    projects = get_filtered_sample_projects(session.get('user_id'), 20)
     return jsonify({'projects': projects})
 
 
