@@ -355,6 +355,38 @@
         line-height: 1.6;
     }
 
+    /* Filter-Preview Card */
+    .onb-filter-preview {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px;
+        padding: 1.75rem;
+    }
+
+    .onb-filter-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+    }
+
+    .onb-filter-item-full {
+        grid-column: span 2;
+    }
+
+    .onb-filter-label {
+        font-size: 0.75rem;
+        color: #71717a;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.4rem;
+    }
+
+    .onb-filter-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #fff;
+    }
+
     /* Step IDs */
     .onb-ids-area {
         width: 100%;
@@ -615,6 +647,8 @@
         .onb-choice-grid { grid-template-columns: 1fr; }
         .onb-form-row { grid-template-columns: 1fr; }
         .onb-volume-grid { grid-template-columns: 1fr; }
+        .onb-filter-grid { grid-template-columns: 1fr; }
+        .onb-filter-item-full { grid-column: auto; }
         .onb-card { padding: 2rem 1.5rem; }
         .onb-step-line { width: 35px; }
     }
@@ -813,6 +847,45 @@
                 </div>
             </div>
 
+            <!-- ==================== STEP 3c: Filter bestätigen ==================== -->
+            <div class="onb-step" id="step-3c">
+                <div class="onb-header">
+                    <div class="onb-icon">
+                        <svg width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+                    </div>
+                    <h1>Ihre Filter</h1>
+                    <p>Wir zeigen Ihnen Ausschreibungen, die zu diesen Kriterien passen</p>
+                </div>
+
+                <div class="onb-filter-preview">
+                    <div class="onb-filter-grid">
+                        <div>
+                            <div class="onb-filter-label">Kanton</div>
+                            <div class="onb-filter-value" id="filter-preview-canton">—</div>
+                        </div>
+                        <div>
+                            <div class="onb-filter-label">Projekttyp</div>
+                            <div class="onb-filter-value" id="filter-preview-subtype">—</div>
+                        </div>
+                        <div class="onb-filter-item-full">
+                            <div class="onb-filter-label">Auftragsvolumen</div>
+                            <div class="onb-filter-value" id="filter-preview-volume">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="onb-actions">
+                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(1)">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
+                        Filter ändern
+                    </button>
+                    <button class="onb-btn onb-btn-primary" onclick="goToRating()">
+                        Passt, weiter
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </button>
+                </div>
+            </div>
+
             <!-- ==================== STEP 3b: Rating ==================== -->
             <div class="onb-step" id="step-3b">
                 <div class="onb-header" style="margin-bottom:1rem;">
@@ -822,7 +895,7 @@
 
                 <div class="onb-rating-progress">
                     <div class="onb-rating-bar"><div class="onb-rating-fill" id="rating-fill" style="width:0%"></div></div>
-                    <div class="onb-rating-text"><strong id="rating-current">0</strong> von <strong id="rating-total">10</strong> bewertet</div>
+                    <div class="onb-rating-text"><strong id="rating-current">0</strong> von <strong id="rating-total">20</strong> bewertet</div>
                 </div>
 
                 <div id="rating-card-container">
@@ -869,13 +942,32 @@
     var ratingTenders = [];
     var ratings = [];
     var ratingIndex = 0;
-    var RATING_TARGET = 10;
+    var RATING_TARGET = 20;
 
     // Volume mapping: label -> {min, max}
     var VOLUME_MAP = {
         'low':  { min: 0,      max: 100000 },
         'mid':  { min: 100000, max: 500000 },
         'high': { min: 500000, max: null   }
+    };
+
+    // Labels für den Filter-Preview Screen
+    var KANTON_NAMES = {
+        'AG':'Aargau','AI':'Appenzell Innerrhoden','AR':'Appenzell Ausserrhoden','BE':'Bern',
+        'BL':'Basel-Landschaft','BS':'Basel-Stadt','FR':'Freiburg','GE':'Genf','GL':'Glarus',
+        'GR':'Graubünden','JU':'Jura','LU':'Luzern','NE':'Neuenburg','NW':'Nidwalden',
+        'OW':'Obwalden','SG':'St. Gallen','SH':'Schaffhausen','SO':'Solothurn','SZ':'Schwyz',
+        'TG':'Thurgau','TI':'Tessin','UR':'Uri','VD':'Waadt','VS':'Wallis','ZG':'Zug','ZH':'Zürich'
+    };
+    var SUBTYPE_LABELS = {
+        'construction': 'Bauleistung',
+        'supply': 'Lieferung',
+        'service': 'Dienstleistung'
+    };
+    var VOLUME_LABELS = {
+        'low':  "Bis 100'000 CHF",
+        'mid':  "100'000 – 500'000 CHF",
+        'high': "Über 500'000 CHF"
     };
 
     // ==========================================
@@ -903,15 +995,18 @@
     });
 
     function loadSubtypes() {
+        var ALLOWED = ['construction', 'supply', 'service'];
+
         fetch('/api/onboarding/filter-options')
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 var sel = document.getElementById('project-subtype');
                 sel.innerHTML = '<option value="">Bitte wählen</option>';
                 (data.subtypes || []).forEach(function(s) {
+                    if (ALLOWED.indexOf(s) === -1) return;  // filtert nicht-erlaubte raus
                     var opt = document.createElement('option');
                     opt.value = s;
-                    opt.textContent = s;
+                    opt.textContent = SUBTYPE_LABELS[s] || s;
                     sel.appendChild(opt);
                 });
             })
@@ -969,7 +1064,11 @@
         for (var i = 0; i < allSteps.length; i++) allSteps[i].classList.remove('active');
 
         var stepId = 'step-' + step;
-        if (step === 3) stepId = selectedChoice === 'ids' ? 'step-3a' : 'step-3b';
+        if (step === 3) {
+            // Bei "rate" zuerst Filter-Bestätigung (3c), erst dann Rating (3b)
+            if (selectedChoice === 'ids') stepId = 'step-3a';
+            else stepId = 'step-3c';
+        }
         document.getElementById(stepId).classList.add('active');
 
         for (var d = 1; d <= 4; d++) {
@@ -1002,8 +1101,28 @@
         if (!selectedChoice) return;
         goToStep(3);
         if (selectedChoice === 'rate') {
-            loadRatingTenders();
+            showFilterPreview();
         }
+    }
+
+    // ==========================================
+    // STEP 3c: FILTER PREVIEW
+    // ==========================================
+    function showFilterPreview() {
+        var cantonCode = document.getElementById('canton').value;
+        var subtypeCode = document.getElementById('project-subtype').value;
+
+        document.getElementById('filter-preview-canton').textContent = KANTON_NAMES[cantonCode] || cantonCode;
+        document.getElementById('filter-preview-subtype').textContent = SUBTYPE_LABELS[subtypeCode] || subtypeCode;
+        document.getElementById('filter-preview-volume').textContent = VOLUME_LABELS[selectedVolume] || '—';
+    }
+
+    function goToRating() {
+        // innerhalb Step 3: von 3c (Preview) nach 3b (Rating) wechseln
+        document.getElementById('step-3c').classList.remove('active');
+        document.getElementById('step-3b').classList.add('active');
+        loadRatingTenders();
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     // ==========================================
@@ -1040,7 +1159,7 @@
                         '<div style="text-align:center;padding:2rem;color:#f87171;">Keine passenden Ausschreibungen für Ihren Filter gefunden. Bitte gehen Sie zurück und passen Sie Ihr Profil an.</div>';
                     return;
                 }
-                RATING_TARGET = Math.min(10, ratingTenders.length);
+                RATING_TARGET = Math.min(20, ratingTenders.length);
                 document.getElementById('rating-total').textContent = RATING_TARGET;
                 ratingIndex = 0;
                 ratings = [];
@@ -1062,8 +1181,8 @@
 
         var t = ratingTenders[ratingIndex];
         var tags = '';
-        if (t.canton) tags += '<span class="onb-tender-tag">' + escapeHtml(t.canton) + '</span>';
-        if (t.project_subtype) tags += '<span class="onb-tender-tag">' + escapeHtml(t.project_subtype) + '</span>';
+        if (t.canton) tags += '<span class="onb-tender-tag">' + escapeHtml(KANTON_NAMES[t.canton] || t.canton) + '</span>';
+        if (t.project_subtype) tags += '<span class="onb-tender-tag">' + escapeHtml(SUBTYPE_LABELS[t.project_subtype] || t.project_subtype) + '</span>';
         if (t.award_amount) tags += '<span class="onb-tender-tag">CHF ' + Number(t.award_amount).toLocaleString('de-CH') + '</span>';
 
         var fullDesc = escapeHtml(t.description_de || '');
@@ -1117,13 +1236,15 @@
         var pct = Math.min(100, Math.round(ratings.length / RATING_TARGET * 100));
         document.getElementById('rating-fill').style.width = pct + '%';
         document.getElementById('rating-current').textContent = ratings.length;
-        if (ratings.length >= 5) {
+        // Mindestens 3 Likes nötig damit der Taste-Vektor sinnvoll wird
+        if (ratings.filter(function(r){return r.rating === 1;}).length >= 3) {
             document.getElementById('btn-finish-rating').disabled = false;
         }
     }
 
     function finishRating() {
-        if (ratings.length < 5) { showMsg('Bitte mindestens 5 Ausschreibungen bewerten.'); return; }
+        var likeCount = ratings.filter(function(r){return r.rating === 1;}).length;
+        if (likeCount < 3) { showMsg('Bitte mindestens 3 Ausschreibungen als "Relevant" markieren.'); return; }
 
         fetch('/api/onboarding/submit-ratings', {
             method: 'POST',
