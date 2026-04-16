@@ -33,6 +33,9 @@ Thumbs.db
 .env
 .envrc
 
+# Jupyter
+.ipynb_checkpoints/
+
 # Data outputs
 data/
 

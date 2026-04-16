@@ -1,0 +1,121 @@
+===============================================================================
+  Datentransformations-Protokoll: Tabelle `public.archive` (Supabase)
+===============================================================================
+Datum:            2026-04-16
+Ausgefuehrt von:  Cursor Agent (MCP user-supabase-sajf)
+Supabase-Tabelle: public.archive
+
+-------------------------------------------------------------------------------
+1. Ausgangslage (Vor Transformation)
+-------------------------------------------------------------------------------
+Anzahl Zeilen gesamt:                         274'795
+Eindeutige simap_publication_id:              274'795  (bereits unique)
+Eindeutige simap_project_id (Auftraege):      135'673
+Spalten project_number / publication_number:  komplett NULL (Datenqualitaet)
+
+Pruefung auf echte Duplikate:
+  - dup nach simap_publication_id:            0
+  - dup nach content_hash:                    0
+  - dup nach (project_id, pub_type, lang):    8'116 Gruppen / 28'806 Zeilen
+
+Nicht-enrichte Eintraege:
+  - raw_json_detail IS NULL:                  5
+  - detail_fetched_at IS NULL:                4
+  - detail_fetch_error IS NOT NULL:           2
+  (Union aller Kriterien: 9 unique vor Dedup)
+
+-------------------------------------------------------------------------------
+2. Durchgefuehrte Operationen
+-------------------------------------------------------------------------------
+A) Backup-Tabelle angelegt
+   CREATE TABLE archive_deleted_backup_20260416 (LIKE archive INCLUDING ALL);
+   ALTER TABLE archive_deleted_backup_20260416
+     ADD COLUMN deletion_reason text,
+     ADD COLUMN deleted_at timestamptz DEFAULT now();
+
+B) Duplikate entfernt (Kriterium: pro (simap_project_id, pub_type,
+   creation_language) nur einen Eintrag behalten).
+   Auswahlregel fuer den zu BEHALTENDEN Eintrag (ORDER BY, aufsteigend):
+     1. raw_json_detail IS NULL   zuerst schlechter bewertet
+     2. detail_fetched_at IS NULL zuerst schlechter bewertet
+     3. detail_fetch_error NOT NULL schlechter bewertet
+     4. length(raw_json_detail::text) DESC  (je voller, desto besser)
+     5. updated_at DESC
+     6. created_at DESC
+     7. simap_publication_id ASC (stabiler Tie-Breaker)
+
+   Technisches Vorgehen:
+     - Zu loeschende IDs in Staging-Tabelle `archive_to_delete_ids` gesammelt
+       (mit Spalte `reason`).
+     - In Batches von 2'000 Zeilen kopiert in `archive_deleted_backup_20260416`
+       (mit reason='duplicate_project_pubtype_language'), dann DELETE FROM
+       archive. Begruendung: Direkt-INSERT-SELECT ueber 20k jsonb-Zeilen lief in
+       Cloudflare 524-Timeout.
+
+   Ergebnis:
+     - Zeilen ins Backup verschoben:      20'690
+     - Zeilen aus archive geloescht:      20'690
+     - Duplikat-Check nach Loeschung:     0
+
+C) Nicht-enrichte Eintraege entfernt (nach Deduplikation).
+   Filter: raw_json_detail IS NULL
+        OR detail_fetched_at IS NULL
+        OR detail_fetch_error IS NOT NULL
+   Ausgenommen: bereits durch Deduplikation entfernte Zeilen.
+
+   Ergebnis:
+     - Zeilen ins Backup verschoben:      4
+       (deletion_reason = 'not_enriched')
+     - Zeilen aus archive geloescht:      4
+     - Enrichment-Check nach Loeschung:   0 Zeilen ohne raw_json_detail
+
+D) Aufraeumen
+     DROP TABLE archive_to_delete_ids;
+
+-------------------------------------------------------------------------------
+3. Ergebnis (Nach Transformation)
+-------------------------------------------------------------------------------
+archive Zeilen gesamt:                        254'101   (- 20'694)
+Eindeutige simap_project_id:                  135'672
+Backup-Tabelle archive_deleted_backup_20260416: 20'694
+  davon deletion_reason='duplicate_project_pubtype_language': 20'690
+  davon deletion_reason='not_enriched':                       4
+
+Invarianten geprueft:
+  - 0 Duplikate bei (simap_project_id, pub_type, creation_language)
+  - 0 Zeilen ohne raw_json_detail / detail_fetched_at / ohne detail_fetch_error
+    (d.h. alle Zeilen in `archive` sind jetzt erfolgreich enriched)
+
+-------------------------------------------------------------------------------
+4. Rollback / Wiederherstellung
+-------------------------------------------------------------------------------
+Alle geloeschten Zeilen sind vollstaendig in `archive_deleted_backup_20260416`
+(inkl. aller Original-Spalten plus `deletion_reason`, `deleted_at`) erhalten.
+
+Rollback komplett:
+  INSERT INTO archive
+  SELECT <alle Original-Spalten ohne deletion_reason, deleted_at>
+  FROM archive_deleted_backup_20260416;
+
+Rollback selektiv (z.B. nur not_enriched):
+  INSERT INTO archive
+  SELECT <...>
+  FROM archive_deleted_backup_20260416
+  WHERE deletion_reason = 'not_enriched';
+
+CSV-Export des Backups siehe letzte Zelle im Notebook `archive.ipynb`.
+
+-------------------------------------------------------------------------------
+5. Hinweise / Caveats
+-------------------------------------------------------------------------------
+- "Auftrag" wurde als simap_project_id interpretiert. Pro Auftrag bleiben weiter
+  mehrere Publikationen (Ausschreibung OB01, Zuschlag OB02, Abbruch OB05, ...)
+  in der Tabelle, weil diese eigenstaendige Ereignisse darstellen.
+- Bei mehreren Publikationen zum selben Projekt mit gleichem pub_type aber
+  UNTERSCHIEDLICHER creation_language (DE/FR/IT) wurde bewusst NICHT
+  dedupliziert - das sind Sprachfassungen derselben Publikation und tragen
+  unterschiedlichen Informationsgehalt (title_de vs. title_fr etc.).
+- Die entfernten Duplikate kamen typischerweise aus mehrfachen Neuveroeffentlichungen
+  / Loscorrekturen auf derselben simap_project_id, pub_type und Sprache.
+
+===============================================================================
