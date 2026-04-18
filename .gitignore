@@ -59,3 +59,12 @@ supabase/config.toml
 **/supabase/.temp/
 *.sql.backup
 supabase-*.tar.gz
+
+# Lokale Daten-Backups (nicht versionieren)
+archive_deleted_backup*.csv
+
+# DB-DDL / RPC-Skripte (Schema/Migrationen in Supabase; nicht im Remote-Repo)
+embeddings/schema.sql
+embeddings/search.sql
+supabase/sql/*.sql
+!supabase/sql/README.md

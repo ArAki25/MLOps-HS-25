@@ -1,4 +1,4 @@
-# `public.archive_embeddings` — Spezifikation
+# `public.embeddings` — Spezifikation
 
 Stand: 2026-04-17 (löst den alten Embedding-Bericht zu `project_embeddings`
 (intfloat/multilingual-e5-small, 384d) vollständig ab).
@@ -108,7 +108,7 @@ Begründung: {award_justification_de|fr}.
 
 `text_hash` = `md5(raw_text)`. Beim Rebuild holt
 `build_embeddings.py` pro Batch von 1000 Rows die bestehenden
-`(id, text_hash)`-Paare aus `archive_embeddings` und re-encodiert nur,
+`(id, text_hash)`-Paare aus `embeddings` und re-encodiert nur,
 wo der Hash sich geändert hat (oder kein Eintrag existiert). Typischer
 täglicher Re-Run: >99 % `unchanged`, encoded wenige Hundert Rows.
 
@@ -119,7 +119,7 @@ Normalisierung liegt in den Vektoren selbst, daher:
 ```sql
 -- pgvector: Cosine-Distanz <=>, Similarity = 1 - <=>
 SELECT (1 - (embedding <=> $1)) AS similarity, *
-FROM public.archive_embeddings
+FROM public.embeddings
 ORDER BY embedding <=> $1
 LIMIT 20;
 ```
@@ -136,8 +136,13 @@ match_count, source_filter, pub_type_filter, canton_filter, min_similarity)`.
 
 ## 7. Build-Kommandos
 
+Die Dateien `embeddings/schema.sql` und `embeddings/search.sql` sind **lokal**
+vorhanden (DDL + RPC), stehen aber **nicht** im GitHub-Repo (`.gitignore`).
+Schema-Änderungen laufen über **Supabase Migrations** bzw. SQL-Editor; für
+frische Umgebungen die Skripte aus dem Team-Backup oder aus Supabase exportieren.
+
 ```bash
-# Einmalig: Schema anwenden (via Supabase SQL editor oder psql)
+# Einmalig: Schema anwenden (via Supabase SQL editor oder psql, wenn die Dateien lokal liegen)
 psql $SUPABASE_DIRECT_URL -f embeddings/schema.sql
 psql $SUPABASE_DIRECT_URL -f embeddings/search.sql
 

@@ -169,7 +169,7 @@ Quelle für Wörterbuch: offizielle `cpv_2008.xml` der EU Publications Office (f
 
 | Feld                                                                                   | Verwendung                                                                                                                                                                                    |
 | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `publication_date`, `submission_deadline`, `offer_opening_date`, `award_decision_date` | **FEATURE** — Datumswerte gehören nicht in den Embedding-Text. Sie werden vom Abruf/Filter benutzt und als separate numerische Features für ML. Für `archive_embeddings`-Tabelle kein Nutzen. |
+| `publication_date`, `submission_deadline`, `offer_opening_date`, `award_decision_date` | **FEATURE** — Datumswerte gehören nicht in den Embedding-Text. Sie werden vom Abruf/Filter benutzt und als separate numerische Features für ML. Für die Tabelle `public.embeddings` kein Nutzen. |
 
 
 ### 2.11 Struktur (FEATURE / LABEL)
@@ -242,16 +242,16 @@ Konkret verbessert gegenüber dem alten Setup:
 
 - **Winner-Felder erzeugen strukturelle OB01↔OB02-Distanz.** Das ist gewollt: die beiden sind fachlich unterschiedliche Ereignisse. Wenn wir das NICHT wollten, müssten wir `winner_name` weglassen.
 - **BKP-Wörterbuch unvollständig.** Der offizielle CRB-BKP ist ~250 Codes, aber mit Varianten; wir stellen eine Baseline bereit und loggen fehlende Codes, damit wir sie nachziehen können.
-- **Kein Embedding für leere Zeilen.** Wenn `title_`*, `description_*` UND `cpv_code_main` fehlen (selten, aber möglich), wird die Zeile übersprungen und der Fall geloggt.
+- **Kein Embedding für leere Zeilen.** Wenn `title_`*, `description_`* UND `cpv_code_main` fehlen (selten, aber möglich), wird die Zeile übersprungen und der Fall geloggt.
 
 ## 6. Konkrete Konsequenzen für den Plan
 
-Ergänzungen zum bestehenden Plan `archive_embeddings_rebuild`:
+Ergänzungen zum bestehenden Plan `embeddings_rebuild`:
 
 - Neues Artefakt `**embeddings/bkp_de.json`** (Baukostenplan-Wörterbuch) + entsprechende Lookup-Funktion in `text_builder.py`.
 - `text_builder.py` wird **pub_type-aware**: Block F wird nur für OB02/OB08 gerendert.
 - Label-Mapping wird um `CONTEST`, `ENGINEER`, `ARCHITECT` (order_type) und OB00–OB09 (pub_type) erweitert.
-- Zusätzliches Feld `pub_type` im `archive_embeddings`-Schema (direkt in der Tabelle, für Filter-Queries). Nicht nur im Text.
+- Zusätzliches Feld `pub_type` im `public.embeddings`-Schema (direkt in der Tabelle, für Filter-Queries). Nicht nur im Text.
 - Sprachbevorzugung bleibt DE > FR > IT > EN, aber **pro Block** (Titel DE vs. Beschreibung DE separat entschieden; falls kein title_de vorhanden aber description_de, werden beide auf DE gemischt gerendert — Realität in ~5% der Zeilen).
 
 ---
