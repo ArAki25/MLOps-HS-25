@@ -1,5 +1,5 @@
 """
-Text-Builder für die unified archive_embeddings.
+Text-Builder für die unified Tabelle public.embeddings.
 
 Nimmt eine Row aus `public.archive` oder `public.projects` (Schemas sind praktisch
 identisch) und erzeugt einen stabilen, menschenlesbaren Rohtext, der anschliessend

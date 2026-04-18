@@ -1,5 +1,5 @@
 """
-Label-Mappings und Code-Lookups für den Text-Builder der archive_embeddings.
+Label-Mappings und Code-Lookups für den Text-Builder der Tabelle public.embeddings.
 
 Quellen:
   - cpv_de.json  : offizielles EU-CPV-2008-Vokabular (samhallskod/cpv-eu), DE/FR/IT/EN

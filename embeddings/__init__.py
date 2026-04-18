@@ -1,1 +1,1 @@
-"""archive_embeddings package."""
+"""Embeddings-Pipeline (Supabase-Tabelle public.embeddings)."""
