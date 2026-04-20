@@ -38,45 +38,14 @@ from supabase_client import (
     save_user_simap_ids,
     save_user_ratings,
     get_random_archive_tenders,
-    # NEU:
+    find_similar_tenders,
     get_onboarding_filter_options,
     get_filtered_sample_projects,
     save_user_ratings_v2,
     get_user_recommendations,
+    recommendation_diversity_metric,
     get_user_ratings_with_details,
     update_single_rating,
-)
-from supabase_client import (
-    init_supabase,
-    get_all_projects,
-    get_projects_paginated,
-    get_filter_options,
-    get_project_by_id,
-    search_projects,
-    filter_projects,
-    get_statistics,
-    get_cantons,
-    get_content,
-    update_content,
-    get_team_members,
-    add_team_member,
-    update_team_member,
-    delete_team_member,
-    get_admin_by_email,
-    get_pro_user,
-    get_user_favorites,
-    add_favorite,
-    remove_favorite,
-    get_user_favorites_ids,
-    register_user,
-    login_user,
-    logout_user,
-    get_user_by_id,
-    is_onboarding_complete,
-    save_user_profile,
-    save_user_simap_ids,
-    save_user_ratings,
-    get_random_archive_tenders,
 )
 
 load_dotenv()
@@ -457,6 +426,19 @@ def api_recommendations():
     recs = get_user_recommendations(session.get('user_id'), 20)
     return jsonify({'recommendations': recs})
 
+
+@app.route('/api/recommendations/diversity', methods=['GET'])
+def api_recommendations_diversity():
+    """Messmetrik fuer Task 4: durchschnittliche pairwise-Cosine der Top-N
+    Empfehlungen, mit und ohne MMR. Zielwert <= 0.75."""
+    if not session.get('user_logged_in'):
+        return jsonify({'error': 'not authenticated'}), 401
+    try:
+        count = int(request.args.get('count', 10))
+    except (TypeError, ValueError):
+        count = 10
+    return jsonify(recommendation_diversity_metric(session.get('user_id'), count))
+
 @app.route('/api/user-ratings', methods=['GET'])
 def api_user_ratings():
     """Alle Bewertungen des Users mit Projekt-Details"""
@@ -478,7 +460,6 @@ def api_update_rating():
         data.get('rating')
     )
     return jsonify(result)
-
 
 # ============================================
 # FAVORITES / MERKLISTE ROUTES
