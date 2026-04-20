@@ -499,67 +499,114 @@ def get_user_favorites_ids(user_id: str) -> List[str]:
 
 
 def get_user_ratings_with_details(user_id):
-    """Alle Bewertungen eines Users mit Projekt-Details"""
+    """
+    Alle Bewertungen eines Users mit Projekt-/Archiv-Details.
+    Joint je nach source aus projects_ui ODER public.archive.
+    """
     if not user_id:
         return []
     try:
-        # Ratings holen
+        # 1) Alle Ratings laden
         ratings_res = ui('user_tender_ratings') \
-            .select('tender_id, rating') \
+            .select('tender_id, rating, source') \
             .eq('user_id', user_id) \
             .execute()
 
         if not ratings_res.data:
             return []
 
-        # Projekt-Details für jede tender_id laden
-        tender_ids = [r['tender_id'] for r in ratings_res.data if r.get('tender_id')]
-        if not tender_ids:
-            return []
+        # 2) IDs nach Source aufteilen
+        project_ids = [r['tender_id'] for r in ratings_res.data if r.get('source') == 'project' and r.get('tender_id')]
+        archive_ids = [r['tender_id'] for r in ratings_res.data if r.get('source') == 'archive' and r.get('tender_id')]
 
-        projects_res = ui('projects_ui') \
-            .select('id, title_de, canton, project_subtype, award_amount') \
-            .in_('id', tender_ids) \
-            .execute()
+        # 3) Details aus jeweiliger Tabelle laden
+        project_map = {}
+        if project_ids:
+            proj_res = ui('projects_ui') \
+                .select('id, title_de, canton, project_subtype, award_amount') \
+                .in_('id', project_ids) \
+                .execute()
+            project_map = {str(p['id']): p for p in (proj_res.data or [])}
 
-        # Zusammenführen
-        project_map = {str(p['id']): p for p in (projects_res.data or [])}
+        archive_map = {}
+        if archive_ids:
+            # archive liegt in public, daher über den Standard-Client
+            from supabase_client import sb  # lokaler Import um Zirkel zu vermeiden
+            arch_res = sb.table('archive') \
+                .select('id, title_de, canton, order_type, award_amount, winner_name, winner_city, award_decision_date') \
+                .in_('id', archive_ids) \
+                .execute()
+            # order_type → project_subtype zurückmappen für konsistente UI
+            reverse_map = {'WORKS': 'construction', 'SERVICES': 'service', 'SUPPLIES': 'supply'}
+            archive_map = {}
+            for a in (arch_res.data or []):
+                a['project_subtype'] = reverse_map.get(a.get('order_type'), a.get('order_type'))
+                archive_map[str(a['id'])] = a
 
+        # 4) Zusammenführen
         result = []
         for r in ratings_res.data:
             tid = r.get('tender_id', '')
-            proj = project_map.get(tid, {})
-            result.append({
-                'tender_id': tid,
-                'rating': r.get('rating'),
-                'title_de': proj.get('title_de', 'Unbekannt'),
-                'canton': proj.get('canton', ''),
-                'project_subtype': proj.get('project_subtype', ''),
-                'award_amount': proj.get('award_amount'),
-            })
+            source = r.get('source', 'project')
 
-        print(f"✅ {len(result)} Bewertungen geladen für User: {user_id}")
+            if source == 'archive':
+                details = archive_map.get(tid, {})
+                result.append({
+                    'tender_id': tid,
+                    'rating': r.get('rating'),
+                    'source': 'archive',
+                    'title_de': details.get('title_de', 'Unbekannt'),
+                    'canton': details.get('canton', ''),
+                    'project_subtype': details.get('project_subtype', ''),
+                    'award_amount': details.get('award_amount'),
+                    'winner_name': details.get('winner_name'),
+                    'winner_city': details.get('winner_city'),
+                    'award_decision_date': details.get('award_decision_date'),
+                })
+            else:
+                details = project_map.get(tid, {})
+                result.append({
+                    'tender_id': tid,
+                    'rating': r.get('rating'),
+                    'source': 'project',
+                    'title_de': details.get('title_de', 'Unbekannt'),
+                    'canton': details.get('canton', ''),
+                    'project_subtype': details.get('project_subtype', ''),
+                    'award_amount': details.get('award_amount'),
+                    'winner_name': None,
+                    'winner_city': None,
+                    'award_decision_date': None,
+                })
+
+        print(f"✅ {len(result)} Bewertungen geladen ({len(project_ids)} Projekte + {len(archive_ids)} Archiv)")
         return result
     except Exception as e:
         print(f"❌ get_user_ratings_with_details Fehler: {e}")
         return []
 
 
-def update_single_rating(user_id, tender_id, rating):
-    """Einzelne Bewertung aktualisieren"""
+def update_single_rating(user_id, tender_id, rating, source='project'):
+    """
+    Einzelne Bewertung aktualisieren (Toggle zwischen 1 und -1).
+    source wird benötigt da der Unique-Constraint auf (user_id, tender_id, source) liegt.
+    """
     if not user_id or not tender_id or rating not in (-1, 1):
         return {'success': False, 'error': 'Ungültige Parameter'}
+    if source not in ('project', 'archive'):
+        source = 'project'
     try:
         ui('user_tender_ratings') \
             .update({'rating': rating}) \
             .eq('user_id', user_id) \
             .eq('tender_id', tender_id) \
+            .eq('source', source) \
             .execute()
-        print(f"✅ Rating aktualisiert: {tender_id} → {rating}")
+        print(f"✅ Rating aktualisiert: {tender_id} ({source}) → {rating}")
         return {'success': True}
     except Exception as e:
         print(f"❌ update_single_rating Fehler: {e}")
         return {'success': False, 'error': str(e)}
+
 
 
 # ============================================
@@ -761,41 +808,76 @@ def get_onboarding_filter_options():
         return {'subtypes': []}
 
 
-def get_filtered_sample_projects(user_id, sample_size=10):
-    """Ruft die RPC sample_projects_for_rating auf — gibt 10 gefilterte Projekte zurück"""
+def get_filtered_sample_projects(user_id, sample_size=20):
+    """
+    Ruft die RPC auf und gibt die Mischung aus project + archive zurück.
+    Die RPC liefert bereits source, winner_name, winner_city, award_decision_date.
+    """
     if not user_id:
         return []
     try:
         result = ui_rpc('sample_projects_for_rating', {
             'p_user_id': user_id,
             'sample_size': sample_size
-        }).execute()
-        print(f"✅ {len(result.data or [])} sample projects für User: {user_id}")
-        return result.data or []
+        })
+        projects = result.data if hasattr(result, 'data') else result
+
+        # description_de hat HTML-Tags drin – für die UI ok, Frontend stripped
+        for p in (projects or []):
+            # award_decision_date als String falls date-Objekt zurückkommt
+            if p.get('award_decision_date'):
+                p['award_decision_date'] = str(p['award_decision_date'])
+
+        print(f"✅ {len(projects or [])} Sample-Projekte geladen für User: {user_id}")
+        return projects or []
     except Exception as e:
         print(f"❌ get_filtered_sample_projects Fehler: {e}")
         return []
 
 
 def save_user_ratings_v2(user_id, ratings_list):
-    """Speichert Ratings (tender_id + rating -1/1) und schliesst Onboarding ab"""
-    if not user_id:
-        return {'success': False, 'error': 'Nicht eingeloggt'}
+    """
+    Ratings speichern - inkl. source ('project' oder 'archive').
+
+    Erwartetes Format pro rating:
+        {'project_id': <uuid>, 'rating': 1|-1, 'source': 'project'|'archive'}
+    """
+    if not user_id or not ratings_list:
+        return {'success': False, 'error': 'Keine Ratings übergeben'}
 
     try:
-        rows = [{
-            'user_id': user_id,
-            'tender_id': str(r.get('project_id')),   # Frontend schickt "project_id", DB heisst "tender_id"
-            'rating': r.get('rating')
-        } for r in ratings_list if r.get('project_id') and r.get('rating') in (-1, 1)]
+        rows = []
+        for r in ratings_list:
+            tender_id = r.get('project_id')
+            rating_val = r.get('rating')
+            source = r.get('source', 'project')  # Default: project (für Backwards-Compat)
 
-        if rows:
-            ui('user_tender_ratings').upsert(rows, on_conflict='user_id,tender_id').execute()
+            if not tender_id or rating_val not in (-1, 1):
+                continue
+            if source not in ('project', 'archive'):
+                source = 'project'
 
+            rows.append({
+                'user_id': user_id,
+                'tender_id': str(tender_id),
+                'rating': rating_val,
+                'source': source,
+            })
+
+        if not rows:
+            return {'success': False, 'error': 'Keine gültigen Ratings'}
+
+        # Upsert damit bei Re-Rating die bestehende Zeile überschrieben wird
+        ui('user_tender_ratings').upsert(
+            rows,
+            on_conflict='user_id,tender_id,source'
+        ).execute()
+
+        # Onboarding als abgeschlossen markieren
         mark_onboarding_complete(user_id)
+
         print(f"✅ {len(rows)} Ratings gespeichert für User: {user_id}")
         return {'success': True, 'count': len(rows)}
-
     except Exception as e:
         print(f"❌ save_user_ratings_v2 Fehler: {e}")
         return {'success': False, 'error': str(e)}
