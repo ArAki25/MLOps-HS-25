@@ -28,12 +28,20 @@ def init_supabase():
     global supabase, supabase_auth
 
     url = os.getenv('SUPABASE_URL')
-    key = os.getenv('SUPABASE_KEY')
+    # Bevorzugt: ANON Key für UI/Read-only, Service Role nur serverseitig/ETL lokal
+    key = (
+        os.getenv('SUPABASE_ANON_KEY')
+        or os.getenv('SUPABASE_KEY')
+        or os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+    )
 
     if not url:
         url = 'https://rkfwuxocuojkjswigoss.supabase.co'
     if not key:
-        key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZnd1eG9jdW9qa2pzd2lnb3NzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjc4MTUwMywiZXhwIjoyMDc4MzU3NTAzfQ.j-n-tnWaAp9WxoBxWPsYDcU1E4lcKgCYu3ukWzdtF6k'
+        raise RuntimeError(
+            "SUPABASE Key fehlt. Setze SUPABASE_ANON_KEY (empfohlen) oder "
+            "SUPABASE_SERVICE_ROLE_KEY in deiner lokalen .env Datei."
+        )
 
     print(f"🔗 URL: {url[:50]}...")
     print(f"🔑 Key: {key[:20]}...{key[-10:]}")
@@ -60,11 +68,15 @@ def get_auth_client():
 
 
 def ui(table_name: str):
-    """Helper: Zugriff auf eine Tabelle im 'ui' Schema.
-    Verwendung: ui('projects_ui').select('*')...
-    """
+    """Helper: Zugriff auf eine Tabelle im 'ui' Schema."""
     sb = get_client()
     return sb.schema(UI_SCHEMA).table(table_name)
+
+
+def ui_rpc(function_name: str, params: dict):
+    """Helper: Aufruf einer Postgres-Funktion im 'ui' Schema."""
+    sb = get_client()
+    return sb.schema(UI_SCHEMA).rpc(function_name, params)
 
 
 # ============================================
@@ -72,7 +84,6 @@ def ui(table_name: str):
 # ============================================
 
 def get_all_projects(limit: int = 50) -> List[Dict]:
-    """Hole Projekte (einfache Version für Kompatibilität)"""
     try:
         response = ui('projects_ui') \
             .select('*') \
@@ -88,14 +99,10 @@ def get_all_projects(limit: int = 50) -> List[Dict]:
 def get_projects_paginated(page=1, per_page=30, search='', canton='',
                            order_type='', process_type='', pub_type='',
                            sort='newest') -> Dict:
-    """Server-Side Pagination mit Filter und Suche"""
     try:
-        # Count-Query
         count_q = ui('projects_ui').select('id', count='exact')
-        # Data-Query
         data_q = ui('projects_ui').select('*')
 
-        # Search
         if search:
             search_filter = (
                 f'title_de.ilike.%{search}%,'
@@ -106,7 +113,6 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
             count_q = count_q.or_(search_filter)
             data_q = data_q.or_(search_filter)
 
-        # Filters
         if canton:
             count_q = count_q.ilike('canton', canton)
             data_q = data_q.ilike('canton', canton)
@@ -120,7 +126,6 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
             count_q = count_q.eq('pub_type', pub_type)
             data_q = data_q.eq('pub_type', pub_type)
 
-        # Sort
         if sort == 'oldest':
             data_q = data_q.order('publication_date', desc=False)
         elif sort == 'alpha':
@@ -128,15 +133,12 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
         else:
             data_q = data_q.order('publication_date', desc=True)
 
-        # Execute count
         count_result = count_q.execute()
         total = count_result.count if count_result.count else 0
 
-        # Pagination
         offset = (page - 1) * per_page
         data_q = data_q.range(offset, offset + per_page - 1)
 
-        # Execute data
         data_result = data_q.execute()
         projects = [transform_project(row) for row in (data_result.data or [])]
 
@@ -144,11 +146,8 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
         pages = math.ceil(total / per_page) if per_page > 0 else 0
 
         return {
-            'data': projects,
-            'total': total,
-            'page': page,
-            'per_page': per_page,
-            'pages': pages
+            'data': projects, 'total': total, 'page': page,
+            'per_page': per_page, 'pages': pages
         }
 
     except Exception as e:
@@ -157,7 +156,6 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
 
 
 def get_filter_options() -> Dict:
-    """Hole unique Werte für alle Filter aus der DB"""
     try:
         all_rows = []
         batch_size = 1000
@@ -181,10 +179,8 @@ def get_filter_options() -> Dict:
 
         print(f"✅ Filter-Optionen: {len(cantons)} Kantone, {len(order_types)} Auftragsarten, {len(process_types)} Verfahren, {len(pub_types)} Pub-Typen")
         return {
-            'cantons': cantons,
-            'order_types': order_types,
-            'process_types': process_types,
-            'pub_types': pub_types
+            'cantons': cantons, 'order_types': order_types,
+            'process_types': process_types, 'pub_types': pub_types
         }
     except Exception as e:
         print(f"❌ get_filter_options Fehler: {e}")
@@ -434,11 +430,10 @@ def get_pro_user(username: str, password: str):
 
 
 # ============================================
-# ML / RECOMMENDED
+# ML / RECOMMENDED (alte Pro-User Logik)
 # ============================================
 
 def get_recommended_projects(table_name: str, limit: int = 50) -> List[Dict]:
-    """ML-Predictions — diese Tabellen bleiben ggf. in public"""
     sb = get_client()
     if not sb or not table_name:
         return []
@@ -507,8 +502,119 @@ def get_user_favorites_ids(user_id: str) -> List[str]:
         return []
 
 
+def get_user_ratings_with_details(user_id):
+    """
+    Alle Bewertungen eines Users mit Projekt-/Archiv-Details.
+    Joint je nach source aus projects_ui ODER public.archive.
+    """
+    if not user_id:
+        return []
+    try:
+        # 1) Alle Ratings laden
+        ratings_res = ui('user_tender_ratings') \
+            .select('tender_id, rating, source') \
+            .eq('user_id', user_id) \
+            .execute()
+
+        if not ratings_res.data:
+            return []
+
+        # 2) IDs nach Source aufteilen
+        project_ids = [r['tender_id'] for r in ratings_res.data if r.get('source') == 'project' and r.get('tender_id')]
+        archive_ids = [r['tender_id'] for r in ratings_res.data if r.get('source') == 'archive' and r.get('tender_id')]
+
+        # 3) Details aus jeweiliger Tabelle laden
+        project_map = {}
+        if project_ids:
+            proj_res = ui('projects_ui') \
+                .select('id, title_de, canton, project_subtype, award_amount') \
+                .in_('id', project_ids) \
+                .execute()
+            project_map = {str(p['id']): p for p in (proj_res.data or [])}
+
+        archive_map = {}
+        if archive_ids:
+            # archive liegt in public, daher über den Standard-Client
+            from supabase_client import sb  # lokaler Import um Zirkel zu vermeiden
+            arch_res = sb.table('archive') \
+                .select('id, title_de, canton, order_type, award_amount, winner_name, winner_city, award_decision_date') \
+                .in_('id', archive_ids) \
+                .execute()
+            # order_type → project_subtype zurückmappen für konsistente UI
+            reverse_map = {'WORKS': 'construction', 'SERVICES': 'service', 'SUPPLIES': 'supply'}
+            archive_map = {}
+            for a in (arch_res.data or []):
+                a['project_subtype'] = reverse_map.get(a.get('order_type'), a.get('order_type'))
+                archive_map[str(a['id'])] = a
+
+        # 4) Zusammenführen
+        result = []
+        for r in ratings_res.data:
+            tid = r.get('tender_id', '')
+            source = r.get('source', 'project')
+
+            if source == 'archive':
+                details = archive_map.get(tid, {})
+                result.append({
+                    'tender_id': tid,
+                    'rating': r.get('rating'),
+                    'source': 'archive',
+                    'title_de': details.get('title_de', 'Unbekannt'),
+                    'canton': details.get('canton', ''),
+                    'project_subtype': details.get('project_subtype', ''),
+                    'award_amount': details.get('award_amount'),
+                    'winner_name': details.get('winner_name'),
+                    'winner_city': details.get('winner_city'),
+                    'award_decision_date': details.get('award_decision_date'),
+                })
+            else:
+                details = project_map.get(tid, {})
+                result.append({
+                    'tender_id': tid,
+                    'rating': r.get('rating'),
+                    'source': 'project',
+                    'title_de': details.get('title_de', 'Unbekannt'),
+                    'canton': details.get('canton', ''),
+                    'project_subtype': details.get('project_subtype', ''),
+                    'award_amount': details.get('award_amount'),
+                    'winner_name': None,
+                    'winner_city': None,
+                    'award_decision_date': None,
+                })
+
+        print(f"✅ {len(result)} Bewertungen geladen ({len(project_ids)} Projekte + {len(archive_ids)} Archiv)")
+        return result
+    except Exception as e:
+        print(f"❌ get_user_ratings_with_details Fehler: {e}")
+        return []
+
+
+def update_single_rating(user_id, tender_id, rating, source='project'):
+    """
+    Einzelne Bewertung aktualisieren (Toggle zwischen 1 und -1).
+    source wird benötigt da der Unique-Constraint auf (user_id, tender_id, source) liegt.
+    """
+    if not user_id or not tender_id or rating not in (-1, 1):
+        return {'success': False, 'error': 'Ungültige Parameter'}
+    if source not in ('project', 'archive'):
+        source = 'project'
+    try:
+        ui('user_tender_ratings') \
+            .update({'rating': rating}) \
+            .eq('user_id', user_id) \
+            .eq('tender_id', tender_id) \
+            .eq('source', source) \
+            .execute()
+        print(f"✅ Rating aktualisiert: {tender_id} ({source}) → {rating}")
+        return {'success': True}
+    except Exception as e:
+        print(f"❌ update_single_rating Fehler: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+
 # ============================================
-# SUPABASE AUTH (auth bleibt in eigenem Schema)
+# SUPABASE AUTH
 # ============================================
 
 def register_user(email: str, password: str, company_name: str) -> Dict:
@@ -525,7 +631,6 @@ def register_user(email: str, password: str, company_name: str) -> Dict:
         })
 
         if auth_response.user:
-            # User in ui.users Tabelle speichern
             try:
                 ui('users').insert({
                     'id': auth_response.user.id,
@@ -564,7 +669,6 @@ def login_user(email: str, password: str) -> Dict:
         })
 
         if auth_response.user and auth_response.session:
-            # Company name aus ui.users holen
             company_name = None
             try:
                 r = ui('users').select('company_name').eq('id', auth_response.user.id).execute()
@@ -617,36 +721,34 @@ def get_user_by_id(user_id: str):
 
 
 # ============================================
-# ONBOARDING (alle in ui Schema)
+# ONBOARDING — NEU mit Embedding-Support
 # ============================================
 
 def save_user_profile(user_id, data):
-    """Speichere oder update Firmenprofil"""
+    """Speichere oder update Firmenprofil mit den neuen Filter-Feldern"""
     if not user_id:
-        return {'success': False, 'error': 'Nicht verbunden'}
+        return {'success': False, 'error': 'Nicht eingeloggt'}
 
     try:
         profile = {
             'user_id': user_id,
-            'company_name': data.get('company_name', ''),
-            'branche': data.get('branche', ''),
-            'kanton': data.get('kanton', ''),
-            'mitarbeiter': data.get('mitarbeiter', ''),
-            'umsatz': data.get('umsatz', ''),
-            'budget': data.get('budget', ''),
-            'cpv_tags': data.get('cpv_tags', []),
+            'company_name': data.get('company_name'),
+            'employee_count': data.get('employee_count'),
+            'headquarters': data.get('headquarters'),
+            'canton': data.get('canton'),
+            'project_subtype': data.get('project_subtype'),
+            'award_amount_min': data.get('award_amount_min'),
+            'award_amount_max': data.get('award_amount_max'),
             'updated_at': datetime.utcnow().isoformat()
         }
 
-        # Upsert: insert or update if exists
-        existing = ui('user_profiles').select('id').eq('user_id', user_id).execute()
+        existing = ui('user_profiles').select('user_id').eq('user_id', user_id).execute()
         if existing.data:
             ui('user_profiles').update(profile).eq('user_id', user_id).execute()
         else:
-            profile['created_at'] = datetime.utcnow().isoformat()
             ui('user_profiles').insert(profile).execute()
 
-        # Update company_name in ui.users too
+        # company_name auch in ui.users updaten
         try:
             ui('users').update({'company_name': data.get('company_name')}).eq('id', user_id).execute()
         except:
@@ -663,20 +765,14 @@ def save_user_profile(user_id, data):
 def save_user_simap_ids(user_id, ids):
     """Speichere Simap Projekt-IDs"""
     if not user_id:
-        return {'success': False, 'error': 'Nicht verbunden'}
+        return {'success': False, 'error': 'Nicht eingeloggt'}
 
     try:
-        # Alte IDs löschen
         ui('user_simap_ids').delete().eq('user_id', user_id).execute()
-
-        # Neue IDs einfügen
         rows = [{'user_id': user_id, 'simap_project_id': str(pid)} for pid in ids]
         if rows:
             ui('user_simap_ids').insert(rows).execute()
-
-        # Onboarding als komplett markieren
         mark_onboarding_complete(user_id)
-
         print(f"✅ {len(ids)} Simap-IDs gespeichert für User: {user_id}")
         return {'success': True, 'count': len(ids)}
 
@@ -685,30 +781,35 @@ def save_user_simap_ids(user_id, ids):
         return {'success': False, 'error': str(e)}
 
 
-def save_user_ratings(user_id, ratings_list):
-    """Speichere Tender-Bewertungen"""
-    if not user_id:
-        return {'success': False, 'error': 'Nicht verbunden'}
-
+def get_onboarding_filter_options():
+    """Distinct project_subtypes für das Onboarding-Dropdown"""
     try:
-        rows = [{
-            'user_id': user_id,
-            'tender_id': str(r.get('tender_id', '')),
-            'relevant': r.get('relevant', False)
-        } for r in ratings_list]
+        all_rows = []
+        batch_size = 1000
+        offset = 0
+        while True:
+            r = ui('projects_ui') \
+                .select('project_subtype') \
+                .not_.is_('project_subtype', 'null') \
+                .range(offset, offset + batch_size - 1) \
+                .execute()
+            if not r.data:
+                break
+            all_rows.extend(r.data)
+            if len(r.data) < batch_size:
+                break
+            offset += batch_size
 
-        if rows:
-            ui('user_tender_ratings').insert(rows).execute()
-
-        # Onboarding als komplett markieren
-        mark_onboarding_complete(user_id)
-
-        print(f"✅ {len(rows)} Bewertungen gespeichert für User: {user_id}")
-        return {'success': True, 'count': len(rows)}
+        subtypes = sorted(set(
+            r['project_subtype'] for r in all_rows
+            if r.get('project_subtype') and r['project_subtype'].strip()
+        ))
+        print(f"✅ {len(subtypes)} project_subtypes geladen")
+        return {'subtypes': subtypes}
 
     except Exception as e:
-        print(f"❌ Ratings-Fehler: {e}")
-        return {'success': False, 'error': str(e)}
+        print(f"❌ get_onboarding_filter_options Fehler: {e}")
+        return {'subtypes': []}
 
 
 # ============================================
@@ -924,128 +1025,140 @@ def save_user_ratings(user_id, ratings_list):
 def get_random_archive_tenders(count=20):
     """Hole zufällige Ausschreibungen aus dem Archiv für Rating.
     archiv_daten_2010-2024 liegt in public Schema.
+def get_filtered_sample_projects(user_id, sample_size=20):
     """
-    sb = get_client()
-    if not sb:
+    Ruft die RPC auf und gibt die Mischung aus project + archive zurück.
+    Die RPC liefert bereits source, winner_name, winner_city, award_decision_date.
+    """
+    if not user_id:
+        return []
+    try:
+        result = ui_rpc('sample_projects_for_rating', {
+            'p_user_id': user_id,
+            'sample_size': sample_size
+        })
+        projects = result.data if hasattr(result, 'data') else result
+
+        # description_de hat HTML-Tags drin – für die UI ok, Frontend stripped
+        for p in (projects or []):
+            # award_decision_date als String falls date-Objekt zurückkommt
+            if p.get('award_decision_date'):
+                p['award_decision_date'] = str(p['award_decision_date'])
+
+        print(f"✅ {len(projects or [])} Sample-Projekte geladen für User: {user_id}")
+        return projects or []
+    except Exception as e:
+        print(f"❌ get_filtered_sample_projects Fehler: {e}")
         return []
 
+
+def save_user_ratings_v2(user_id, ratings_list):
+    """
+    Ratings speichern - inkl. source ('project' oder 'archive').
+
+    Erwartetes Format pro rating:
+        {'project_id': <uuid>, 'rating': 1|-1, 'source': 'project'|'archive'}
+    """
+    if not user_id or not ratings_list:
+        return {'success': False, 'error': 'Keine Ratings übergeben'}
+
     try:
-        response = sb.table('archiv_daten_2010-2024') \
-            .select('simap_id,project_id,cont_name,cont_descr,location,contract_type,procedure_xml,auth_name') \
-            .not_.is_('cont_name', 'null') \
-            .limit(200) \
-            .execute()
+        rows = []
+        for r in ratings_list:
+            tender_id = r.get('project_id')
+            rating_val = r.get('rating')
+            source = r.get('source', 'project')  # Default: project (für Backwards-Compat)
 
-        import random
-        rows = response.data or []
-        random.shuffle(rows)
-        selected = rows[:count]
+            if not tender_id or rating_val not in (-1, 1):
+                continue
+            if source not in ('project', 'archive'):
+                source = 'project'
 
-        tenders = []
-        for row in selected:
-            tenders.append({
-                'id': str(row.get('simap_id') or row.get('project_id', '')),
-                'title': row.get('cont_name') or 'Ohne Titel',
-                'description': (row.get('cont_descr') or '')[:300],
-                'full_description': row.get('cont_descr') or '',
-                'canton': row.get('location') or '',
-                'order_type': row.get('contract_type') or '',
-                'process_type': row.get('procedure_xml') or '',
-                'organization': row.get('auth_name') or ''
+            rows.append({
+                'user_id': user_id,
+                'tender_id': str(tender_id),
+                'rating': rating_val,
+                'source': source,
             })
 
-        return tenders
+        if not rows:
+            return {'success': False, 'error': 'Keine gültigen Ratings'}
 
+        # Upsert damit bei Re-Rating die bestehende Zeile überschrieben wird
+        ui('user_tender_ratings').upsert(
+            rows,
+            on_conflict='user_id,tender_id,source'
+        ).execute()
+
+        # Onboarding als abgeschlossen markieren
+        mark_onboarding_complete(user_id)
+
+        print(f"✅ {len(rows)} Ratings gespeichert für User: {user_id}")
+        return {'success': True, 'count': len(rows)}
     except Exception as e:
-        print(f"❌ Random-Tenders-Fehler: {e}")
-        return []
-
-
-def find_similar_tenders(simap_ids, limit=20):
-    """Finde ähnliche Tender via Embedding-API.
-    1. Simap-IDs -> DB-IDs nachschlagen (public.projects)
-    2. FastAPI /similar/{id} aufrufen pro ID
-    3. Ergebnisse mergen und nach Similarity sortieren
-    """
-    import requests as req
-
-    sb = get_client()
-    if not sb:
-        return {'success': False, 'error': 'DB nicht verbunden'}
-
-    try:
-        # Simap-IDs -> DB-IDs (public.projects Tabelle)
-        id_list = ','.join(str(sid) for sid in simap_ids)
-        response = sb.table('projects') \
-            .select('id,simap_project_id') \
-            .or_(f'simap_project_id.in.({id_list}),id.in.({id_list})') \
-            .execute()
-
-        db_ids = [row['id'] for row in (response.data or [])]
-
-        if not db_ids:
-            return {'success': False, 'error': 'Keine Projekte zu diesen IDs gefunden'}
-
-        # FastAPI aufrufen pro ID, Ergebnisse mergen
-        SIMILARITY_API = os.getenv('SIMILARITY_API_URL', 'http://127.0.0.1:8000')
-        seen = {}
-
-        for db_id in db_ids:
-            try:
-                r = req.get(
-                    f'{SIMILARITY_API}/similar/{db_id}',
-                    params={'limit': limit},
-                    timeout=30
-                )
-                if r.status_code != 200:
-                    continue
-                for item in r.json():
-                    pid = item.get('id')
-                    score = item.get('similarity_score', 0)
-                    if pid not in seen or score > seen[pid]['similarity_score']:
-                        seen[pid] = item
-            except Exception as e:
-                print(f"  Similarity API Fehler fuer {db_id}: {e}")
-                continue
-
-        results = sorted(
-            seen.values(),
-            key=lambda x: x.get('similarity_score', 0),
-            reverse=True
-        )[:limit]
-
-        return {'success': True, 'results': results, 'input_count': len(db_ids)}
-
-    except Exception as e:
-        print(f"Similar-Tenders-Fehler: {e}")
+        print(f"❌ save_user_ratings_v2 Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
+def get_user_recommendations(user_id, count=20):
+    """Personalisierte Empfehlungen via Embedding-Similarity"""
+    if not user_id:
+        return []
+    try:
+        result = ui_rpc('recommend_projects_for_user', {
+            'p_user_id': user_id,
+            'match_count': count
+        }).execute()
+        print(f"✅ {len(result.data or [])} recommendations für User: {user_id}")
+        return result.data or []
+    except Exception as e:
+        print(f"❌ get_user_recommendations Fehler: {e}")
+        return []
+
+
+# ============================================
+# Alte Funktionen — bleiben für Kompatibilität, werden aber nicht mehr genutzt
+# ============================================
+
+def save_user_ratings(user_id, ratings_list):
+    """[DEPRECATED] alte Version — bitte save_user_ratings_v2 verwenden"""
+    print("⚠️ save_user_ratings (alt) aufgerufen — sollte save_user_ratings_v2 sein")
+    return save_user_ratings_v2(user_id, ratings_list)
+
+
+def get_random_archive_tenders(count=20):
+    """[DEPRECATED] wurde durch get_filtered_sample_projects ersetzt"""
+    print("⚠️ get_random_archive_tenders (alt) aufgerufen")
+    return []
+
+
 def mark_onboarding_complete(user_id):
-    """Markiere Onboarding als abgeschlossen"""
+    """Markiere Onboarding als abgeschlossen — KORRIGIERT auf 'onboarding_completed'"""
     try:
         ui('user_profiles') \
-            .update({'onboarding_complete': True, 'updated_at': datetime.utcnow().isoformat()}) \
+            .update({'onboarding_completed': True, 'updated_at': datetime.utcnow().isoformat()}) \
             .eq('user_id', user_id) \
             .execute()
+        print(f"✅ Onboarding completed für User: {user_id}")
     except Exception as e:
-        print(f"⚠️ Onboarding-Complete-Fehler: {e}")
+        print(f"⚠️ mark_onboarding_complete Fehler: {e}")
 
 
 def is_onboarding_complete(user_id):
-    """Prüfe ob User Onboarding abgeschlossen hat"""
+    """Prüfe ob User Onboarding abgeschlossen hat — KORRIGIERT auf 'onboarding_completed'"""
     if not user_id:
         return False
 
     try:
         r = ui('user_profiles') \
-            .select('onboarding_complete') \
+            .select('onboarding_completed') \
             .eq('user_id', user_id) \
             .execute()
 
         if r.data and len(r.data) > 0:
-            return r.data[0].get('onboarding_complete', False)
+            return r.data[0].get('onboarding_completed', False)
         return False
 
-    except:
+    except Exception as e:
+        print(f"⚠️ is_onboarding_complete Fehler: {e}")
         return False

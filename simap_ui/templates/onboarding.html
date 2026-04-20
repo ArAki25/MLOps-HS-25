@@ -3,760 +3,360 @@
 
 {% block extra_css %}
 <style>
-    .onb-bg-blobs {
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        overflow: hidden;
-        z-index: 0;
-        pointer-events: none;
-    }
-    .onb-blob {
-        position: absolute;
-        filter: blur(120px);
-        opacity: 0.25;
-        border-radius: 50%;
-        animation: floatOrb 15s infinite ease-in-out alternate;
-    }
+    .onb-bg-blobs { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; z-index: 0; pointer-events: none; }
+    .onb-blob { position: absolute; filter: blur(120px); opacity: 0.25; border-radius: 50%; animation: floatOrb 15s infinite ease-in-out alternate; }
     .onb-blob-1 { top: -5%; left: -5%; width: 50vw; height: 50vw; background: rgba(37, 99, 235, 0.4); }
     .onb-blob-2 { bottom: -5%; right: -5%; width: 40vw; height: 40vw; background: rgba(6, 182, 212, 0.3); animation-delay: -7s; }
+    @keyframes floatOrb { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(50px,80px) scale(1.1); } }
 
-    @keyframes floatOrb {
-        0% { transform: translate(0, 0) scale(1); }
-        100% { transform: translate(50px, 80px) scale(1.1); }
-    }
+    .onb-wrapper { min-height: calc(100vh - 72px); display: flex; align-items: flex-start; justify-content: center; padding: 4rem 1.5rem; position: relative; }
+    .onb-container { width: 100%; max-width: 720px; position: relative; z-index: 1; }
 
-    .onb-wrapper {
-        min-height: calc(100vh - 72px);
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        padding: 4rem 1.5rem;
-        position: relative;
-    }
+    .onb-progress { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 3rem; }
+    .onb-step-dot { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 700; font-family: 'Space Mono', monospace; border: 2px solid rgba(255,255,255,0.1); background: rgba(18,18,20,0.8); color: #71717a; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative; z-index: 2; backdrop-filter: blur(10px); }
+    .onb-step-dot.active { border-color: var(--accent, #06b6d4); background: linear-gradient(135deg, var(--accent, #06b6d4), #3b82f6); color: #fff; box-shadow: 0 0 25px rgba(6,182,212,0.4); transform: scale(1.1); }
+    .onb-step-dot.done { border-color: var(--accent, #06b6d4); background: rgba(6,182,212,0.1); color: var(--accent, #06b6d4); box-shadow: 0 0 10px rgba(6,182,212,0.2); }
+    .onb-step-line { width: 60px; height: 3px; background: rgba(255,255,255,0.05); transition: background 0.4s ease; }
+    .onb-step-line.done { background: linear-gradient(90deg, rgba(6,182,212,0.5), var(--accent, #06b6d4)); }
 
-    .onb-container {
-        width: 100%;
-        max-width: 720px;
-        position: relative;
-        z-index: 1;
-    }
+    .onb-card { background: rgba(18,18,20,0.65); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 3.5rem; backdrop-filter: blur(24px); box-shadow: 0 30px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1); }
+    .onb-header { text-align: center; margin-bottom: 2.5rem; }
+    .onb-icon { width: 64px; height: 64px; background: linear-gradient(135deg, var(--accent, #06b6d4), #3b82f6); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 10px 20px rgba(6,182,212,0.3), inset 0 1px 0 rgba(255,255,255,0.3); }
+    .onb-header h1 { font-size: 1.875rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.5rem; color: #fff; }
+    .onb-header p { color: #a1a1aa; font-size: 1rem; }
 
-    /* Progress Bar */
-    .onb-progress {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0;
-        margin-bottom: 3rem;
-    }
+    .onb-form-group { margin-bottom: 1.5rem; }
+    .onb-label { display: block; font-size: 0.875rem; font-weight: 600; color: #e4e4e7; margin-bottom: 0.5rem; }
+    .onb-label .required { color: #f87171; margin-left: 0.25rem; }
+    .onb-input, .onb-select { width: 100%; padding: 0.875rem 1rem; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; background: rgba(0,0,0,0.2); color: #fff; font-size: 0.9375rem; font-family: inherit; transition: all 0.2s; }
+    .onb-input:focus, .onb-select:focus { outline: none; border-color: var(--accent, #06b6d4); background: rgba(0,0,0,0.4); box-shadow: 0 0 0 4px rgba(6,182,212,0.15); }
+    .onb-select option { background: #18181b; color: #fff; }
+    .onb-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .onb-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent, #06b6d4); margin-bottom: 1rem; margin-top: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .onb-section-title:first-child { margin-top: 0; }
 
-    .onb-step-dot {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.875rem;
-        font-weight: 700;
-        font-family: 'Space Mono', monospace;
-        border: 2px solid rgba(255,255,255,0.1);
-        background: rgba(18, 18, 20, 0.8);
-        color: #71717a;
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        position: relative;
-        z-index: 2;
-        backdrop-filter: blur(10px);
-    }
+    .onb-volume-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+    .onb-volume-option { padding: 1rem 0.75rem; border: 2px solid rgba(255,255,255,0.08); border-radius: 12px; background: rgba(0,0,0,0.2); cursor: pointer; text-align: center; transition: all 0.2s; }
+    .onb-volume-option:hover { border-color: rgba(6,182,212,0.4); background: rgba(6,182,212,0.05); }
+    .onb-volume-option.selected { border-color: var(--accent, #06b6d4); background: rgba(6,182,212,0.12); box-shadow: 0 0 0 1px var(--accent, #06b6d4); }
+    .onb-volume-label { font-size: 0.875rem; font-weight: 600; color: #fff; }
+    .onb-volume-sub { font-size: 0.7rem; color: #71717a; margin-top: 0.25rem; }
 
-    .onb-step-dot.active {
-        border-color: var(--accent, #06b6d4);
-        background: linear-gradient(135deg, var(--accent, #06b6d4), #3b82f6);
-        color: #fff;
-        box-shadow: 0 0 25px rgba(6,182,212,0.4);
-        transform: scale(1.1);
-    }
+    .onb-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; gap: 1rem; }
+    .onb-btn { padding: 0.875rem 1.75rem; border-radius: 12px; font-weight: 600; font-size: 0.9375rem; font-family: inherit; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: inline-flex; align-items: center; gap: 0.5rem; border: none; }
+    .onb-btn-primary { background: linear-gradient(135deg, var(--accent, #06b6d4), #3b82f6); color: white; box-shadow: 0 8px 20px rgba(6,182,212,0.3); }
+    .onb-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(6,182,212,0.4); }
+    .onb-btn-ghost { background: rgba(255,255,255,0.03); color: #e4e4e7; border: 1px solid rgba(255,255,255,0.1); }
+    .onb-btn-ghost:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); color: #fff; }
+    .onb-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-    .onb-step-dot.done {
-        border-color: var(--accent, #06b6d4);
-        background: rgba(6,182,212,0.1);
-        color: var(--accent, #06b6d4);
-        box-shadow: 0 0 10px rgba(6,182,212,0.2);
-    }
+    .onb-choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1.5rem; }
+    .onb-choice { padding: 2rem; border: 2px solid rgba(255,255,255,0.08); border-radius: 20px; text-align: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); background: rgba(0,0,0,0.2); }
+    .onb-choice:hover { border-color: rgba(6,182,212,0.4); background: rgba(6,182,212,0.05); transform: translateY(-4px); }
+    .onb-choice.selected { border-color: var(--accent, #06b6d4); background: rgba(6,182,212,0.1); box-shadow: 0 0 0 1px var(--accent, #06b6d4); }
+    .onb-choice-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.3); color: var(--accent, #06b6d4); }
+    .onb-choice h3 { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; color: #fff; }
+    .onb-choice p { font-size: 0.875rem; color: #a1a1aa; line-height: 1.6; }
 
-    .onb-step-line {
-        width: 80px;
-        height: 3px;
-        background: rgba(255,255,255,0.05);
-        transition: background 0.4s ease;
-    }
+    .onb-filter-preview { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 1.75rem; }
+    .onb-filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .onb-filter-item-full { grid-column: span 2; }
+    .onb-filter-label { font-size: 0.75rem; color: #71717a; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+    .onb-filter-value { font-size: 1rem; font-weight: 600; color: #fff; }
 
-    .onb-step-line.done {
-        background: linear-gradient(90deg, rgba(6,182,212,0.5), var(--accent, #06b6d4));
-    }
+    .onb-ids-area { width: 100%; min-height: 140px; padding: 1.25rem; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; font-size: 0.9375rem; font-family: 'Space Mono', monospace; background: rgba(0,0,0,0.2); color: #fff; resize: vertical; line-height: 1.8; }
+    .onb-ids-area:focus { outline: none; border-color: var(--accent, #06b6d4); background: rgba(0,0,0,0.4); box-shadow: 0 0 0 4px rgba(6,182,212,0.15); }
+    .onb-ids-hint { font-size: 0.8125rem; color: #71717a; margin-top: 0.75rem; }
+    .onb-ids-count { font-size: 0.875rem; color: var(--accent, #06b6d4); font-weight: 600; margin-top: 1rem; }
 
-    /* Card */
-    .onb-card {
-        background: rgba(18, 18, 20, 0.65);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 24px;
-        padding: 3.5rem;
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        box-shadow: 0 30px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
-        transition: height 0.3s ease;
-    }
+    /* ========== RATING LIST ========== */
+    .onb-rating-progress { text-align: center; margin-bottom: 2rem; }
+    .onb-rating-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; margin-bottom: 0.75rem; overflow: hidden; }
+    .onb-rating-fill { height: 100%; background: linear-gradient(90deg, var(--accent, #06b6d4), #3b82f6); border-radius: 3px; transition: width 0.4s; box-shadow: 0 0 10px rgba(6,182,212,0.5); }
+    .onb-rating-text { font-size: 0.875rem; color: #a1a1aa; }
+    .onb-rating-text strong { color: #fff; }
 
-    .onb-header {
-        text-align: center;
-        margin-bottom: 2.5rem;
-    }
+    .onb-rating-list { display: flex; flex-direction: column; gap: 1rem; }
 
-    .onb-icon {
-        width: 64px;
-        height: 64px;
-        background: linear-gradient(135deg, var(--accent, #06b6d4), #3b82f6);
-        border-radius: 18px;
+    .onb-rcard { background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 1.5rem; transition: all 0.3s ease; }
+    .onb-rcard.rated-yes { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.05); }
+    .onb-rcard.rated-no { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.03); }
+
+    /* Archive-Header (prominent oben) */
+    .onb-arch-header {
         display: flex;
         align-items: center;
-        justify-content: center;
-        margin: 0 auto 1.5rem;
-        box-shadow: 0 10px 20px rgba(6,182,212,0.3), inset 0 1px 0 rgba(255,255,255,0.3);
-    }
-
-    .onb-header h1 {
-        font-size: 1.875rem;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        margin-bottom: 0.5rem;
-        color: #fff;
-    }
-
-    .onb-header p {
-        color: #a1a1aa;
-        font-size: 1rem;
-    }
-
-    /* Buttons */
-    .onb-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 2.5rem;
-        gap: 1rem;
-    }
-
-    .onb-btn {
-        padding: 0.875rem 1.75rem;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 0.9375rem;
-        font-family: inherit;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        border: none;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .onb-btn-primary {
-        background: linear-gradient(135deg, var(--accent, #06b6d4), #3b82f6);
-        color: white;
-        box-shadow: 0 8px 20px rgba(6,182,212,0.3);
-    }
-
-    .onb-btn-primary::after {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: linear-gradient(rgba(255,255,255,0.2), transparent);
-        opacity: 0;
-        transition: opacity 0.3s;
-    }
-
-    .onb-btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 28px rgba(6,182,212,0.4);
-    }
-
-    .onb-btn-primary:hover::after { opacity: 1; }
-
-    .onb-btn-ghost {
-        background: rgba(255,255,255,0.03);
-        color: #e4e4e7;
-        border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .onb-btn-ghost:hover {
-        background: rgba(255,255,255,0.08);
-        border-color: rgba(255,255,255,0.2);
-        color: #fff;
-    }
-
-    .onb-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-    }
-
-    /* Choice Cards */
-    .onb-choice-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.25rem;
-        margin-top: 1.5rem;
-    }
-
-    .onb-choice {
-        padding: 2rem;
-        border: 2px solid rgba(255,255,255,0.08);
-        border-radius: 20px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        background: rgba(0,0,0,0.2);
-    }
-
-    .onb-choice:hover {
-        border-color: rgba(6,182,212,0.4);
-        background: rgba(6,182,212,0.05);
-        transform: translateY(-4px);
-        box-shadow: 0 12px 24px rgba(0,0,0,0.3);
-    }
-
-    .onb-choice.selected {
-        border-color: var(--accent, #06b6d4);
-        background: rgba(6,182,212,0.1);
-        box-shadow: 0 0 0 1px var(--accent, #06b6d4), 0 12px 24px rgba(6,182,212,0.2);
-    }
-
-    .onb-choice-icon {
-        width: 56px;
-        height: 56px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1.25rem;
-        background: rgba(6,182,212,0.15);
-        border: 1px solid rgba(6,182,212,0.3);
-        color: var(--accent, #06b6d4);
-        transition: all 0.3s;
-    }
-
-    .onb-choice:hover .onb-choice-icon {
-        background: var(--accent, #06b6d4);
-        color: #fff;
-        transform: scale(1.05);
-    }
-
-    .onb-choice h3 {
-        font-size: 1.125rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #fff;
-    }
-
-    .onb-choice p {
-        font-size: 0.875rem;
-        color: #a1a1aa;
-        line-height: 1.6;
-    }
-
-    /* Step IDs */
-    .onb-ids-area {
-        width: 100%;
-        min-height: 140px;
-        padding: 1.25rem;
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 12px;
-        font-size: 0.9375rem;
-        font-family: 'Space Mono', monospace;
-        background: rgba(0,0,0,0.2);
-        color: #fff;
-        resize: vertical;
-        line-height: 1.8;
-        transition: all 0.2s;
-    }
-
-    .onb-ids-area:focus {
-        outline: none;
-        border-color: var(--accent, #06b6d4);
-        background: rgba(0,0,0,0.4);
-        box-shadow: 0 0 0 4px rgba(6,182,212,0.15), inset 0 0 0 1px var(--accent, #06b6d4);
-    }
-
-    .onb-ids-hint {
-        font-size: 0.8125rem;
-        color: #71717a;
-        margin-top: 0.75rem;
-    }
-
-    .sim-card {
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 12px;
-        padding: 1rem 1.25rem;
-        transition: border-color 0.2s;
-    }
-    .sim-card:hover {
-        border-color: rgba(6,182,212,0.3);
-    }
-    .sim-card-title {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: #f4f4f5;
-        margin-bottom: 0.4rem;
-    }
-    .sim-card-meta {
-        display: flex;
-        gap: 0.75rem;
-        font-size: 0.75rem;
-        color: #a1a1aa;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-    .sim-score {
-        background: rgba(6,182,212,0.15);
-        color: var(--accent,#06b6d4);
-        padding: 0.15rem 0.5rem;
-        border-radius: 6px;
-        font-weight: 700;
-        font-size: 0.7rem;
-    }
-    .sim-loading {
-        text-align: center;
-        padding: 2rem;
-        color: #71717a;
-    }
-    .sim-loading .spinner {
-        display: inline-block;
-        width: 20px; height: 20px;
-        border: 2px solid rgba(6,182,212,0.2);
-        border-top-color: var(--accent,#06b6d4);
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        margin-right: 0.5rem;
-        vertical-align: middle;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .onb-ids-count {
-        font-size: 0.875rem;
-        color: var(--accent, #06b6d4);
-        font-weight: 600;
-        margin-top: 1rem;
-    }
-
-    /* Rating Cards */
-    .onb-rating-progress {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-
-    .onb-rating-bar {
-        height: 6px;
-        background: rgba(255,255,255,0.08);
-        border-radius: 3px;
-        margin-bottom: 0.75rem;
-        overflow: hidden;
-    }
-
-    .onb-rating-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--accent, #06b6d4), #3b82f6);
-        border-radius: 3px;
-        transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        box-shadow: 0 0 10px rgba(6,182,212,0.5);
-    }
-
-    .onb-rating-text {
-        font-size: 0.875rem;
-        color: #a1a1aa;
-    }
-
-    .onb-rating-text strong {
-        color: #fff;
-    }
-
-    .onb-tender-card {
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 20px;
-        padding: 2rem;
-        margin-bottom: 1.5rem;
-        transition: all 0.3s;
-        animation: cardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .onb-tender-card:hover {
-        background: rgba(255,255,255,0.05);
-        border-color: rgba(255,255,255,0.15);
-    }
-
-    @keyframes cardIn {
-        from { opacity: 0; transform: translateY(15px) scale(0.98); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .onb-tender-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        margin-bottom: 0.75rem;
-        line-height: 1.5;
-        color: #fff;
-    }
-
-    .onb-tender-desc {
-        font-size: 0.9375rem;
-        color: #a1a1aa;
-        line-height: 1.7;
-        margin-bottom: 0;
-        max-height: 72px;
-        overflow: hidden;
-        position: relative;
-        transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        white-space: pre-line;
-    }
-
-    .onb-tender-desc.collapsed::after {
-        content: '';
-        position: absolute;
-        bottom: 0; left: 0; right: 0; height: 40px;
-        background: linear-gradient(transparent, rgba(18, 18, 20, 0.95));
-        pointer-events: none;
-    }
-
-    .onb-tender-desc.expanded {
-        max-height: 2000px;
-    }
-
-    .onb-tender-desc.expanded::after {
-        display: none;
-    }
-
-    .onb-expand-btn {
-        background: none;
-        border: none;
-        color: var(--accent, #06b6d4);
-        font-size: 0.8125rem;
-        font-weight: 600;
-        cursor: pointer;
-        padding: 0.5rem 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        font-family: inherit;
-        transition: color 0.2s;
-    }
-
-    .onb-expand-btn:hover {
-        color: #fff;
-    }
-
-    .onb-expand-btn svg {
-        transition: transform 0.3s ease;
-    }
-
-    .onb-expand-btn.expanded svg {
-        transform: rotate(180deg);
-    }
-
-    .onb-tender-meta {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-        margin-top: 0.75rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .onb-tender-tag {
-        padding: 0.3rem 0.6rem;
-        background: rgba(6,182,212,0.15);
-        color: var(--accent, #06b6d4);
-        border-radius: 6px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        border: 1px solid rgba(6,182,212,0.2);
-    }
-
-    .onb-tender-org {
-        font-size: 0.8125rem;
-        color: #71717a;
-        margin-top: 0.5rem;
-        display: flex;
-        align-items: flex-start;
-        gap: 0.4rem;
-        line-height: 1.5;
-    }
-
-    .onb-tender-org svg {
-        flex-shrink: 0;
-        margin-top: 2px;
-    }
-
-    .onb-rating-btns {
-        display: flex;
-        gap: 1rem;
-    }
-
-    .onb-rate-btn {
-        flex: 1;
-        padding: 1rem;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 0.9375rem;
-        font-family: inherit;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-    }
-
-    .onb-rate-no {
-        background: rgba(239,68,68,0.1);
-        border: 1px solid rgba(239,68,68,0.2);
-        color: #f87171;
-    }
-
-    .onb-rate-no:hover {
-        background: rgba(239,68,68,0.2);
-        border-color: #ef4444;
-        color: #fff;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(239,68,68,0.2);
-    }
-
-    .onb-rate-yes {
-        background: rgba(16,185,129,0.1);
-        border: 1px solid rgba(16,185,129,0.2);
-        color: #34d399;
-    }
-
-    .onb-rate-yes:hover {
-        background: rgba(16,185,129,0.2);
-        border-color: #10b981;
-        color: #fff;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(16,185,129,0.2);
-    }
-
-    .onb-rate-skip {
-        background: transparent;
-        border: 1px solid rgba(255,255,255,0.1);
-        color: #a1a1aa;
-        flex: 0;
-        padding: 1rem 1.25rem;
-    }
-
-    .onb-rate-skip:hover {
-        background: rgba(255,255,255,0.05);
-        color: #fff;
-    }
-
-    /* Success */
-    .onb-success {
-        text-align: center;
-        padding: 3rem 0;
-    }
-
-    .onb-success-icon {
-        width: 96px;
-        height: 96px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05));
-        border: 2px solid rgba(16,185,129,0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 2rem;
-        color: #34d399;
-        animation: scaleInBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        box-shadow: 0 0 40px rgba(16,185,129,0.2);
-    }
-
-    @keyframes scaleInBounce {
-        0% { transform: scale(0); opacity: 0; }
-        60% { transform: scale(1.1); }
-        100% { transform: scale(1); opacity: 1; }
-    }
-
-    .onb-success h2 {
-        font-size: 2rem;
-        font-weight: 700;
+        gap: 0.6rem;
+        padding: 0.65rem 0.9rem;
+        background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(168,85,247,0.08));
+        border: 1px solid rgba(168,85,247,0.25);
+        border-radius: 10px;
         margin-bottom: 1rem;
-        color: #fff;
+        flex-wrap: wrap;
     }
-
-    .onb-success p {
-        color: #a1a1aa;
-        margin-bottom: 2.5rem;
-        line-height: 1.8;
-        font-size: 1.0625rem;
+    .onb-arch-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.55rem;
+        background: rgba(168,85,247,0.2);
+        color: #c4b5fd;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
     }
+    .onb-arch-info { display: flex; gap: 1rem; flex: 1; flex-wrap: wrap; font-size: 0.8125rem; }
+    .onb-arch-label { color: #71717a; }
+    .onb-arch-value { color: #fff; font-weight: 600; }
+    .onb-arch-price { color: #34d399; font-weight: 700; font-family: 'Space Mono', monospace; }
 
-    /* Msg */
-    .onb-msg-error {
-        background: rgba(239,68,68,0.1);
-        color: #f87171;
-        border: 1px solid rgba(239,68,68,0.2);
-        padding: 1rem 1.25rem;
-        border-radius: 12px;
-        margin-bottom: 1.5rem;
-    }
+    .onb-rcard-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+    .onb-rcard-content { flex: 1; min-width: 0; }
+    .onb-rcard-title { font-size: 1rem; font-weight: 600; color: #fff; line-height: 1.4; margin-bottom: 0.5rem; }
+    .onb-rcard-desc { font-size: 0.875rem; color: #a1a1aa; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .onb-rcard-desc.expanded { -webkit-line-clamp: unset; }
+    .onb-rcard-expand { background: none; border: none; color: var(--accent, #06b6d4); font-size: 0.75rem; font-weight: 600; cursor: pointer; padding: 0.25rem 0; font-family: inherit; margin-top: 0.25rem; }
+    .onb-rcard-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .onb-rcard-tag { padding: 0.2rem 0.5rem; background: rgba(6,182,212,0.12); color: var(--accent, #06b6d4); border-radius: 5px; font-size: 0.7rem; font-weight: 600; border: 1px solid rgba(6,182,212,0.2); }
 
-    /* Hide steps */
+    .onb-rcard-btns { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: flex-start; }
+    .onb-rbtn { padding: 0.5rem 0.875rem; border-radius: 10px; font-weight: 600; font-size: 0.8125rem; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.35rem; }
+    .onb-rbtn-no { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: #f87171; }
+    .onb-rbtn-no:hover, .onb-rbtn-no.active { background: rgba(239,68,68,0.2); border-color: #ef4444; color: #fff; }
+    .onb-rbtn-yes { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: #34d399; }
+    .onb-rbtn-yes:hover, .onb-rbtn-yes.active { background: rgba(16,185,129,0.2); border-color: #10b981; color: #fff; }
+
+    .onb-rcard-status { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.5rem; font-size: 0.75rem; font-weight: 600; }
+    .onb-rcard-status.yes { color: #34d399; }
+    .onb-rcard-status.no { color: #f87171; }
+
+    .onb-success { text-align: center; padding: 3rem 0; }
+    .onb-success-icon { width: 96px; height: 96px; border-radius: 50%; background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05)); border: 2px solid rgba(16,185,129,0.4); display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; color: #34d399; animation: scaleInBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 0 40px rgba(16,185,129,0.2); }
+    @keyframes scaleInBounce { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+    .onb-success h2 { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; color: #fff; }
+    .onb-success p { color: #a1a1aa; margin-bottom: 2.5rem; line-height: 1.8; font-size: 1.0625rem; }
+
+    .onb-msg-error { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; }
     .onb-step { display: none; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
     .onb-step.active { display: block; opacity: 1; transform: translateY(0); }
 
     @media (max-width: 600px) {
         .onb-choice-grid { grid-template-columns: 1fr; }
+        .onb-form-row { grid-template-columns: 1fr; }
+        .onb-volume-grid { grid-template-columns: 1fr; }
+        .onb-filter-grid { grid-template-columns: 1fr; }
+        .onb-filter-item-full { grid-column: auto; }
         .onb-card { padding: 2rem 1.5rem; }
+        .onb-step-line { width: 35px; }
+        .onb-rcard-top { flex-direction: column; }
+        .onb-rcard-btns { width: 100%; }
+        .onb-rbtn { flex: 1; justify-content: center; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="onb-bg-blobs">
-    <div class="onb-blob onb-blob-1"></div>
-    <div class="onb-blob onb-blob-2"></div>
-</div>
+<div class="onb-bg-blobs"><div class="onb-blob onb-blob-1"></div><div class="onb-blob onb-blob-2"></div></div>
 
 <div class="onb-wrapper">
     <div class="onb-container">
-
-        <!-- Progress: 3 Steps -->
         <div class="onb-progress" id="progress-bar">
             <div class="onb-step-dot active" id="dot-1">1</div>
             <div class="onb-step-line" id="line-1"></div>
             <div class="onb-step-dot" id="dot-2">2</div>
             <div class="onb-step-line" id="line-2"></div>
             <div class="onb-step-dot" id="dot-3">3</div>
+            <div class="onb-step-line" id="line-3"></div>
+            <div class="onb-step-dot" id="dot-4">4</div>
         </div>
 
         <div class="onb-card">
             <div id="msg-container"></div>
 
-            <!-- ==================== STEP 1: Wahl ==================== -->
+            <!-- STEP 1: Firmenprofil -->
             <div class="onb-step active" id="step-1">
                 <div class="onb-header">
-                    <div class="onb-icon">
-                        <svg width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+                    <div class="onb-icon"><svg width="28" height="28" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+                    <h1>Firmenprofil</h1>
+                    <p>Damit wir Ihnen passende Ausschreibungen empfehlen können</p>
+                </div>
+
+                <div class="onb-section-title">Über Ihr Unternehmen</div>
+                <div class="onb-form-group">
+                    <label class="onb-label">Firmenname<span class="required">*</span></label>
+                    <input type="text" class="onb-input" id="company-name" placeholder="z.B. Muster Bau AG">
+                </div>
+                <div class="onb-form-row">
+                    <div class="onb-form-group">
+                        <label class="onb-label">Mitarbeiteranzahl</label>
+                        <select class="onb-select" id="employee-count">
+                            <option value="">Bitte wählen</option>
+                            <option value="5">1–10</option>
+                            <option value="25">11–50</option>
+                            <option value="100">51–250</option>
+                            <option value="500">über 250</option>
+                        </select>
                     </div>
+                    <div class="onb-form-group">
+                        <label class="onb-label">Hauptsitz</label>
+                        <input type="text" class="onb-input" id="headquarters" placeholder="z.B. Olten, SO">
+                    </div>
+                </div>
+
+                <div class="onb-section-title">Was suchen Sie?</div>
+                <div class="onb-form-row">
+                    <div class="onb-form-group">
+                        <label class="onb-label">Kanton<span class="required">*</span></label>
+                        <select class="onb-select" id="canton">
+                            <option value="">Bitte wählen</option>
+                            <option value="AG">Aargau</option><option value="AI">Appenzell Innerrhoden</option>
+                            <option value="AR">Appenzell Ausserrhoden</option><option value="BE">Bern</option>
+                            <option value="BL">Basel-Landschaft</option><option value="BS">Basel-Stadt</option>
+                            <option value="FR">Freiburg</option><option value="GE">Genf</option>
+                            <option value="GL">Glarus</option><option value="GR">Graubünden</option>
+                            <option value="JU">Jura</option><option value="LU">Luzern</option>
+                            <option value="NE">Neuenburg</option><option value="NW">Nidwalden</option>
+                            <option value="OW">Obwalden</option><option value="SG">St. Gallen</option>
+                            <option value="SH">Schaffhausen</option><option value="SO">Solothurn</option>
+                            <option value="SZ">Schwyz</option><option value="TG">Thurgau</option>
+                            <option value="TI">Tessin</option><option value="UR">Uri</option>
+                            <option value="VD">Waadt</option><option value="VS">Wallis</option>
+                            <option value="ZG">Zug</option><option value="ZH">Zürich</option>
+                        </select>
+                    </div>
+                    <div class="onb-form-group">
+                        <label class="onb-label">Projekttyp<span class="required">*</span></label>
+                        <select class="onb-select" id="project-subtype">
+                            <option value="">Wird geladen...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="onb-form-group">
+                    <label class="onb-label">Auftragsvolumen<span class="required">*</span></label>
+                    <div class="onb-volume-grid">
+                        <div class="onb-volume-option" data-volume="low" onclick="selectVolume('low')"><div class="onb-volume-label">Bis 100'000</div><div class="onb-volume-sub">CHF</div></div>
+                        <div class="onb-volume-option" data-volume="mid" onclick="selectVolume('mid')"><div class="onb-volume-label">100'000 – 500'000</div><div class="onb-volume-sub">CHF</div></div>
+                        <div class="onb-volume-option" data-volume="high" onclick="selectVolume('high')"><div class="onb-volume-label">Über 500'000</div><div class="onb-volume-sub">CHF</div></div>
+                    </div>
+                </div>
+                <div class="onb-actions">
+                    <div></div>
+                    <button class="onb-btn onb-btn-primary" id="btn-step1" onclick="submitProfile()" disabled>
+                        Weiter <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Wahl -->
+            <div class="onb-step" id="step-2">
+                <div class="onb-header">
+                    <div class="onb-icon"><svg width="28" height="28" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg></div>
                     <h1>ML-Training vorbereiten</h1>
                     <p>Damit wir relevante Ausschreibungen für Sie finden können</p>
                 </div>
-
                 <div class="onb-choice-grid">
                     <div class="onb-choice" id="choice-ids" onclick="selectChoice('ids')">
-                        <div class="onb-choice-icon">
-                            <svg width="24" height="24" fill="none" stroke="var(--accent,#06b6d4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                        </div>
+                        <div class="onb-choice-icon"><svg width="24" height="24" fill="none" stroke="var(--accent,#06b6d4)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
                         <h3>Simap-IDs eingeben</h3>
                         <p>Ich habe bereits bei simap.ch Projekte beworben und kenne die IDs</p>
                     </div>
                     <div class="onb-choice" id="choice-rate" onclick="selectChoice('rate')">
-                        <div class="onb-choice-icon">
-                            <svg width="24" height="24" fill="none" stroke="var(--accent,#06b6d4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-                        </div>
+                        <div class="onb-choice-icon"><svg width="24" height="24" fill="none" stroke="var(--accent,#06b6d4)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></div>
                         <h3>Ausschreibungen bewerten</h3>
                         <p>Zeigt mir Beispiele und ich sage ob sie relevant sind oder nicht</p>
                     </div>
                 </div>
-
                 <div class="onb-actions">
-                    <div></div>
-                    <button class="onb-btn onb-btn-primary" id="btn-step1" onclick="submitStep1()" disabled>
-                        Weiter
-                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(1)">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Zurück
+                    </button>
+                    <button class="onb-btn onb-btn-primary" id="btn-step2" onclick="submitChoice()" disabled>
+                        Weiter <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                     </button>
                 </div>
             </div>
 
-            <!-- ==================== STEP 2a: Simap IDs ==================== -->
-            <div class="onb-step" id="step-2a">
+            <!-- STEP 3a: Simap IDs -->
+            <div class="onb-step" id="step-3a">
                 <div class="onb-header">
-                    <div class="onb-icon">
-                        <svg width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    </div>
+                    <div class="onb-icon"><svg width="28" height="28" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
                     <h1>Simap Projekt-IDs</h1>
                     <p>Geben Sie die IDs der Projekte ein, bei denen Sie sich beworben haben</p>
                 </div>
-
                 <textarea class="onb-ids-area" id="simap-ids" placeholder="Projekt-IDs eingeben, eine pro Zeile oder mit Komma getrennt:&#10;&#10;z.B.&#10;21144&#10;32619&#10;28503"></textarea>
-                <div class="onb-ids-hint">Eine ID pro Zeile oder mit Komma getrennt. Mindestens 3 IDs empfohlen.</div>
+                <div class="onb-ids-hint">Eine ID pro Zeile oder mit Komma getrennt.</div>
                 <div class="onb-ids-count" id="ids-count"></div>
-
-                <!-- Ähnliche Tender suchen -->
-                <button class="onb-btn onb-btn-primary" id="btn-find-similar" onclick="findSimilarTenders()" style="margin-top:1rem;width:100%;justify-content:center;">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                    Ähnliche Ausschreibungen finden
-                </button>
-
-                <div id="similar-results" style="display:none; margin-top:1.5rem;">
-                    <div style="font-size:0.8125rem; color:var(--accent,#06b6d4); font-weight:600; margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.1em;">
-                        Ähnliche Ausschreibungen
-                    </div>
-                    <div id="similar-list" style="display:flex; flex-direction:column; gap:0.5rem; max-height:400px; overflow-y:auto; padding-right:0.5rem;"></div>
-                </div>
-
                 <div class="onb-actions">
-                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(1)">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
-                        Zurück
+                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(2)">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Zurück
                     </button>
                     <button class="onb-btn onb-btn-primary" onclick="submitIds()">
-                        Abschliessen
-                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        Abschliessen <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                     </button>
                 </div>
             </div>
 
-            <!-- ==================== STEP 2b: Rating ==================== -->
-            <div class="onb-step" id="step-2b">
+            <!-- STEP 3c: Filter bestätigen -->
+            <div class="onb-step" id="step-3c">
+                <div class="onb-header">
+                    <div class="onb-icon"><svg width="28" height="28" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg></div>
+                    <h1>Ihre Filter</h1>
+                    <p>Wir zeigen Ihnen Ausschreibungen, die zu diesen Kriterien passen</p>
+                </div>
+                <div class="onb-filter-preview">
+                    <div class="onb-filter-grid">
+                        <div><div class="onb-filter-label">Kanton</div><div class="onb-filter-value" id="filter-preview-canton">—</div></div>
+                        <div><div class="onb-filter-label">Projekttyp</div><div class="onb-filter-value" id="filter-preview-subtype">—</div></div>
+                        <div class="onb-filter-item-full"><div class="onb-filter-label">Auftragsvolumen</div><div class="onb-filter-value" id="filter-preview-volume">—</div></div>
+                    </div>
+                </div>
+                <div class="onb-actions">
+                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(1)">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Filter ändern
+                    </button>
+                    <button class="onb-btn onb-btn-primary" onclick="goToRating()">
+                        Passt, weiter <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3b: Rating LISTE -->
+            <div class="onb-step" id="step-3b">
                 <div class="onb-header" style="margin-bottom:1rem;">
                     <h1>Ausschreibungen bewerten</h1>
-                    <p>Ist diese Ausschreibung für Ihr Unternehmen relevant?</p>
+                    <p>Markieren Sie, welche Ausschreibungen für Ihr Unternehmen relevant sind. Wir zeigen Ihnen aktive und bereits abgeschlossene Projekte.</p>
                 </div>
 
                 <div class="onb-rating-progress">
                     <div class="onb-rating-bar"><div class="onb-rating-fill" id="rating-fill" style="width:0%"></div></div>
-                    <div class="onb-rating-text"><strong id="rating-current">0</strong> von <strong id="rating-total">15</strong> bewertet</div>
+                    <div class="onb-rating-text"><strong id="rating-current">0</strong> von <strong id="rating-total">20</strong> bewertet</div>
                 </div>
 
-                <div id="rating-card-container">
-                    <div style="text-align:center;padding:2rem;color:var(--text-muted,#71717a);">Ausschreibungen werden geladen...</div>
+                <div id="rating-list-container">
+                    <div style="text-align:center;padding:2rem;color:#71717a;">Ausschreibungen werden geladen...</div>
                 </div>
 
                 <div class="onb-actions">
-                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(1)">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
-                        Zurück
+                    <button class="onb-btn onb-btn-ghost" onclick="goToStep(2)">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Zurück
                     </button>
                     <button class="onb-btn onb-btn-primary" id="btn-finish-rating" onclick="finishRating()" disabled>
-                        Abschliessen
-                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        Abschliessen <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                     </button>
                 </div>
             </div>
 
-            <!-- ==================== STEP 3: Success ==================== -->
-            <div class="onb-step" id="step-3">
+            <!-- STEP 4: Success -->
+            <div class="onb-step" id="step-4">
                 <div class="onb-success">
-                    <div class="onb-success-icon">
-                        <svg width="40" height="40" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    </div>
+                    <div class="onb-success-icon"><svg width="40" height="40" fill="none" stroke="#10b981" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
                     <h2>Profil eingerichtet!</h2>
                     <p>Ihr ML-Modell wird jetzt trainiert. Sie erhalten in Kürze personalisierte Ausschreibungs-Empfehlungen.</p>
                     <a href="/publications" class="onb-btn onb-btn-primary" style="text-decoration:none;">
-                        Zu den Ausschreibungen
-                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                        Zu den Ausschreibungen <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                     </a>
                 </div>
             </div>
@@ -770,285 +370,304 @@
 <script>
     var currentStep = 1;
     var selectedChoice = '';
+    var selectedVolume = '';
     var ratingTenders = [];
-    var ratings = [];
-    var ratingIndex = 0;
-    var RATING_TARGET = 15;
+    var ratings = {};  // key = tender_id, value = {rating, source}
+    var RATING_TARGET = 20;
 
-    // ==========================================
-    // IDS COUNTER
-    // ==========================================
+    var VOLUME_MAP = {
+        'low':  { min: 0,      max: 100000 },
+        'mid':  { min: 100000, max: 500000 },
+        'high': { min: 500000, max: null   }
+    };
+
+    var KANTON_NAMES = {
+        'AG':'Aargau','AI':'Appenzell Innerrhoden','AR':'Appenzell Ausserrhoden','BE':'Bern',
+        'BL':'Basel-Landschaft','BS':'Basel-Stadt','FR':'Freiburg','GE':'Genf','GL':'Glarus',
+        'GR':'Graubünden','JU':'Jura','LU':'Luzern','NE':'Neuenburg','NW':'Nidwalden',
+        'OW':'Obwalden','SG':'St. Gallen','SH':'Schaffhausen','SO':'Solothurn','SZ':'Schwyz',
+        'TG':'Thurgau','TI':'Tessin','UR':'Uri','VD':'Waadt','VS':'Wallis','ZG':'Zug','ZH':'Zürich'
+    };
+    var SUBTYPE_LABELS = { 'construction':'Bauleistung', 'supply':'Lieferung', 'service':'Dienstleistung' };
+    var VOLUME_LABELS = { 'low':"Bis 100'000 CHF", 'mid':"100'000 – 500'000 CHF", 'high':"Über 500'000 CHF" };
+
     document.addEventListener('DOMContentLoaded', function() {
+        loadSubtypes();
+        ['company-name', 'canton', 'project-subtype'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.addEventListener('input', validateProfile);
+            if (el) el.addEventListener('change', validateProfile);
+        });
         var idsArea = document.getElementById('simap-ids');
         if (idsArea) {
             idsArea.addEventListener('input', function() {
                 var ids = parseIds(this.value);
                 var el = document.getElementById('ids-count');
-                if (ids.length > 0) {
-                    el.textContent = ids.length + ' ID' + (ids.length > 1 ? 's' : '') + ' erkannt';
-                } else {
-                    el.textContent = '';
-                }
+                el.textContent = ids.length > 0 ? (ids.length + ' ID' + (ids.length > 1 ? 's' : '') + ' erkannt') : '';
             });
         }
     });
 
-    function parseIds(text) {
-        return text.split(/[\n,;]+/).map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0 && /^\d+$/.test(s); });
+    function loadSubtypes() {
+        var ALLOWED = ['construction', 'supply', 'service'];
+        fetch('/api/onboarding/filter-options')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var sel = document.getElementById('project-subtype');
+                sel.innerHTML = '<option value="">Bitte wählen</option>';
+                (data.subtypes || []).forEach(function(s) {
+                    if (ALLOWED.indexOf(s) === -1) return;
+                    var opt = document.createElement('option');
+                    opt.value = s;
+                    opt.textContent = SUBTYPE_LABELS[s] || s;
+                    sel.appendChild(opt);
+                });
+            })
+            .catch(function() { document.getElementById('project-subtype').innerHTML = '<option value="">Fehler beim Laden</option>'; });
     }
 
-    // ==========================================
-    // NAVIGATION (3 Steps)
-    // ==========================================
+    function selectVolume(vol) {
+        selectedVolume = vol;
+        document.querySelectorAll('.onb-volume-option').forEach(function(el) {
+            el.classList.toggle('selected', el.dataset.volume === vol);
+        });
+        validateProfile();
+    }
+
+    function validateProfile() {
+        var ok = document.getElementById('company-name').value.trim() &&
+                 document.getElementById('canton').value &&
+                 document.getElementById('project-subtype').value &&
+                 selectedVolume;
+        document.getElementById('btn-step1').disabled = !ok;
+    }
+
+    function submitProfile() {
+        var vol = VOLUME_MAP[selectedVolume];
+        var payload = {
+            company_name: document.getElementById('company-name').value.trim(),
+            employee_count: parseInt(document.getElementById('employee-count').value) || null,
+            headquarters: document.getElementById('headquarters').value.trim() || null,
+            canton: document.getElementById('canton').value,
+            project_subtype: document.getElementById('project-subtype').value,
+            award_amount_min: vol.min,
+            award_amount_max: vol.max
+        };
+        fetch('/api/onboarding/profile', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        }).then(function(r) { return r.json(); }).then(function(res) {
+            if (res.success) goToStep(2);
+            else showMsg(res.error || 'Fehler beim Speichern.');
+        }).catch(function() { showMsg('Verbindungsfehler.'); });
+    }
+
     function goToStep(step) {
-        var allSteps = document.querySelectorAll('.onb-step');
-        for (var i = 0; i < allSteps.length; i++) allSteps[i].classList.remove('active');
-
+        document.querySelectorAll('.onb-step').forEach(function(s) { s.classList.remove('active'); });
         var stepId = 'step-' + step;
-        if (step === 2) stepId = selectedChoice === 'ids' ? 'step-2a' : 'step-2b';
+        if (step === 3) {
+            if (selectedChoice === 'ids') stepId = 'step-3a';
+            else stepId = 'step-3c';
+        }
         document.getElementById(stepId).classList.add('active');
-
-        for (var d = 1; d <= 3; d++) {
+        for (var d = 1; d <= 4; d++) {
             var dot = document.getElementById('dot-' + d);
             dot.classList.remove('active', 'done');
             if (d < step) dot.classList.add('done');
             if (d === step) dot.classList.add('active');
         }
-        for (var l = 1; l <= 2; l++) {
-            var line = document.getElementById('line-' + l);
-            line.classList.toggle('done', l < step);
+        for (var l = 1; l <= 3; l++) {
+            document.getElementById('line-' + l).classList.toggle('done', l < step);
         }
-
         currentStep = step;
         clearMsg();
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
-    // ==========================================
-    // STEP 1: CHOICE
-    // ==========================================
     function selectChoice(choice) {
         selectedChoice = choice;
         document.getElementById('choice-ids').classList.toggle('selected', choice === 'ids');
         document.getElementById('choice-rate').classList.toggle('selected', choice === 'rate');
-        document.getElementById('btn-step1').disabled = false;
+        document.getElementById('btn-step2').disabled = false;
     }
 
-    function submitStep1() {
+    function submitChoice() {
         if (!selectedChoice) return;
-        goToStep(2);
-        if (selectedChoice === 'rate') {
-            loadRatingTenders();
-        }
+        goToStep(3);
+        if (selectedChoice === 'rate') showFilterPreview();
     }
 
-    // ==========================================
-    // STEP 2a: SIMILAR TENDERS
-    // ==========================================
-    function findSimilarTenders() {
-        var ids = parseIds(document.getElementById('simap-ids').value);
-        if (ids.length === 0) { showMsg('Bitte mindestens eine ID eingeben.'); return; }
+    function showFilterPreview() {
+        var cantonCode = document.getElementById('canton').value;
+        var subtypeCode = document.getElementById('project-subtype').value;
+        document.getElementById('filter-preview-canton').textContent = KANTON_NAMES[cantonCode] || cantonCode;
+        document.getElementById('filter-preview-subtype').textContent = SUBTYPE_LABELS[subtypeCode] || subtypeCode;
+        document.getElementById('filter-preview-volume').textContent = VOLUME_LABELS[selectedVolume] || '—';
+    }
 
-        var btn = document.getElementById('btn-find-similar');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span> Suche läuft...';
+    function goToRating() {
+        document.getElementById('step-3c').classList.remove('active');
+        document.getElementById('step-3b').classList.add('active');
+        loadRatingTenders();
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
 
-        var container = document.getElementById('similar-results');
-        var list = document.getElementById('similar-list');
-        container.style.display = 'block';
-        list.innerHTML = '<div class="sim-loading"><span class="spinner"></span> Ähnliche Ausschreibungen werden gesucht...</div>';
-
-        fetch('/api/onboarding/similar-tenders', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ids: ids, limit: 15})
-        }).then(function(r) { return r.json(); }).then(function(res) {
-            btn.disabled = false;
-            btn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Ähnliche Ausschreibungen finden';
-
-            if (!res.success || !res.results || res.results.length === 0) {
-                list.innerHTML = '<div class="sim-loading">Keine ähnlichen Ausschreibungen gefunden. Versuchen Sie andere IDs.</div>';
-                return;
-            }
-
-            var html = '';
-            res.results.forEach(function(item) {
-                var title = item.title_de || item.title_fr || 'Ohne Titel';
-                var score = item.similarity_score ? (item.similarity_score * 100).toFixed(0) + '%' : '';
-                var canton = item.canton || '';
-                var orderType = item.order_type || '';
-
-                html += '<div class="sim-card">'
-                    + '<div class="sim-card-title">' + title.substring(0, 100) + '</div>'
-                    + '<div class="sim-card-meta">'
-                    + (score ? '<span class="sim-score">' + score + ' Match</span>' : '')
-                    + (canton ? '<span>' + canton + '</span>' : '')
-                    + (orderType ? '<span>' + orderType + '</span>' : '')
-                    + '</div>'
-                    + '</div>';
-            });
-            list.innerHTML = html;
-
-        }).catch(function(err) {
-            btn.disabled = false;
-            btn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Ähnliche Ausschreibungen finden';
-            list.innerHTML = '<div class="sim-loading" style="color:#ef4444;">Fehler bei der Suche. Ist die Embedding-API erreichbar?</div>';
-        });
+    function parseIds(text) {
+        return text.split(/[\n,;]+/).map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0 && /^\d+$/.test(s); });
     }
 
     function submitIds() {
         var ids = parseIds(document.getElementById('simap-ids').value);
         if (ids.length === 0) { showMsg('Bitte mindestens eine ID eingeben.'); return; }
-
         fetch('/api/onboarding/simap-ids', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ids: ids})
         }).then(function(r) { return r.json(); }).then(function(res) {
-            if (res.success) goToStep(3);
+            if (res.success) goToStep(4);
             else showMsg(res.error || 'Fehler beim Speichern.');
         }).catch(function() { showMsg('Verbindungsfehler.'); });
     }
 
-    // ==========================================
-    // STEP 2b: RATING (expandable cards)
-    // ==========================================
     function loadRatingTenders() {
-        fetch('/api/onboarding/random-tenders?count=20')
+        fetch('/api/onboarding/sample-projects')
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                ratingTenders = data.tenders || [];
-                RATING_TARGET = Math.min(15, ratingTenders.length);
+                ratingTenders = data.projects || [];
+                if (ratingTenders.length === 0) {
+                    document.getElementById('rating-list-container').innerHTML =
+                        '<div style="text-align:center;padding:2rem;color:#f87171;">Keine passenden Ausschreibungen für Ihren Filter gefunden.</div>';
+                    return;
+                }
+                RATING_TARGET = ratingTenders.length;
                 document.getElementById('rating-total').textContent = RATING_TARGET;
-                ratingIndex = 0;
-                ratings = [];
-                showNextTender();
+                ratings = {};
+                renderRatingList();
             })
             .catch(function() {
-                document.getElementById('rating-card-container').innerHTML = '<div style="text-align:center;padding:2rem;color:#ef4444;">Fehler beim Laden der Ausschreibungen.</div>';
+                document.getElementById('rating-list-container').innerHTML =
+                    '<div style="text-align:center;padding:2rem;color:#ef4444;">Fehler beim Laden.</div>';
             });
     }
 
-    function showNextTender() {
-        if (ratingIndex >= ratingTenders.length || ratings.length >= RATING_TARGET) {
-            document.getElementById('btn-finish-rating').disabled = false;
-            document.getElementById('rating-card-container').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--accent,#06b6d4);font-weight:600;">Alle bewertet! Klicken Sie auf Abschliessen.</div>';
-            return;
-        }
+    function renderRatingList() {
+        var html = '<div class="onb-rating-list">';
+        ratingTenders.forEach(function(t, idx) {
+            var pid = t.id;
+            var r = ratings[pid] ? ratings[pid].rating : 0;
+            var cardClass = r === 1 ? 'rated-yes' : (r === -1 ? 'rated-no' : '');
+            var desc = stripHtml(t.description_de || '');
+            var isArchive = t.source === 'archive';
 
-        var t = ratingTenders[ratingIndex];
-        var tags = '';
-        if (t.canton) tags += '<span class="onb-tender-tag">' + escapeHtml(t.canton) + '</span>';
-        if (t.order_type) tags += '<span class="onb-tender-tag">' + escapeHtml(t.order_type) + '</span>';
-        if (t.process_type) tags += '<span class="onb-tender-tag">' + escapeHtml(t.process_type) + '</span>';
+            html += '<div class="onb-rcard ' + cardClass + '">';
 
-        var fullDesc = escapeHtml(t.full_description || t.description || '');
-        var isLong = fullDesc.length > 150;
+            // ARCHIVE HEADER: prominent oben mit Badge + Gewinner + Preis
+            if (isArchive) {
+                var winnerText = t.winner_name || 'Unbekannt';
+                if (t.winner_city) winnerText += ' (' + t.winner_city + ')';
+                var priceText = t.award_amount ? 'CHF ' + Number(t.award_amount).toLocaleString('de-CH') : '—';
+                var dateText = t.award_decision_date ? formatDate(t.award_decision_date) : '';
 
-        var html = '<div class="onb-tender-card">' +
-            '<div class="onb-tender-title">' + escapeHtml(t.title || 'Ohne Titel') + '</div>' +
-            '<div class="onb-tender-desc ' + (isLong ? 'collapsed' : '') + '" id="tender-desc">' + fullDesc + '</div>';
+                html += '<div class="onb-arch-header">' +
+                    '<span class="onb-arch-badge">' +
+                        '<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> ' +
+                        'Abgeschlossen' +
+                    '</span>' +
+                    '<div class="onb-arch-info">' +
+                        '<div><span class="onb-arch-label">Gewinner:</span> <span class="onb-arch-value">' + escapeHtml(winnerText) + '</span></div>' +
+                        '<div><span class="onb-arch-label">Zuschlag:</span> <span class="onb-arch-price">' + priceText + '</span></div>' +
+                        (dateText ? '<div><span class="onb-arch-label">Datum:</span> <span class="onb-arch-value">' + dateText + '</span></div>' : '') +
+                    '</div>' +
+                '</div>';
+            }
 
-        if (isLong) {
-            html += '<button class="onb-expand-btn" id="expand-btn" onclick="toggleExpand()">' +
-                '<span id="expand-text">Mehr anzeigen</span>' +
-                '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>' +
-            '</button>';
-        }
+            html += '<div class="onb-rcard-top">' +
+                '<div class="onb-rcard-content">' +
+                    '<div class="onb-rcard-title">' + escapeHtml(t.title_de || 'Ohne Titel') + '</div>' +
+                    '<div class="onb-rcard-desc" id="rdesc-' + idx + '">' + escapeHtml(desc) + '</div>';
 
-        if (t.organization) {
-            html += '<div class="onb-tender-org">' +
-                '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>' +
-                '<span>' + escapeHtml(t.organization) + '</span>' +
+            if (desc.length > 120) {
+                html += '<button class="onb-rcard-expand" onclick="toggleDesc(' + idx + ')">Mehr anzeigen</button>';
+            }
+
+            html += '<div class="onb-rcard-meta">';
+            if (t.canton) html += '<span class="onb-rcard-tag">' + escapeHtml(KANTON_NAMES[t.canton] || t.canton) + '</span>';
+            if (t.project_subtype) html += '<span class="onb-rcard-tag">' + escapeHtml(SUBTYPE_LABELS[t.project_subtype] || t.project_subtype) + '</span>';
+            if (!isArchive && t.award_amount) html += '<span class="onb-rcard-tag">CHF ' + Number(t.award_amount).toLocaleString('de-CH') + '</span>';
+            html += '</div>';
+
+            if (r === 1) html += '<div class="onb-rcard-status yes"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Relevant</div>';
+            else if (r === -1) html += '<div class="onb-rcard-status no"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Nicht relevant</div>';
+
+            html += '</div>' +
+                '<div class="onb-rcard-btns">' +
+                    '<button class="onb-rbtn onb-rbtn-no' + (r === -1 ? ' active' : '') + '" onclick="rateItem(' + idx + ',-1)">' +
+                        '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Nein' +
+                    '</button>' +
+                    '<button class="onb-rbtn onb-rbtn-yes' + (r === 1 ? ' active' : '') + '" onclick="rateItem(' + idx + ',1)">' +
+                        '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Ja' +
+                    '</button>' +
+                '</div>' +
             '</div>';
-        }
-
-        html += '<div class="onb-tender-meta">' + tags + '</div>' +
-            '<div class="onb-rating-btns">' +
-                '<button class="onb-rate-btn onb-rate-no" onclick="rateTender(false)">' +
-                    '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
-                    'Nicht relevant' +
-                '</button>' +
-                '<button class="onb-rate-btn onb-rate-skip" onclick="skipTender()">Überspringen</button>' +
-                '<button class="onb-rate-btn onb-rate-yes" onclick="rateTender(true)">' +
-                    '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' +
-                    'Relevant' +
-                '</button>' +
-            '</div>' +
-        '</div>';
-
-        document.getElementById('rating-card-container').innerHTML = html;
+            html += '</div>';
+        });
+        html += '</div>';
+        document.getElementById('rating-list-container').innerHTML = html;
     }
 
-    function toggleExpand() {
-        var desc = document.getElementById('tender-desc');
-        var btn = document.getElementById('expand-btn');
-        var text = document.getElementById('expand-text');
+    function rateItem(idx, rating) {
+        var t = ratingTenders[idx];
+        var pid = t.id;
+        var source = t.source || 'project';
 
-        if (desc.classList.contains('collapsed')) {
-            desc.classList.remove('collapsed');
-            desc.classList.add('expanded');
-            btn.classList.add('expanded');
-            text.textContent = 'Weniger anzeigen';
+        if (ratings[pid] && ratings[pid].rating === rating) {
+            delete ratings[pid];
         } else {
-            desc.classList.remove('expanded');
-            desc.classList.add('collapsed');
-            btn.classList.remove('expanded');
-            text.textContent = 'Mehr anzeigen';
+            ratings[pid] = { rating: rating, source: source };
         }
-    }
-
-    function rateTender(isRelevant) {
-        var t = ratingTenders[ratingIndex];
-        ratings.push({tender_id: t.id, relevant: isRelevant});
-        ratingIndex++;
         updateRatingProgress();
-        showNextTender();
+        renderRatingList();
     }
 
-    function skipTender() {
-        ratingIndex++;
-        showNextTender();
+    function toggleDesc(idx) {
+        var desc = document.getElementById('rdesc-' + idx);
+        if (desc) desc.classList.toggle('expanded');
     }
 
     function updateRatingProgress() {
-        var pct = Math.min(100, Math.round(ratings.length / RATING_TARGET * 100));
+        var ratedCount = Object.keys(ratings).length;
+        var likeCount = Object.values(ratings).filter(function(v) { return v.rating === 1; }).length;
+        var pct = Math.min(100, Math.round(ratedCount / RATING_TARGET * 100));
         document.getElementById('rating-fill').style.width = pct + '%';
-        document.getElementById('rating-current').textContent = ratings.length;
-        if (ratings.length >= 10) {
-            document.getElementById('btn-finish-rating').disabled = false;
-        }
+        document.getElementById('rating-current').textContent = ratedCount;
+        document.getElementById('btn-finish-rating').disabled = likeCount < 3;
     }
 
     function finishRating() {
-        if (ratings.length < 5) { showMsg('Bitte mindestens 5 Ausschreibungen bewerten.'); return; }
+        var likeCount = Object.values(ratings).filter(function(v) { return v.rating === 1; }).length;
+        if (likeCount < 3) { showMsg('Bitte mindestens 3 Ausschreibungen als "Ja" markieren.'); return; }
 
-        fetch('/api/onboarding/ratings', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ratings: ratings})
+        var ratingsArray = [];
+        for (var pid in ratings) {
+            ratingsArray.push({
+                project_id: pid,
+                rating: ratings[pid].rating,
+                source: ratings[pid].source
+            });
+        }
+
+        fetch('/api/onboarding/submit-ratings', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ratings: ratingsArray})
         }).then(function(r) { return r.json(); }).then(function(res) {
-            if (res.success) goToStep(3);
+            if (res.success) goToStep(4);
             else showMsg(res.error || 'Fehler beim Speichern.');
         }).catch(function() { showMsg('Verbindungsfehler.'); });
     }
 
-    // ==========================================
-    // HELPERS
-    // ==========================================
-    function showMsg(text) {
-        document.getElementById('msg-container').innerHTML = '<div class="onb-msg onb-msg-error">' + text + '</div>';
-    }
-
-    function clearMsg() {
-        document.getElementById('msg-container').innerHTML = '';
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        var d = document.createElement('div');
-        d.textContent = text;
-        return d.innerHTML;
-    }
+    function showMsg(text) { document.getElementById('msg-container').innerHTML = '<div class="onb-msg-error">' + text + '</div>'; }
+    function clearMsg() { document.getElementById('msg-container').innerHTML = ''; }
+    function escapeHtml(t) { if(!t)return''; var d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+    function stripHtml(t) { return t ? t.replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').trim() : ''; }
+    function formatDate(d) { if(!d)return'-'; try{return new Date(d).toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(e){return d;} }
 </script>
 {% endblock %}

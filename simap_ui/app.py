@@ -133,23 +133,6 @@ def api_onboarding_ratings():
     return jsonify(result)
 
 
-@app.route('/api/onboarding/similar-tenders', methods=['POST'])
-def api_similar_tenders():
-    """API: Finde ähnliche Ausschreibungen via Embedding-Similarity"""
-    if not session.get('user_logged_in'):
-        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
-
-    data = request.get_json()
-    ids = data.get('ids', [])
-    limit = data.get('limit', 20)
-
-    if not ids:
-        return jsonify({'success': False, 'error': 'Keine IDs angegeben'}), 400
-
-    result = find_similar_tenders(ids, limit=limit)
-    return jsonify(result)
-
-
 @app.route('/api/onboarding/random-tenders', methods=['GET'])
 def api_random_tenders():
     """Zufällige Archiv-Ausschreibungen für Rating"""

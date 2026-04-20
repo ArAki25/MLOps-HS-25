@@ -31,825 +31,177 @@
             --shadow: 0 4px 12px rgba(0,0,0,.5);
             --shadow-glow: 0 0 20px rgba(6,182,212,.15);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            -webkit-font-smoothing: antialiased;
-        }
+        body { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
 
         /* ========== TOP HEADER ========== */
-        .top-header {
-            background: rgba(9,9,11,0.85);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding: 0 1.5rem;
-            height: 60px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 0.625rem;
-        }
-
-        .logo-mark {
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-        }
-
-        .logo-name {
-            font-weight: 700;
-            font-size: 1rem;
-            color: var(--text-primary);
-            text-decoration: none;
-        }
-
-        .logo-name span {
-            font-weight: 400;
-            color: var(--text-muted);
-            font-size: 0.8125rem;
-            margin-left: 0.25rem;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            background: var(--accent);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 0.8125rem;
-            cursor: pointer;
-            position: relative;
-            transition: box-shadow 0.15s;
-        }
-
-        .user-avatar:hover {
-            box-shadow: 0 0 0 3px var(--accent-bg);
-        }
-
-        .user-dropdown {
-            display: none;
-            position: absolute;
-            top: 44px;
-            right: 0;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-            min-width: 200px;
-            z-index: 1000;
-            overflow: hidden;
-        }
-
+        .top-header { background: rgba(9,9,11,0.85); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 0 1.5rem; height: 60px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(20px); }
+        .header-left { display: flex; align-items: center; gap: 0.625rem; }
+        .logo-mark { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+        .logo-name { font-weight: 700; font-size: 1rem; color: var(--text-primary); text-decoration: none; }
+        .logo-name span { font-weight: 400; color: var(--text-muted); font-size: 0.8125rem; margin-left: 0.25rem; }
+        .header-right { display: flex; align-items: center; gap: 0.75rem; }
+        .user-avatar { width: 36px; height: 36px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.8125rem; cursor: pointer; position: relative; transition: box-shadow 0.15s; }
+        .user-avatar:hover { box-shadow: 0 0 0 3px var(--accent-bg); }
+        .user-dropdown { display: none; position: absolute; top: 44px; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0,0,0,0.1); min-width: 200px; z-index: 1000; overflow: hidden; }
         .user-dropdown.show { display: block; }
-
-        .user-dropdown-header {
-            padding: 0.875rem 1rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .user-dropdown-name {
-            font-weight: 600;
-            font-size: 0.875rem;
-            color: var(--text-primary);
-        }
-
-        .user-dropdown-email {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .user-dropdown a {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1rem;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 0.875rem;
-            transition: background 0.1s;
-        }
-
-        .user-dropdown a:hover {
-            background: var(--surface-hover);
-            color: var(--text-primary);
-        }
-
-        .user-dropdown a.danger {
-            color: #dc2626;
-        }
-
-        .user-dropdown a.danger:hover {
-            background: #fef2f2;
-        }
+        .user-dropdown-header { padding: 0.875rem 1rem; border-bottom: 1px solid var(--border); }
+        .user-dropdown-name { font-weight: 600; font-size: 0.875rem; color: var(--text-primary); }
+        .user-dropdown-email { font-size: 0.75rem; color: var(--text-muted); }
+        .user-dropdown a { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; transition: background 0.1s; }
+        .user-dropdown a:hover { background: var(--surface-hover); color: var(--text-primary); }
+        .user-dropdown a.danger { color: #dc2626; }
 
         /* ========== MAIN LAYOUT ========== */
-        .main-layout {
-            display: flex;
-            flex: 1;
-        }
+        .main-layout { display: flex; flex: 1; }
 
         /* ========== SIDEBAR ========== */
-        .sidebar {
-            width: 240px;
-            background: var(--sidebar-bg);
-            border-right: 1px solid var(--border);
-            padding: 1rem 0;
-            min-height: calc(100vh - 56px);
-            flex-shrink: 0;
-            overflow-y: auto;
-        }
-
-        .sidebar-section {
-            margin-bottom: 0.5rem;
-        }
-
-        .sidebar-section-title {
-            padding: 0.5rem 1.25rem;
-            font-size: 0.6875rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--text-muted);
-        }
-
-        .sidebar-nav {
-            list-style: none;
-        }
-
-        .sidebar-nav a {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.625rem 1.25rem;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.1s;
-            border-left: 3px solid transparent;
-        }
-
-        .sidebar-nav a:hover {
-            background: var(--surface);
-            color: var(--text-primary);
-        }
-
-        .sidebar-nav a.active {
-            background: var(--accent-light);
-            color: var(--accent);
-            border-left-color: var(--accent);
-            font-weight: 600;
-            box-shadow: inset 3px 0 0 var(--accent), 0 0 15px rgba(6,182,212,0.05);
-        }
-
-        .sidebar-icon {
-            width: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .sidebar-badge {
-            margin-left: auto;
-            background: var(--accent);
-            color: white;
-            font-size: 0.6875rem;
-            font-weight: 700;
-            padding: 0.125rem 0.5rem;
-            border-radius: 100px;
-            font-family: 'Space Mono', monospace;
-        }
+        .sidebar { width: 240px; background: var(--sidebar-bg); border-right: 1px solid var(--border); padding: 1rem 0; min-height: calc(100vh - 56px); flex-shrink: 0; overflow-y: auto; }
+        .sidebar-section { margin-bottom: 0.5rem; }
+        .sidebar-section-title { padding: 0.5rem 1.25rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+        .sidebar-nav { list-style: none; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1.25rem; color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.1s; border-left: 3px solid transparent; cursor: pointer; }
+        .sidebar-nav a:hover { background: var(--surface); color: var(--text-primary); }
+        .sidebar-nav a.active { background: var(--accent-light); color: var(--accent); border-left-color: var(--accent); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent), 0 0 15px rgba(6,182,212,0.05); }
+        .sidebar-icon { width: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .sidebar-badge { margin-left: auto; background: var(--accent); color: white; font-size: 0.6875rem; font-weight: 700; padding: 0.125rem 0.5rem; border-radius: 100px; font-family: 'Space Mono', monospace; }
 
         /* ========== MAIN CONTENT ========== */
-        .main-content {
-            flex: 1;
-            padding: 1.5rem 2rem;
-            max-width: 1200px;
-            min-width: 0;
-        }
+        .main-content { flex: 1; padding: 1.5rem 2rem; max-width: 1200px; min-width: 0; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .page-title { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+        .page-subtitle { font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.125rem; }
 
-        /* Page Header */
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .page-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: -0.02em;
-        }
-
-        .page-subtitle {
-            font-size: 0.8125rem;
-            color: var(--text-muted);
-            margin-top: 0.125rem;
-        }
+        /* ========== TABS ========== */
+        .pub-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .pub-tab { padding: 0.75rem 1.25rem; font-size: 0.875rem; font-weight: 500; color: var(--text-muted); cursor: pointer; border: none; background: none; font-family: inherit; position: relative; transition: color 0.2s; display: flex; align-items: center; gap: 0.5rem; }
+        .pub-tab:hover { color: var(--text-primary); }
+        .pub-tab.active { color: var(--accent); font-weight: 600; }
+        .pub-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--accent); border-radius: 1px 1px 0 0; }
+        .pub-tab-badge { background: var(--accent-light); color: var(--accent); font-size: 0.6875rem; font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 100px; font-family: 'Space Mono', monospace; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
 
         /* ========== SEARCH ========== */
-        .search-section {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-        }
-
-        .search-row {
-            display: flex;
-            gap: 0.625rem;
-            margin-bottom: 1rem;
-        }
-
-        .search-input-wrap {
-            flex: 1;
-            position: relative;
-        }
-
-        .search-input-wrap svg {
-            position: absolute;
-            left: 0.875rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 0.75rem 0.875rem 0.75rem 2.75rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            font-size: 0.875rem;
-            font-family: inherit;
-            transition: border-color 0.15s, box-shadow 0.15s;
-            background: var(--bg);
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-            background: var(--surface);
-        }
-
-        .lang-select {
-            padding: 0.75rem 0.875rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            font-size: 0.8125rem;
-            font-family: inherit;
-            background: var(--bg);
-            color: var(--text-secondary);
-            cursor: pointer;
-            min-width: 140px;
-        }
-
-        .btn-search {
-            padding: 0.75rem 1.75rem;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: var(--radius);
-            font-weight: 600;
-            font-size: 0.8125rem;
-            cursor: pointer;
-            font-family: inherit;
-            transition: background 0.15s;
-            white-space: nowrap;
-        }
-
+        .search-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+        .search-row { display: flex; gap: 0.625rem; margin-bottom: 1rem; }
+        .search-input-wrap { flex: 1; position: relative; }
+        .search-input-wrap svg { position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .search-input { width: 100%; padding: 0.75rem 0.875rem 0.75rem 2.75rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.875rem; font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s; background: var(--bg); color: var(--text-primary); }
+        .search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); background: var(--surface); }
+        .lang-select { padding: 0.75rem 0.875rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.8125rem; font-family: inherit; background: var(--bg); color: var(--text-secondary); cursor: pointer; min-width: 140px; }
+        .btn-search { padding: 0.75rem 1.75rem; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-weight: 600; font-size: 0.8125rem; cursor: pointer; font-family: inherit; transition: background 0.15s; white-space: nowrap; }
         .btn-search:hover { background: var(--accent-hover); }
 
         /* ========== FILTERS ========== */
-        .filters-row {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            position: relative;
-        }
-
-        .filter-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.375rem;
-            padding: 0.5rem 0.875rem;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            font-size: 0.8125rem;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-family: inherit;
-            transition: all 0.15s;
-            position: relative;
-            font-weight: 500;
-        }
-
-        .filter-chip:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-            background: var(--accent-light);
-        }
-
-        .filter-chip.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
-
-        .filter-chip.active:hover {
-            background: var(--accent-hover);
-        }
-
-        .filter-chip svg {
-            transition: transform 0.15s;
-        }
-
-        .filter-chip.open svg {
-            transform: rotate(180deg);
-        }
-
-        .filter-clear {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.5rem 0.75rem;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-size: 0.8125rem;
-            cursor: pointer;
-            font-family: inherit;
-            transition: color 0.15s;
-        }
-
+        .filters-row { display: flex; gap: 0.5rem; flex-wrap: wrap; position: relative; }
+        .filter-chip { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 0.875rem; background: var(--bg); border: 1px solid var(--border); border-radius: 100px; font-size: 0.8125rem; color: var(--text-secondary); cursor: pointer; font-family: inherit; transition: all 0.15s; position: relative; font-weight: 500; }
+        .filter-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+        .filter-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .filter-chip svg { transition: transform 0.15s; }
+        .filter-chip.open svg { transform: rotate(180deg); }
+        .filter-clear { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; background: transparent; border: none; color: var(--text-muted); font-size: 0.8125rem; cursor: pointer; font-family: inherit; }
         .filter-clear:hover { color: #dc2626; }
-
-        /* Filter Dropdown */
-        .filter-dropdown {
-            display: none;
-            position: absolute;
-            top: calc(100% + 0.5rem);
-            left: 0;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-            min-width: 260px;
-            max-height: 320px;
-            overflow-y: auto;
-            z-index: 50;
-            padding: 0.5rem;
-        }
-
+        .filter-dropdown { display: none; position: absolute; top: calc(100% + 0.5rem); left: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 12px 32px rgba(0,0,0,0.08); min-width: 260px; max-height: 320px; overflow-y: auto; z-index: 50; padding: 0.5rem; }
         .filter-dropdown.show { display: block; }
-
-        .filter-dropdown-search {
-            padding: 0.5rem 0.625rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            width: 100%;
-            font-size: 0.8125rem;
-            font-family: inherit;
-            margin-bottom: 0.375rem;
-            background: var(--bg);
-        }
-
-        .filter-dropdown-search:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .filter-option {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 0.625rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8125rem;
-            color: var(--text-secondary);
-            transition: background 0.1s;
-        }
-
-        .filter-option:hover {
-            background: var(--surface-hover);
-            color: var(--text-primary);
-        }
-
-        .filter-option.selected {
-            background: var(--accent-light);
-            color: var(--accent);
-            font-weight: 600;
-        }
-
-        .filter-option-check {
-            width: 16px;
-            height: 16px;
-            border: 1.5px solid var(--border);
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: all 0.15s;
-        }
-
-        .filter-option.selected .filter-option-check {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: white;
-        }
-
-        /* Active filters display */
-        .active-filters {
-            display: flex;
-            gap: 0.375rem;
-            flex-wrap: wrap;
-            margin-top: 0.75rem;
-        }
-
-        .active-filter-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.25rem 0.625rem;
-            background: var(--accent-light);
-            color: var(--accent);
-            border-radius: 100px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .active-filter-tag button {
-            background: none;
-            border: none;
-            color: var(--accent);
-            cursor: pointer;
-            font-size: 1rem;
-            line-height: 1;
-            padding: 0;
-            margin-left: 0.125rem;
-            opacity: 0.6;
-        }
-
+        .filter-dropdown-search { padding: 0.5rem 0.625rem; border: 1px solid var(--border); border-radius: var(--radius); width: 100%; font-size: 0.8125rem; font-family: inherit; margin-bottom: 0.375rem; background: var(--bg); color: var(--text-primary); }
+        .filter-dropdown-search:focus { outline: none; border-color: var(--accent); }
+        .filter-option { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.625rem; border-radius: 6px; cursor: pointer; font-size: 0.8125rem; color: var(--text-secondary); transition: background 0.1s; }
+        .filter-option:hover { background: var(--surface-hover); color: var(--text-primary); }
+        .filter-option.selected { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+        .filter-option-check { width: 16px; height: 16px; border: 1.5px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .filter-option.selected .filter-option-check { background: var(--accent); border-color: var(--accent); color: white; }
+        .active-filters { display: flex; gap: 0.375rem; flex-wrap: wrap; margin-top: 0.75rem; }
+        .active-filter-tag { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.625rem; background: var(--accent-light); color: var(--accent); border-radius: 100px; font-size: 0.75rem; font-weight: 600; }
+        .active-filter-tag button { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 1rem; line-height: 1; padding: 0; margin-left: 0.125rem; opacity: 0.6; }
         .active-filter-tag button:hover { opacity: 1; }
 
         /* ========== RESULTS ========== */
-        .results-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 0;
-            margin-bottom: 0.5rem;
-        }
-
-        .results-count {
-            font-size: 0.8125rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        .results-count strong {
-            color: var(--text-primary);
-            font-family: 'Space Mono', monospace;
-        }
-
-        .sort-select {
-            padding: 0.375rem 0.75rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            font-size: 0.8125rem;
-            font-family: inherit;
-            background: var(--surface);
-            color: var(--text-secondary);
-            cursor: pointer;
-        }
+        .results-bar { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; margin-bottom: 0.5rem; }
+        .results-count { font-size: 0.8125rem; color: var(--text-muted); font-weight: 500; }
+        .results-count strong { color: var(--text-primary); font-family: 'Space Mono', monospace; }
+        .sort-select { padding: 0.375rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.8125rem; font-family: inherit; background: var(--surface); color: var(--text-secondary); cursor: pointer; }
 
         /* ========== TABLE ========== */
-        .pub-table {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-        }
-
-        .pub-table-head {
-            display: grid;
-            grid-template-columns: 1fr 200px 160px 48px;
-            padding: 0.75rem 1.25rem;
-            background: var(--bg);
-            border-bottom: 1px solid var(--border);
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-        }
-
-        .pub-row {
-            display: grid;
-            grid-template-columns: 1fr 200px 160px 48px;
-            padding: 1.125rem 1.25rem;
-            border-bottom: 1px solid var(--border-light);
-            align-items: start;
-            cursor: pointer;
-            transition: background 0.1s;
-        }
-
+        .pub-table { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+        .pub-table-head { display: grid; grid-template-columns: 1fr 200px 160px 48px; padding: 0.75rem 1.25rem; background: var(--bg); border-bottom: 1px solid var(--border); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+        .pub-row { display: grid; grid-template-columns: 1fr 200px 160px 48px; padding: 1.125rem 1.25rem; border-bottom: 1px solid var(--border-light); align-items: start; cursor: pointer; transition: background 0.1s; }
         .pub-row:last-child { border-bottom: none; }
-
         .pub-row:hover { background: var(--surface-hover); }
-
-        /* Expandable detail panel */
-        .pub-detail {
-            display: none;
-            padding: 0 1.25rem 1.25rem 1.25rem;
-            border-bottom: 1px solid var(--border-light);
-            animation: slideOpen 0.2s ease;
-        }
-
+        .pub-detail { display: none; padding: 0 1.25rem 1.25rem 1.25rem; border-bottom: 1px solid var(--border-light); animation: slideOpen 0.2s ease; }
         .pub-detail.open { display: block; }
-
-        @keyframes slideOpen {
-            from { opacity: 0; max-height: 0; }
-            to { opacity: 1; max-height: 300px; }
-        }
-
-        .pub-detail-inner {
-            background: var(--surface-hover);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1rem 1.25rem;
-        }
-
-        .pub-detail-desc {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            line-height: 1.7;
-            margin-bottom: 1rem;
-            max-height: 120px;
-            overflow-y: auto;
-        }
-
-        .pub-detail-desc:empty::after {
-            content: 'Keine Beschreibung verfügbar.';
-            color: var(--text-muted);
-            font-style: italic;
-        }
-
-        .pub-detail-actions {
-            display: flex;
-            gap: 0.75rem;
-            align-items: center;
-        }
-
-        .btn-simap {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: var(--accent);
-            color: #000;
-            border-radius: 8px;
-            font-size: 0.8125rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.15s;
-            font-family: inherit;
-        }
-
-        .btn-simap:hover {
-            filter: brightness(1.1);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(6,182,212,0.3);
-        }
-
-        .pub-detail-meta {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .pub-row.expanded {
-            background: var(--surface-hover);
-            border-bottom-color: transparent;
-        }
-
-        /* Title column */
-        .pub-title-col {
-            display: flex;
-            flex-direction: column;
-            gap: 0.375rem;
-            min-width: 0;
-        }
-
-        .pub-title {
-            font-weight: 600;
-            font-size: 0.9375rem;
-            color: var(--text-primary);
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
+        @keyframes slideOpen { from { opacity: 0; } to { opacity: 1; } }
+        .pub-detail-inner { background: var(--surface-hover); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; }
+        .pub-detail-desc { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 1rem; max-height: 120px; overflow-y: auto; }
+        .pub-detail-actions { display: flex; gap: 0.75rem; align-items: center; }
+        .btn-simap { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--accent); color: #000; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; text-decoration: none; transition: all 0.15s; font-family: inherit; }
+        .btn-simap:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(6,182,212,0.3); }
+        .pub-detail-meta { font-size: 0.75rem; color: var(--text-muted); }
+        .pub-row.expanded { background: var(--surface-hover); border-bottom-color: transparent; }
+        .pub-title-col { display: flex; flex-direction: column; gap: 0.375rem; min-width: 0; }
+        .pub-title { font-weight: 600; font-size: 0.9375rem; color: var(--text-primary); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .pub-row:hover .pub-title { color: var(--accent); }
-
-        .pub-location {
-            font-size: 0.8125rem;
-            color: var(--text-muted);
-        }
-
-        .pub-tags {
-            display: flex;
-            gap: 0.375rem;
-            flex-wrap: wrap;
-            margin-top: 0.125rem;
-        }
-
-        .pub-tag {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.125rem 0.5rem;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 0.6875rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
+        .pub-location { font-size: 0.8125rem; color: var(--text-muted); }
+        .pub-tags { display: flex; gap: 0.375rem; flex-wrap: wrap; margin-top: 0.125rem; }
+        .pub-tag { display: inline-flex; align-items: center; padding: 0.125rem 0.5rem; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; font-size: 0.6875rem; color: var(--text-muted); font-weight: 500; }
         .pub-tag.type-tender { background: var(--accent-light); color: var(--accent); border-color: transparent; }
         .pub-tag.type-award { background: var(--success-bg); color: var(--success); border-color: transparent; }
-        .pub-tag.type-cancel { background: rgba(239,68,68,.12); color: #ef4444; border-color: transparent; }
-
-        /* Office column */
-        .pub-office {
-            font-size: 0.8125rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
-
-        /* Date column */
-        .pub-date-col {
-            text-align: right;
-        }
-
-        .pub-time-ago {
-            font-size: 0.8125rem;
-            font-weight: 600;
-            color: var(--success);
-            margin-bottom: 0.125rem;
-        }
-
+        .pub-office { font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; }
+        .pub-date-col { text-align: right; }
+        .pub-time-ago { font-size: 0.8125rem; font-weight: 600; color: var(--success); margin-bottom: 0.125rem; }
         .pub-time-ago.old { color: var(--text-muted); font-weight: 500; }
-
-        .pub-date-exact {
-            font-size: 0.6875rem;
-            color: var(--text-muted);
-        }
-
-        /* Actions */
-        .pub-actions {
-            display: flex;
-            justify-content: center;
-        }
-
-        .pub-fav-btn {
-            width: 32px;
-            height: 32px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            border-radius: 6px;
-            color: var(--text-muted);
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s;
-        }
-
-        .pub-fav-btn:hover {
-            background: var(--warning-bg);
-            color: var(--warning);
-        }
-
-        .pub-fav-btn.favorited {
-            color: var(--warning);
-        }
+        .pub-date-exact { font-size: 0.6875rem; color: var(--text-muted); }
+        .pub-actions { display: flex; justify-content: center; }
+        .pub-fav-btn { width: 32px; height: 32px; border: none; background: transparent; cursor: pointer; border-radius: 6px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+        .pub-fav-btn:hover { background: var(--warning-bg); color: var(--warning); }
+        .pub-fav-btn.favorited { color: var(--warning); }
 
         /* ========== LOADING / EMPTY ========== */
-        .loading-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--text-muted);
-        }
-
-        .spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 1rem;
-        }
-
+        .loading-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
+        .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--text-muted);
-        }
-
-        .empty-state-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
+        .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
 
         /* ========== PAGINATION ========== */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 1.5rem 0;
-        }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 0.25rem; padding: 1.5rem 0; }
+        .pagination button { width: 36px; height: 36px; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); font-size: 0.8125rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.1s; font-family: inherit; }
+        .pagination button:hover { border-color: var(--accent); color: var(--accent); }
+        .pagination button.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .pagination button:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        .pagination button {
-            width: 36px;
-            height: 36px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            border-radius: var(--radius);
-            font-size: 0.8125rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.1s;
-            font-family: inherit;
-        }
+        /* ========== BEWERTUNGEN TAB ========== */
+        .bew-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; transition: border-color 0.2s; }
+        .bew-card.rated-yes { border-left: 3px solid var(--success); }
+        .bew-card.rated-no { border-left: 3px solid #ef4444; }
+        .bew-content { flex: 1; min-width: 0; }
+        .bew-title { font-weight: 600; font-size: 0.9375rem; color: var(--text-primary); margin-bottom: 0.375rem; }
+        .bew-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .bew-tag { padding: 0.15rem 0.5rem; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; font-size: 0.6875rem; color: var(--text-muted); }
+        .bew-btns { display: flex; gap: 0.375rem; flex-shrink: 0; }
+        .bew-btn { padding: 0.4rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid; transition: all 0.15s; font-family: inherit; display: flex; align-items: center; gap: 0.25rem; }
+        .bew-btn-yes { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.2); color: #34d399; }
+        .bew-btn-yes:hover, .bew-btn-yes.active { background: rgba(16,185,129,0.2); border-color: #10b981; color: #fff; }
+        .bew-btn-no { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); color: #f87171; }
+        .bew-btn-no:hover, .bew-btn-no.active { background: rgba(239,68,68,0.2); border-color: #ef4444; color: #fff; }
 
-        .pagination button:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .pagination button.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
-
-        .pagination button:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
+        /* ========== EMPFEHLUNGEN TAB ========== */
+        .rec-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 0.75rem; transition: all 0.2s; position: relative; overflow: hidden; }
+        .rec-card:hover { border-color: rgba(6,182,212,0.3); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        .rec-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent-secondary)); opacity: 0; transition: opacity 0.2s; }
+        .rec-card:hover::before { opacity: 1; }
+        .rec-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+        .rec-score { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; font-family: 'Space Mono', monospace; }
+        .rec-score.high { background: rgba(16,185,129,0.12); color: #34d399; }
+        .rec-score.mid { background: rgba(234,179,8,0.1); color: #facc15; }
+        .rec-score.low { background: rgba(148,163,184,0.08); color: #94a3b8; }
+        .rec-title { font-weight: 600; font-size: 0.9375rem; color: var(--text-primary); margin-bottom: 0.5rem; line-height: 1.4; }
+        .rec-desc { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0.75rem; }
+        .rec-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 0.75rem; border-top: 1px solid var(--border-light); }
+        .rec-subtype { font-size: 0.75rem; color: var(--text-muted); }
+        .rec-amount { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); font-family: 'Space Mono', monospace; }
 
         /* ========== RESPONSIVE ========== */
-        @media (max-width: 1024px) {
-            .sidebar { width: 200px; }
-            .pub-table-head, .pub-row { grid-template-columns: 1fr 160px 130px 40px; }
-        }
-
+        @media (max-width: 1024px) { .sidebar { width: 200px; } .pub-table-head, .pub-row { grid-template-columns: 1fr 160px 130px 40px; } }
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .main-content { padding: 1rem; }
@@ -857,6 +209,8 @@
             .pub-table-head { display: none; }
             .pub-row { grid-template-columns: 1fr; gap: 0.5rem; padding: 1rem; }
             .pub-office, .pub-date-col { text-align: left; }
+            .pub-tabs { overflow-x: auto; }
+            .bew-card { flex-direction: column; }
         }
     </style>
 </head>
@@ -866,16 +220,16 @@
         <div class="header-left">
             <a href="/" class="logo-mark">
                 <svg class="sajf-logo-svg" width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="5" y="5" width="90" height="90" rx="20" stroke="var(--logo-border)" stroke-width="2" fill="var(--logo-bg)"/>
+                    <rect x="5" y="5" width="90" height="90" rx="20" stroke="var(--border)" stroke-width="2" fill="var(--surface)"/>
                     <path d="M 27 45 L 35 23 L 45 45 Z" fill="var(--accent)"/>
                     <line x1="27" y1="45" x2="45" y2="45" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
                     <path d="M 15 78 L 35 23 L 60 78" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
                     <path d="M 42 78 L 62 36 L 85 78" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
                     <line x1="12" y1="78" x2="88" y2="78" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
-                    <text x="21" y="91" fill="var(--logo-text-top)" font-family="'DM Sans', sans-serif" font-weight="700" font-size="12" text-anchor="middle">S</text>
-                    <text x="40" y="91" fill="var(--logo-text-top)" font-family="'DM Sans', sans-serif" font-weight="700" font-size="12" text-anchor="middle">A</text>
-                    <text x="60" y="91" fill="var(--logo-text-top)" font-family="'DM Sans', sans-serif" font-weight="700" font-size="12" text-anchor="middle">J</text>
-                    <text x="79" y="91" fill="var(--logo-text-top)" font-family="'DM Sans', sans-serif" font-weight="700" font-size="12" text-anchor="middle">F</text>
+                    <text x="21" y="91" fill="var(--text-muted)" font-family="'DM Sans', sans-serif" font-weight="700" font-size="12" text-anchor="middle">S</text>
+                    <text x="40" y="91" fill="var(--text-muted)" font-family="'DM Sans', sans-serif" font-weight="700" font-size="12" text-anchor="middle">A</text>
+                    <text x="60" y="91" fill="var(--text-muted)" font-family="'DM Sans', sans-serif" font-weight="700" font-size="12" text-anchor="middle">J</text>
+                    <text x="79" y="91" fill="var(--text-muted)" font-family="'DM Sans', sans-serif" font-weight="700" font-size="12" text-anchor="middle">F</text>
                 </svg>
             </a>
             <a href="/publications" class="logo-name">SAJF <span>Strategies</span></a>
@@ -890,172 +244,133 @@
                         <div class="user-dropdown-name">{{ session.get('user_company_name', 'Unternehmen') }}</div>
                         <div class="user-dropdown-email">{{ session.get('user_email', '') }}</div>
                     </div>
-                    <a href="/pro/favorites"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:6px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Merkliste</a>
-                    <a href="/pro/dashboard"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:6px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Dashboard</a>
-                    <a href="/logout" class="danger"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:6px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Abmelden</a>
+                    <a href="/logout" class="danger"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:6px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Abmelden</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Main Layout -->
     <div class="main-layout">
         <!-- Sidebar -->
         <nav class="sidebar">
             <div class="sidebar-section">
                 <div class="sidebar-section-title">Übersicht</div>
                 <ul class="sidebar-nav">
-                    <li>
-                        <a href="/publications" class="active">
-                            <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
-                            Ausschreibungen
-                            <span class="sidebar-badge" id="sidebar-count">–</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/pro/favorites">
-                            <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
-                            Merkliste
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/pro/dashboard">
-                            <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/pro/recommended">
-                            <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
-                            Empfohlen
-                        </a>
-                    </li>
+                    <li><a onclick="switchTab('ausschreibungen')" id="nav-ausschreibungen" class="active">
+                        <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+                        Ausschreibungen <span class="sidebar-badge" id="sidebar-count">–</span>
+                    </a></li>
+                    <li><a onclick="switchTab('bewertungen')" id="nav-bewertungen">
+                        <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></span>
+                        Meine Bewertungen
+                    </a></li>
+                    <li><a onclick="switchTab('empfehlungen')" id="nav-empfehlungen">
+                        <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></span>
+                        Empfehlungen
+                    </a></li>
+                    <li><a href="/pro/favorites">
+                        <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                        Merkliste
+                    </a></li>
                 </ul>
             </div>
             <div class="sidebar-section">
                 <div class="sidebar-section-title">Hilfe</div>
                 <ul class="sidebar-nav">
-                    <li>
-                        <a href="/support">
-                            <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
-                            Support
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
-                            Onlinehilfe
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6z"/></svg></span>
-                            News
-                        </a>
-                    </li>
+                    <li><a href="/support"><span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>Support</a></li>
                 </ul>
             </div>
         </nav>
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Page Header -->
             <div class="page-header">
                 <div>
-                    <h1 class="page-title">Ausschreibungen</h1>
-                    <p class="page-subtitle">Öffentliche Aufträge der Schweiz durchsuchen</p>
+                    <h1 class="page-title" id="page-title">Ausschreibungen</h1>
+                    <p class="page-subtitle" id="page-subtitle">Öffentliche Aufträge der Schweiz durchsuchen</p>
                 </div>
             </div>
 
-            <!-- Search Section -->
-            <div class="search-section">
-                <div class="search-row">
-                    <div class="search-input-wrap">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                        <input type="text" class="search-input" id="search-input" 
-                               placeholder="Stichwort, Projekt-ID, Organisation...">
+            <!-- Tab Bar -->
+            <div class="pub-tabs">
+                <button class="pub-tab active" onclick="switchTab('ausschreibungen')" id="tab-ausschreibungen">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Alle Ausschreibungen
+                </button>
+                <button class="pub-tab" onclick="switchTab('bewertungen')" id="tab-bewertungen">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                    Meine Bewertungen
+                    <span class="pub-tab-badge" id="bew-count" style="display:none">0</span>
+                </button>
+                <button class="pub-tab" onclick="switchTab('empfehlungen')" id="tab-empfehlungen">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    Empfehlungen
+                </button>
+            </div>
+
+            <!-- ==================== TAB 1: AUSSCHREIBUNGEN ==================== -->
+            <div class="tab-panel active" id="panel-ausschreibungen">
+                <div class="search-section">
+                    <div class="search-row">
+                        <div class="search-input-wrap">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <input type="text" class="search-input" id="search-input" placeholder="Stichwort, Projekt-ID, Organisation...">
+                        </div>
+                        <select class="lang-select" id="language-select">
+                            <option value="">Alle Sprachen</option>
+                            <option value="de">Deutsch</option>
+                            <option value="fr">Français</option>
+                        </select>
+                        <button class="btn-search" onclick="performSearch()">Suchen</button>
                     </div>
-                    <select class="lang-select" id="language-select">
-                        <option value="">Alle Sprachen</option>
-                        <option value="de">Deutsch</option>
-                        <option value="fr">Français</option>
-                        <option value="it">Italiano</option>
-                        <option value="en">English</option>
+                    <div class="filters-row" id="filters-row">
+                        <button class="filter-chip" data-filter="canton" onclick="toggleFilter('canton')"><span>Kanton</span><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+                        <button class="filter-chip" data-filter="order_type" onclick="toggleFilter('order_type')"><span>Auftragsart</span><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+                        <button class="filter-chip" data-filter="process_type" onclick="toggleFilter('process_type')"><span>Verfahrensart</span><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+                        <button class="filter-chip" data-filter="pub_type" onclick="toggleFilter('pub_type')"><span>Publikationsart</span><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+                        <button class="filter-clear" id="filter-clear-btn" style="display:none;" onclick="clearAllFilters()">
+                            <svg width='14' height='14' fill='none' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg> Filter zurücksetzen
+                        </button>
+                        <div class="filter-dropdown" id="dropdown-canton"></div>
+                        <div class="filter-dropdown" id="dropdown-order_type"></div>
+                        <div class="filter-dropdown" id="dropdown-process_type"></div>
+                        <div class="filter-dropdown" id="dropdown-pub_type"></div>
+                    </div>
+                    <div class="active-filters" id="active-filters"></div>
+                </div>
+
+                <div class="results-bar">
+                    <span class="results-count" id="results-count">Laden...</span>
+                    <select class="sort-select" id="sort-select" onchange="sortProjects()">
+                        <option value="newest">Neueste zuerst</option>
+                        <option value="oldest">Älteste zuerst</option>
+                        <option value="alpha">A–Z</option>
                     </select>
-                    <button class="btn-search" onclick="performSearch()">Suchen</button>
                 </div>
 
-                <!-- Filter Chips -->
-                <div class="filters-row" id="filters-row">
-                    <button class="filter-chip" data-filter="canton" onclick="toggleFilter('canton')">
-                        <span>Kanton</span>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
-                    <button class="filter-chip" data-filter="order_type" onclick="toggleFilter('order_type')">
-                        <span>Auftragsart</span>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
-                    <button class="filter-chip" data-filter="process_type" onclick="toggleFilter('process_type')">
-                        <span>Verfahrensart</span>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
-                    <button class="filter-chip" data-filter="pub_type" onclick="toggleFilter('pub_type')">
-                        <span>Publikationsart</span>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
-                    <button class="filter-clear" id="filter-clear-btn" style="display:none;" onclick="clearAllFilters()">
-                        <svg width='14' height='14' fill='none' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24' style='vertical-align:-2px;margin-right:2px'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg> Filter zurücksetzen
-                    </button>
-
-                    <!-- Dropdown containers -->
-                    <div class="filter-dropdown" id="dropdown-canton"></div>
-                    <div class="filter-dropdown" id="dropdown-order_type"></div>
-                    <div class="filter-dropdown" id="dropdown-process_type"></div>
-                    <div class="filter-dropdown" id="dropdown-pub_type"></div>
-                </div>
-
-                <!-- Active filters -->
-                <div class="active-filters" id="active-filters"></div>
-            </div>
-
-            <!-- Results Bar -->
-            <div class="results-bar">
-                <span class="results-count" id="results-count">Laden...</span>
-                <select class="sort-select" id="sort-select" onchange="sortProjects()">
-                    <option value="newest">Neueste zuerst</option>
-                    <option value="oldest">Älteste zuerst</option>
-                    <option value="alpha">A–Z</option>
-                </select>
-            </div>
-
-            <!-- Publications Table -->
-            <div class="pub-table">
-                <div class="pub-table-head">
-                    <span>Titel</span>
-                    <span>Vergabestelle</span>
-                    <span style="text-align:right;">Veröffentlicht</span>
-                    <span></span>
-                </div>
-                <div id="pub-list">
-                    <div class="loading-state">
-                        <div class="spinner"></div>
-                        Ausschreibungen werden geladen...
+                <div class="pub-table">
+                    <div class="pub-table-head">
+                        <span>Titel</span><span>Vergabestelle</span><span style="text-align:right;">Veröffentlicht</span><span></span>
                     </div>
+                    <div id="pub-list"><div class="loading-state"><div class="spinner"></div>Ausschreibungen werden geladen...</div></div>
+                </div>
+                <div class="pagination" id="pagination"></div>
+            </div>
+
+            <!-- ==================== TAB 2: MEINE BEWERTUNGEN ==================== -->
+            <div class="tab-panel" id="panel-bewertungen">
+                <div id="bew-content">
+                    <div class="loading-state"><div class="spinner"></div>Bewertungen werden geladen...</div>
                 </div>
             </div>
 
-            <!-- Pagination -->
-            <div class="pagination" id="pagination"></div>
+            <!-- ==================== TAB 3: EMPFEHLUNGEN ==================== -->
+            <div class="tab-panel" id="panel-empfehlungen">
+                <div id="rec-content">
+                    <div class="loading-state"><div class="spinner"></div>Empfehlungen werden berechnet...</div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -1063,29 +378,16 @@
         // ==========================================
         // STATE
         // ==========================================
-        var currentPage = 1;
-        var perPage = 30;
-        var totalResults = 0;
-        var totalPages = 0;
-        var searchQuery = '';
-        var sortBy = 'newest';
+        var currentPage = 1, perPage = 30, totalResults = 0, totalPages = 0;
+        var searchQuery = '', sortBy = 'newest', openFilter = null;
         var favoriteIds = new Set();
-        var openFilter = null;
+        var activeFilters = { canton: [], order_type: [], process_type: [], pub_type: [] };
+        var filterOptions = { canton: [], order_type: [], process_type: [], pub_type: [] };
+        var bewLoaded = false, recLoaded = false;
+        var userRatings = {};  // tender_id -> rating
 
-        var activeFilters = {
-            canton: [],
-            order_type: [],
-            process_type: [],
-            pub_type: []
-        };
-
-        var filterOptions = {
-            canton: [],
-            order_type: [],
-            process_type: [],
-            pub_type: []
-        };
-
+        var SUBTYPE_LABELS = { 'construction':'Bauleistung', 'supply':'Lieferung', 'service':'Dienstleistung' };
+        var KANTON_NAMES = {'AG':'Aargau','AI':'Appenzell IR','AR':'Appenzell AR','BE':'Bern','BL':'Basel-Land','BS':'Basel-Stadt','FR':'Freiburg','GE':'Genf','GL':'Glarus','GR':'Graubünden','JU':'Jura','LU':'Luzern','NE':'Neuenburg','NW':'Nidwalden','OW':'Obwalden','SG':'St. Gallen','SH':'Schaffhausen','SO':'Solothurn','SZ':'Schwyz','TG':'Thurgau','TI':'Tessin','UR':'Uri','VD':'Waadt','VS':'Wallis','ZG':'Zug','ZH':'Zürich'};
         var starFilled = '<svg width="18" height="18" fill="#d97706" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
         var starEmpty = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
 
@@ -1100,21 +402,153 @@
         });
 
         function setupEventListeners() {
-            document.getElementById('search-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') performSearch();
-            });
+            document.getElementById('search-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') performSearch(); });
             document.addEventListener('click', function(e) {
-                if (!e.target.closest('.filter-chip') && !e.target.closest('.filter-dropdown')) {
-                    closeAllDropdowns();
-                }
-                if (!e.target.closest('.user-avatar') && !e.target.closest('.user-dropdown')) {
-                    document.getElementById('user-dropdown').classList.remove('show');
-                }
+                if (!e.target.closest('.filter-chip') && !e.target.closest('.filter-dropdown')) closeAllDropdowns();
+                if (!e.target.closest('.user-avatar') && !e.target.closest('.user-dropdown')) document.getElementById('user-dropdown').classList.remove('show');
             });
         }
 
         // ==========================================
-        // SERVER-SIDE DATA LOADING
+        // TAB SWITCHING
+        // ==========================================
+        function switchTab(name) {
+            var tabs = ['ausschreibungen', 'bewertungen', 'empfehlungen'];
+            var titles = { ausschreibungen: 'Ausschreibungen', bewertungen: 'Meine Bewertungen', empfehlungen: 'Empfehlungen' };
+            var subtitles = { ausschreibungen: 'Öffentliche Aufträge der Schweiz durchsuchen', bewertungen: 'Ihre bewerteten Ausschreibungen verwalten', empfehlungen: 'Basierend auf Ihren Bewertungen' };
+
+            tabs.forEach(function(t) {
+                document.getElementById('panel-' + t).classList.toggle('active', t === name);
+                document.getElementById('tab-' + t).classList.toggle('active', t === name);
+                var nav = document.getElementById('nav-' + t);
+                if (nav) nav.classList.toggle('active', t === name);
+            });
+
+            document.getElementById('page-title').textContent = titles[name];
+            document.getElementById('page-subtitle').textContent = subtitles[name];
+
+            if (name === 'bewertungen' && !bewLoaded) loadBewertungen();
+            if (name === 'empfehlungen' && !recLoaded) loadEmpfehlungen();
+        }
+
+        // ==========================================
+        // BEWERTUNGEN TAB
+        // ==========================================
+        function loadBewertungen() {
+            bewLoaded = true;
+            fetch('/api/user-ratings')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var items = data.ratings || [];
+                    if (items.length === 0) {
+                        document.getElementById('bew-content').innerHTML = '<div class="empty-state"><p>Sie haben noch keine Ausschreibungen bewertet.</p><p style="margin-top:0.5rem;"><a href="/onboarding" style="color:var(--accent);">Jetzt Onboarding starten</a></p></div>';
+                        return;
+                    }
+                    document.getElementById('bew-count').textContent = items.length;
+                    document.getElementById('bew-count').style.display = 'inline';
+                    renderBewertungen(items);
+                })
+                .catch(function() {
+                    document.getElementById('bew-content').innerHTML = '<div class="empty-state">Fehler beim Laden.</div>';
+                });
+        }
+
+        function renderBewertungen(items) {
+            var html = '';
+            items.forEach(function(item) {
+                var r = item.rating;
+                var cardClass = r === 1 ? 'rated-yes' : 'rated-no';
+                var canton = item.canton ? (KANTON_NAMES[item.canton] || item.canton) : '';
+                var subtype = item.project_subtype ? (SUBTYPE_LABELS[item.project_subtype] || item.project_subtype) : '';
+                var amount = item.award_amount ? 'CHF ' + Number(item.award_amount).toLocaleString('de-CH') : '';
+
+                html += '<div class="bew-card ' + cardClass + '" id="bew-' + item.tender_id + '">' +
+                    '<div class="bew-content">' +
+                        '<div class="bew-title">' + escapeHtml(item.title_de || 'Ohne Titel') + '</div>' +
+                        '<div class="bew-meta">' +
+                            (canton ? '<span class="bew-tag">' + canton + '</span>' : '') +
+                            (subtype ? '<span class="bew-tag">' + subtype + '</span>' : '') +
+                            (amount ? '<span class="bew-tag">' + amount + '</span>' : '') +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="bew-btns">' +
+                        '<button class="bew-btn bew-btn-no' + (r === -1 ? ' active' : '') + '" onclick="updateRating(\'' + item.tender_id + '\', -1)">' +
+                            '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Nein' +
+                        '</button>' +
+                        '<button class="bew-btn bew-btn-yes' + (r === 1 ? ' active' : '') + '" onclick="updateRating(\'' + item.tender_id + '\', 1)">' +
+                            '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Ja' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+            });
+            document.getElementById('bew-content').innerHTML = html;
+        }
+
+        function updateRating(tenderId, newRating) {
+            fetch('/api/update-rating', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({tender_id: tenderId, rating: newRating})
+            }).then(function(r) { return r.json(); }).then(function(res) {
+                if (res.success) {
+                    bewLoaded = false;
+                    recLoaded = false;  // Empfehlungen müssen sich auch aktualisieren
+                    loadBewertungen();
+                }
+            }).catch(function(e) { console.error(e); });
+        }
+
+        // ==========================================
+        // EMPFEHLUNGEN TAB
+        // ==========================================
+        function loadEmpfehlungen() {
+            recLoaded = true;
+            fetch('/api/recommendations')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var recs = data.recommendations || [];
+                    if (recs.length === 0) {
+                        document.getElementById('rec-content').innerHTML = '<div class="empty-state"><p>Noch keine Empfehlungen verfügbar.</p><p style="margin-top:0.5rem;color:var(--text-muted);">Bewerten Sie mindestens 3 Ausschreibungen als "Relevant", damit wir passende Vorschläge berechnen können.</p></div>';
+                        return;
+                    }
+                    renderEmpfehlungen(recs);
+                })
+                .catch(function() {
+                    document.getElementById('rec-content').innerHTML = '<div class="empty-state">Fehler beim Laden der Empfehlungen.</div>';
+                });
+        }
+
+        function renderEmpfehlungen(recs) {
+            var html = '';
+            recs.forEach(function(r) {
+                var score = Math.round((r.similarity || 0) * 100);
+                var scoreClass = score >= 75 ? 'high' : (score >= 55 ? 'mid' : 'low');
+                var desc = stripHtml(r.description_de || '');
+                var canton = r.canton ? (KANTON_NAMES[r.canton] || r.canton) : '';
+                var subtype = r.project_subtype ? (SUBTYPE_LABELS[r.project_subtype] || r.project_subtype) : '';
+                var amount = r.award_amount ? 'CHF ' + Number(r.award_amount).toLocaleString('de-CH') : '';
+
+                html += '<div class="rec-card">' +
+                    '<div class="rec-top">' +
+                        '<span class="rec-score ' + scoreClass + '">' +
+                            '<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> ' +
+                            score + '% Match' +
+                        '</span>' +
+                        (canton ? '<span class="bew-tag">' + canton + '</span>' : '') +
+                    '</div>' +
+                    '<div class="rec-title">' + escapeHtml(r.title_de || 'Ohne Titel') + '</div>' +
+                    '<div class="rec-desc">' + escapeHtml(desc) + '</div>' +
+                    '<div class="rec-bottom">' +
+                        '<span class="rec-subtype">' + subtype + '</span>' +
+                        (amount ? '<span class="rec-amount">' + amount + '</span>' : '') +
+                    '</div>' +
+                '</div>';
+            });
+            document.getElementById('rec-content').innerHTML = html;
+        }
+
+        // ==========================================
+        // AUSSCHREIBUNGEN TAB (existing logic)
         // ==========================================
         function buildApiUrl(page) {
             var params = ['page=' + page, 'per_page=' + perPage, 'sort=' + sortBy];
@@ -1129,7 +563,6 @@
         function loadPage(page) {
             currentPage = page;
             showLoading();
-
             fetch(buildApiUrl(page))
                 .then(function(res) { return res.json(); })
                 .then(function(result) {
@@ -1140,364 +573,144 @@
                     renderPagination();
                     updateCounts();
                 })
-                .catch(function(e) {
-                    console.error('Load error:', e);
-                    document.getElementById('pub-list').innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg width="48" height="48" fill="none" stroke="#ef4444" stroke-width="1.5" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>Fehler beim Laden.</div>';
-                });
+                .catch(function(e) { console.error('Load error:', e); document.getElementById('pub-list').innerHTML = '<div class="empty-state">Fehler beim Laden.</div>'; });
         }
 
         function loadFilterOptions() {
-            fetch('/api/filter-options')
-                .then(function(res) { return res.json(); })
-                .then(function(opts) {
-                    filterOptions.canton = opts.cantons || [];
-                    filterOptions.order_type = opts.order_types || [];
-                    filterOptions.process_type = opts.process_types || [];
-                    filterOptions.pub_type = opts.pub_types || [];
-                    console.log('Filter options loaded:', filterOptions);
-                })
-                .catch(function(e) { console.error('Filter options error:', e); });
+            fetch('/api/filter-options').then(function(res) { return res.json(); }).then(function(opts) {
+                filterOptions.canton = opts.cantons || []; filterOptions.order_type = opts.order_types || [];
+                filterOptions.process_type = opts.process_types || []; filterOptions.pub_type = opts.pub_types || [];
+            }).catch(function(e) { console.error('Filter error:', e); });
         }
 
         function loadFavorites() {
-            fetch('/api/favorites')
-                .then(function(res) { return res.json(); })
-                .then(function(data) { favoriteIds = new Set(data.favorites || []); })
-                .catch(function(e) { console.error('Favorites error:', e); });
+            fetch('/api/favorites').then(function(res) { return res.json(); }).then(function(data) { favoriteIds = new Set(data.favorites || []); }).catch(function() {});
         }
 
-        function performSearch() {
-            searchQuery = document.getElementById('search-input').value.trim();
-            loadPage(1);
-        }
+        function performSearch() { searchQuery = document.getElementById('search-input').value.trim(); loadPage(1); }
+        function sortProjects() { sortBy = document.getElementById('sort-select').value; loadPage(1); }
 
-        function sortProjects() {
-            sortBy = document.getElementById('sort-select').value;
-            loadPage(1);
-        }
-
-        // ==========================================
-        // FILTERS
-        // ==========================================
-        function getFilterCounts() {
-            // Server-side: we show counts from filterOptions, not from loaded data
-            return {};
-        }
-
+        // Filters
         function renderFilterOption(name, opt) {
             var isSelected = activeFilters[name].includes(opt);
             var safeOpt = opt.replace(/'/g, '');
             var checkSvg = isSelected ? '<svg width="12" height="12" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : '';
-            return '<div class="filter-option ' + (isSelected ? 'selected' : '') + '" onclick="selectFilter(\'' + name + '\', \'' + safeOpt + '\')">' +
-                '<div class="filter-option-check">' + checkSvg + '</div>' +
-                '<span>' + opt + '</span>' +
-                '</div>';
+            return '<div class="filter-option ' + (isSelected ? 'selected' : '') + '" onclick="selectFilter(\'' + name + '\', \'' + safeOpt + '\')"><div class="filter-option-check">' + checkSvg + '</div><span>' + opt + '</span></div>';
         }
 
         function toggleFilter(name) {
             if (openFilter === name) { closeAllDropdowns(); return; }
-            closeAllDropdowns();
-            openFilter = name;
-
-            var chip = document.querySelector('[data-filter="' + name + '"]');
-            chip.classList.add('open');
-
+            closeAllDropdowns(); openFilter = name;
+            document.querySelector('[data-filter="' + name + '"]').classList.add('open');
             var dropdown = document.getElementById('dropdown-' + name);
             var options = filterOptions[name] || [];
-
-            dropdown.innerHTML = '<input type="text" class="filter-dropdown-search" placeholder="Suchen..." oninput="filterDropdownOptions(\'' + name + '\', this.value)">' +
-                '<div id="dropdown-options-' + name + '">' +
-                options.map(function(opt) { return renderFilterOption(name, opt); }).join('') +
-                '</div>';
-
-            var chipRect = chip.getBoundingClientRect();
+            dropdown.innerHTML = '<input type="text" class="filter-dropdown-search" placeholder="Suchen..." oninput="filterDropdownOptions(\'' + name + '\', this.value)"><div id="dropdown-options-' + name + '">' + options.map(function(opt) { return renderFilterOption(name, opt); }).join('') + '</div>';
+            var chipRect = document.querySelector('[data-filter="' + name + '"]').getBoundingClientRect();
             var filtersRect = document.getElementById('filters-row').getBoundingClientRect();
             dropdown.style.left = (chipRect.left - filtersRect.left) + 'px';
             dropdown.classList.add('show');
         }
 
-        function closeAllDropdowns() {
-            openFilter = null;
-            var chips = document.querySelectorAll('.filter-chip');
-            for (var i = 0; i < chips.length; i++) chips[i].classList.remove('open');
-            var drops = document.querySelectorAll('.filter-dropdown');
-            for (var i = 0; i < drops.length; i++) drops[i].classList.remove('show');
-        }
+        function closeAllDropdowns() { openFilter = null; document.querySelectorAll('.filter-chip').forEach(function(c){c.classList.remove('open');}); document.querySelectorAll('.filter-dropdown').forEach(function(d){d.classList.remove('show');}); }
 
         function filterDropdownOptions(name, query) {
             var container = document.getElementById('dropdown-options-' + name);
-            var options = filterOptions[name] || [];
-            var filtered = options.filter(function(o) { return o.toLowerCase().indexOf(query.toLowerCase()) >= 0; });
+            var filtered = (filterOptions[name] || []).filter(function(o) { return o.toLowerCase().indexOf(query.toLowerCase()) >= 0; });
             container.innerHTML = filtered.map(function(opt) { return renderFilterOption(name, opt); }).join('');
         }
 
         function selectFilter(name, value) {
             var idx = activeFilters[name].indexOf(value);
-            if (idx > -1) {
-                activeFilters[name].splice(idx, 1);
-            } else {
-                // Server-side: only one value per filter (for simplicity with Supabase)
-                activeFilters[name] = [value];
-            }
-
+            if (idx > -1) activeFilters[name].splice(idx, 1);
+            else activeFilters[name] = [value];
             var chip = document.querySelector('[data-filter="' + name + '"]');
-            if (activeFilters[name].length > 0) {
-                chip.classList.add('active');
-                chip.querySelector('span').textContent = getFilterLabel(name) + ' (' + activeFilters[name].length + ')';
-            } else {
-                chip.classList.remove('active');
-                chip.querySelector('span').textContent = getFilterLabel(name);
-            }
-
-            if (openFilter === name) {
-                var searchEl = document.querySelector('#dropdown-' + name + ' .filter-dropdown-search');
-                var searchVal = searchEl ? searchEl.value : '';
-                filterDropdownOptions(name, searchVal);
-            }
-
-            renderActiveFilters();
-            loadPage(1);
+            if (activeFilters[name].length > 0) { chip.classList.add('active'); chip.querySelector('span').textContent = getFilterLabel(name) + ' (' + activeFilters[name].length + ')'; }
+            else { chip.classList.remove('active'); chip.querySelector('span').textContent = getFilterLabel(name); }
+            if (openFilter === name) { var s = document.querySelector('#dropdown-' + name + ' .filter-dropdown-search'); filterDropdownOptions(name, s ? s.value : ''); }
+            renderActiveFilters(); loadPage(1);
         }
 
-        function getFilterLabel(name) {
-            var labels = { canton: 'Kanton', order_type: 'Auftragsart', process_type: 'Verfahrensart', pub_type: 'Publikationsart' };
-            return labels[name] || name;
-        }
+        function getFilterLabel(name) { return {canton:'Kanton',order_type:'Auftragsart',process_type:'Verfahrensart',pub_type:'Publikationsart'}[name] || name; }
 
         function clearAllFilters() {
-            var keys = Object.keys(activeFilters);
-            for (var i = 0; i < keys.length; i++) {
-                activeFilters[keys[i]] = [];
-                var chip = document.querySelector('[data-filter="' + keys[i] + '"]');
-                if (chip) {
-                    chip.classList.remove('active');
-                    chip.querySelector('span').textContent = getFilterLabel(keys[i]);
-                }
-            }
-            renderActiveFilters();
-            loadPage(1);
+            Object.keys(activeFilters).forEach(function(k) { activeFilters[k] = []; var c = document.querySelector('[data-filter="'+k+'"]'); if(c){c.classList.remove('active'); c.querySelector('span').textContent = getFilterLabel(k);} });
+            renderActiveFilters(); loadPage(1);
         }
 
-        function removeFilter(name, value) {
-            selectFilter(name, value);
-        }
+        function removeFilter(name, value) { selectFilter(name, value); }
 
         function renderActiveFilters() {
-            var container = document.getElementById('active-filters');
-            var clearBtn = document.getElementById('filter-clear-btn');
-            var allActive = [];
-            var keys = Object.keys(activeFilters);
-            for (var i = 0; i < keys.length; i++) {
-                var vals = activeFilters[keys[i]];
-                for (var j = 0; j < vals.length; j++) {
-                    allActive.push({ key: keys[i], value: vals[j] });
-                }
-            }
-
-            if (allActive.length === 0) {
-                container.innerHTML = '';
-                clearBtn.style.display = 'none';
-                return;
-            }
-
-            clearBtn.style.display = 'inline-flex';
-            container.innerHTML = allActive.map(function(item) {
-                var safeVal = item.value.replace(/'/g, '');
-                return '<span class="active-filter-tag">' +
-                    item.value +
-                    ' <button onclick="removeFilter(\'' + item.key + '\', \'' + safeVal + '\')">&times;</button>' +
-                    '</span>';
-            }).join('');
+            var container = document.getElementById('active-filters'), btn = document.getElementById('filter-clear-btn');
+            var all = []; Object.keys(activeFilters).forEach(function(k) { activeFilters[k].forEach(function(v) { all.push({key:k,value:v}); }); });
+            if (!all.length) { container.innerHTML = ''; btn.style.display = 'none'; return; }
+            btn.style.display = 'inline-flex';
+            container.innerHTML = all.map(function(i) { return '<span class="active-filter-tag">' + i.value + ' <button onclick="removeFilter(\'' + i.key + '\',\'' + i.value.replace(/'/g,'') + '\')">&times;</button></span>'; }).join('');
         }
 
-        // ==========================================
-        // RENDERING
-        // ==========================================
+        // Render projects
         function renderProjects(projects) {
             var container = document.getElementById('pub-list');
-
-            if (!projects || projects.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg width="48" height="48" fill="none" stroke="#71717a" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>Keine Ausschreibungen gefunden.</div>';
-                return;
-            }
-
+            if (!projects || !projects.length) { container.innerHTML = '<div class="empty-state">Keine Ausschreibungen gefunden.</div>'; return; }
             var html = '';
-            for (var i = 0; i < projects.length; i++) {
-                var p = projects[i];
-                var isFav = favoriteIds.has(p.id);
-                var timeAgo = getTimeAgo(p.publication_date);
-                var isRecent = isWithin48h(p.publication_date);
-                var ptClass = getPubTypeClass(p.pub_type);
-                var url = p.simap_url || 'https://www.simap.ch';
-                var loc = (p.city || '') + (p.city && p.canton ? ', ' : '') + (p.canton || '');
-                var desc = p.description || '';
+            projects.forEach(function(p, i) {
+                var isFav = favoriteIds.has(p.id), isRecent = isWithin48h(p.publication_date);
+                var loc = (p.city||'') + (p.city&&p.canton?', ':'') + (p.canton||'');
+                var tags = '<span class="pub-tag">#' + (p.project_number||'-') + '</span>';
+                if (p.pub_type) tags += '<span class="pub-tag ' + getPubTypeClass(p.pub_type) + '">' + capitalize(p.pub_type) + '</span>';
+                if (p.order_type) tags += '<span class="pub-tag">' + capitalize(p.order_type) + '</span>';
                 var rowId = 'row-' + i;
 
-                var tags = '<span class="pub-tag">#' + (p.project_number || '-') + '</span>';
-                if (p.pub_type) tags += '<span class="pub-tag ' + ptClass + '">' + capitalize(p.pub_type) + '</span>';
-                if (p.order_type) tags += '<span class="pub-tag">' + capitalize(p.order_type) + '</span>';
-                if (p.process_type) tags += '<span class="pub-tag">' + capitalize(p.process_type) + '</span>';
-
                 html += '<div class="pub-row" id="' + rowId + '" onclick="toggleDetail(\'' + rowId + '\')">' +
-                    '<div class="pub-title-col">' +
-                        '<div class="pub-title">' + escapeHtml(p.title) + '</div>' +
-                        '<div class="pub-location">' + loc + '</div>' +
-                        '<div class="pub-tags">' + tags + '</div>' +
-                    '</div>' +
-                    '<div class="pub-office">' + escapeHtml(p.organization || '-') + '</div>' +
-                    '<div class="pub-date-col">' +
-                        '<div class="pub-time-ago ' + (isRecent ? '' : 'old') + '">' + timeAgo + '</div>' +
-                        '<div class="pub-date-exact">' + formatDate(p.publication_date) + '</div>' +
-                    '</div>' +
-                    '<div class="pub-actions">' +
-                        '<button class="pub-fav-btn ' + (isFav ? 'favorited' : '') + '" ' +
-                            'onclick="event.stopPropagation(); toggleFavorite(\'' + p.id + '\', this)" ' +
-                            'title="' + (isFav ? 'Entfernen' : 'Merken') + '">' +
-                            (isFav ? starFilled : starEmpty) +
-                        '</button>' +
-                    '</div>' +
+                    '<div class="pub-title-col"><div class="pub-title">' + escapeHtml(p.title) + '</div><div class="pub-location">' + loc + '</div><div class="pub-tags">' + tags + '</div></div>' +
+                    '<div class="pub-office">' + escapeHtml(p.organization||'-') + '</div>' +
+                    '<div class="pub-date-col"><div class="pub-time-ago ' + (isRecent?'':'old') + '">' + getTimeAgo(p.publication_date) + '</div><div class="pub-date-exact">' + formatDate(p.publication_date) + '</div></div>' +
+                    '<div class="pub-actions"><button class="pub-fav-btn ' + (isFav?'favorited':'') + '" onclick="event.stopPropagation();toggleFavorite(\'' + p.id + '\',this)" title="' + (isFav?'Entfernen':'Merken') + '">' + (isFav?starFilled:starEmpty) + '</button></div>' +
                 '</div>' +
-                '<div class="pub-detail" id="detail-' + rowId + '">' +
-                    '<div class="pub-detail-inner">' +
-                        '<div class="pub-detail-desc">' + escapeHtml(desc) + '</div>' +
-                        '<div class="pub-detail-actions">' +
-                            '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener" class="btn-simap" onclick="event.stopPropagation();">' +
-                                '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>' +
-                                'Auf simap.ch ansehen' +
-                            '</a>' +
-                            '<span class="pub-detail-meta">Projekt #' + (p.project_number || '-') + '</span>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>';
-            }
+                '<div class="pub-detail" id="detail-' + rowId + '"><div class="pub-detail-inner"><div class="pub-detail-desc">' + escapeHtml(p.description||'') + '</div><div class="pub-detail-actions"><a href="' + escapeHtml(p.simap_url||'#') + '" target="_blank" class="btn-simap" onclick="event.stopPropagation()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Auf simap.ch ansehen</a><span class="pub-detail-meta">Projekt #' + (p.project_number||'-') + '</span></div></div></div>';
+            });
             container.innerHTML = html;
         }
 
         function toggleDetail(rowId) {
-            var row = document.getElementById(rowId);
-            var detail = document.getElementById('detail-' + rowId);
+            var row = document.getElementById(rowId), detail = document.getElementById('detail-' + rowId);
             if (!detail) return;
             var wasOpen = detail.classList.contains('open');
-            var allDetails = document.querySelectorAll('.pub-detail.open');
-            var allRows = document.querySelectorAll('.pub-row.expanded');
-            for (var i = 0; i < allDetails.length; i++) allDetails[i].classList.remove('open');
-            for (var i = 0; i < allRows.length; i++) allRows[i].classList.remove('expanded');
-            if (!wasOpen) {
-                detail.classList.add('open');
-                row.classList.add('expanded');
-            }
+            document.querySelectorAll('.pub-detail.open').forEach(function(d){d.classList.remove('open');});
+            document.querySelectorAll('.pub-row.expanded').forEach(function(r){r.classList.remove('expanded');});
+            if (!wasOpen) { detail.classList.add('open'); row.classList.add('expanded'); }
         }
 
         function renderPagination() {
-            if (totalPages <= 1) {
-                document.getElementById('pagination').innerHTML = '';
-                return;
-            }
-            var html = '<button ' + (currentPage === 1 ? 'disabled' : '') + ' onclick="goToPage(' + (currentPage - 1) + ')">&#8249;</button>';
+            if (totalPages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+            var html = '<button ' + (currentPage===1?'disabled':'') + ' onclick="goToPage(' + (currentPage-1) + ')">&#8249;</button>';
             for (var i = 1; i <= totalPages; i++) {
-                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-                    html += '<button class="' + (i === currentPage ? 'active' : '') + '" onclick="goToPage(' + i + ')">' + i + '</button>';
-                } else if (i === currentPage - 3 || i === currentPage + 3) {
-                    html += '<button disabled>&hellip;</button>';
-                }
+                if (i===1||i===totalPages||(i>=currentPage-2&&i<=currentPage+2)) html += '<button class="' + (i===currentPage?'active':'') + '" onclick="goToPage(' + i + ')">' + i + '</button>';
+                else if (i===currentPage-3||i===currentPage+3) html += '<button disabled>&hellip;</button>';
             }
-            html += '<button ' + (currentPage === totalPages ? 'disabled' : '') + ' onclick="goToPage(' + (currentPage + 1) + ')">&#8250;</button>';
+            html += '<button ' + (currentPage===totalPages?'disabled':'') + ' onclick="goToPage(' + (currentPage+1) + ')">&#8250;</button>';
             document.getElementById('pagination').innerHTML = html;
         }
 
-        function goToPage(page) {
-            loadPage(page);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        function goToPage(page) { loadPage(page); window.scrollTo({top:0,behavior:'smooth'}); }
+        function updateCounts() { document.getElementById('results-count').innerHTML = '<strong>' + totalResults.toLocaleString('de-CH') + '</strong> Ergebnisse'; document.getElementById('sidebar-count').textContent = totalResults.toLocaleString('de-CH'); }
 
-        function updateCounts() {
-            document.getElementById('results-count').innerHTML = '<strong>' + totalResults.toLocaleString('de-CH') + '</strong> Ergebnisse';
-            document.getElementById('sidebar-count').textContent = totalResults.toLocaleString('de-CH');
-        }
+        // Helpers
+        function getTimeAgo(d) { if(!d)return'-'; var ms=new Date()-new Date(d),m=Math.floor(ms/60000),h=Math.floor(ms/3600000),dy=Math.floor(ms/86400000); if(m<1)return'Gerade eben'; if(m<60)return'vor '+m+' Min.'; if(h<24)return'vor '+h+' Std.'; if(dy===1)return'Gestern'; if(dy<7)return'vor '+dy+' Tagen'; if(dy<30)return'vor '+Math.floor(dy/7)+' Wo.'; return formatDate(d); }
+        function isWithin48h(d) { return d && (new Date()-new Date(d))<172800000; }
+        function getPubTypeClass(t) { if(!t)return''; var l=t.toLowerCase(); if(l.indexOf('tender')>=0||l.indexOf('ausschreibung')>=0)return'type-tender'; if(l.indexOf('award')>=0||l.indexOf('zuschlag')>=0)return'type-award'; return''; }
+        function formatDate(d) { if(!d)return'-'; try{return new Date(d).toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(e){return d;} }
+        function capitalize(s) { return s ? s.charAt(0).toUpperCase()+s.slice(1) : ''; }
+        function escapeHtml(t) { if(!t)return''; var d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+        function stripHtml(t) { return t ? t.replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').trim() : ''; }
+        function showLoading() { document.getElementById('pub-list').innerHTML = '<div class="loading-state"><div class="spinner"></div>Laden...</div>'; }
+        function toggleUserMenu() { document.getElementById('user-dropdown').classList.toggle('show'); }
 
-        // ==========================================
-        // TIME / HELPERS
-        // ==========================================
-        function getTimeAgo(dateStr) {
-            if (!dateStr) return '-';
-            var now = new Date();
-            var date = new Date(dateStr);
-            var diffMs = now - date;
-            var diffMins = Math.floor(diffMs / 60000);
-            var diffHrs = Math.floor(diffMs / 3600000);
-            var diffDays = Math.floor(diffMs / 86400000);
-            if (diffMins < 1) return 'Gerade eben';
-            if (diffMins < 60) return 'vor ' + diffMins + ' Min.';
-            if (diffHrs < 24) return 'vor ' + diffHrs + ' Std.';
-            if (diffDays === 1) return 'Gestern';
-            if (diffDays < 7) return 'vor ' + diffDays + ' Tagen';
-            if (diffDays < 30) return 'vor ' + Math.floor(diffDays / 7) + ' Wo.';
-            return formatDate(dateStr);
-        }
-
-        function isWithin48h(dateStr) {
-            if (!dateStr) return false;
-            return (new Date() - new Date(dateStr)) < 172800000;
-        }
-
-        function getPubTypeClass(type) {
-            if (!type) return '';
-            var t = type.toLowerCase();
-            if (t.indexOf('tender') >= 0 || t.indexOf('ausschreibung') >= 0) return 'type-tender';
-            if (t.indexOf('award') >= 0 || t.indexOf('zuschlag') >= 0) return 'type-award';
-            if (t.indexOf('cancel') >= 0 || t.indexOf('widerruf') >= 0) return 'type-cancel';
-            return '';
-        }
-
-        function formatDate(dateStr) {
-            if (!dateStr) return '-';
-            try { return new Date(dateStr).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
-            catch(e) { return dateStr; }
-        }
-
-        function capitalize(str) { return str ? str.charAt(0).toUpperCase() + str.slice(1) : ''; }
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            var d = document.createElement('div');
-            d.textContent = text;
-            return d.innerHTML;
-        }
-
-        function showLoading() {
-            document.getElementById('pub-list').innerHTML = '<div class="loading-state"><div class="spinner"></div>Ausschreibungen werden geladen...</div>';
-        }
-
-        function toggleUserMenu() {
-            document.getElementById('user-dropdown').classList.toggle('show');
-        }
-
-        // ==========================================
-        // FAVORITES
-        // ==========================================
-        function toggleFavorite(projectId, btn) {
-            var isFav = favoriteIds.has(projectId);
-            if (isFav) {
-                fetch('/api/favorites/remove', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ project_id: projectId })
-                }).then(function() {
-                    favoriteIds.delete(projectId);
-                    btn.classList.remove('favorited');
-                    btn.innerHTML = starEmpty;
-                }).catch(function(e) { console.error(e); });
-            } else {
-                fetch('/api/favorites/add', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ project_id: projectId })
-                }).then(function() {
-                    favoriteIds.add(projectId);
-                    btn.classList.add('favorited');
-                    btn.innerHTML = starFilled;
-                }).catch(function(e) { console.error(e); });
-            }
+        // Favorites
+        function toggleFavorite(pid, btn) {
+            var isFav = favoriteIds.has(pid);
+            fetch('/api/favorites/' + (isFav?'remove':'add'), { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({project_id:pid}) })
+                .then(function() { if(isFav){favoriteIds.delete(pid);btn.classList.remove('favorited');btn.innerHTML=starEmpty;} else{favoriteIds.add(pid);btn.classList.add('favorited');btn.innerHTML=starFilled;} })
+                .catch(function(e){console.error(e);});
         }
     </script>
 </body>
