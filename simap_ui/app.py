@@ -49,6 +49,8 @@ from supabase_client import (
     upsert_feed_rating,
     get_feed_ratings_map,
     get_test_runs_overview,
+    TEST_COMPANY_SEEDS,
+    seed_test_companies,
 )
 
 load_dotenv()
@@ -507,7 +509,11 @@ def admin_test_runs():
     if not _test_runs_enabled():
         return 'Test-Dashboard deaktiviert. Setze ENABLE_TEST_DASHBOARD=true.', 404
     overview = get_test_runs_overview(top_n=10)
-    return render_template('admin_test_runs.html', rows=overview)
+    return render_template(
+        'admin_test_runs.html',
+        rows=overview,
+        test_company_seeds=TEST_COMPANY_SEEDS,
+    )
 
 
 @app.route('/api/admin/test-runs')
@@ -516,6 +522,16 @@ def api_admin_test_runs():
     if not _test_runs_enabled():
         return jsonify({'error': 'disabled'}), 404
     return jsonify({'rows': get_test_runs_overview(top_n=10)})
+
+
+@app.route('/api/admin/seed-test-companies', methods=['POST'])
+def api_admin_seed_test_companies():
+    """Legt die 5 vordefinierten Test-Firmen an (Auth + Profil). Gleiche Logik wie scripts/create_test_companies.py."""
+    if not _test_runs_enabled():
+        return jsonify({'error': 'disabled'}), 404
+    out = seed_test_companies()
+    code = 200 if out.get('success') else 400
+    return jsonify(out), code
 
 # ============================================
 # FAVORITES / MERKLISTE ROUTES

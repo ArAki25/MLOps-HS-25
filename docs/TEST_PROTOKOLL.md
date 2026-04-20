@@ -15,6 +15,12 @@ liked/disliked.
 
 ## 2. Test-User anlegen
 
+**Empfohlen (localhost):** App starten, `ENABLE_TEST_DASHBOARD=true`, dann
+`http://127.0.0.1:5000/admin/test-runs` oeffnen und **„Jetzt 5 Test-Firmen anlegen“**
+klicken — dieselbe Backend-Logik wie unten, ohne separates Terminal.
+
+Alternativ per CLI:
+
 ```bash
 python scripts/create_test_companies.py
 ```

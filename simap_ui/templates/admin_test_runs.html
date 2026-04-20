@@ -40,6 +40,20 @@
   .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
   .kpi .label { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
   .kpi .val { font-size: 22px; font-weight: 700; margin-top: 2px; font-family: "SF Mono", monospace; }
+  .seed-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 20px; }
+  .seed-panel h2 { margin: 0 0 8px; font-size: 15px; color: var(--text-primary); }
+  .seed-panel p { margin: 0 0 12px; font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+  .seed-table { width: 100%; font-size: 12px; margin-bottom: 12px; }
+  .seed-table th { text-align: left; padding: 6px 8px; color: var(--text-muted); font-weight: 600; }
+  .seed-table td { padding: 6px 8px; border-top: 1px solid var(--border); }
+  .btn-seed { background: linear-gradient(135deg, #0ea5e9, #06b6d4); color: #001018; border: none; border-radius: 8px; padding: 10px 18px;
+              font-weight: 700; cursor: pointer; font-size: 13px; }
+  .btn-seed:hover { filter: brightness(1.08); }
+  .btn-seed:disabled { opacity: 0.5; cursor: not-allowed; }
+  #seed-result { margin-top: 12px; padding: 12px; background: var(--surface-2); border-radius: 8px; font-size: 12px; white-space: pre-wrap;
+                  font-family: "SF Mono", monospace; color: var(--text-muted); display: none; border: 1px solid var(--border); }
+  #seed-result.show { display: block; }
+  #seed-result.err { border-color: rgba(239,68,68,0.4); color: #fca5a5; }
 </style>
 </head>
 <body>
@@ -51,6 +65,30 @@
   <b>avg_similarity_top_n &ge; 0.55</b> (Profiltreue).
   <button class="refresh" onclick="location.reload()">&#8635; Aktualisieren</button>
 </p>
+
+<div class="seed-panel">
+  <h2>Test-Firmen anlegen</h2>
+  <p>
+    Nutzt dieselbe Logik wie <span class="mono">scripts/create_test_companies.py</span>:
+    Supabase Auth + <span class="mono">ui.user_profiles</span> (Service-Role-Upsert).
+    Danach kannst du dich mit den Zugangsdaten unten einloggen und Onboarding durchspielen.
+  </p>
+  <table class="seed-table">
+    <thead><tr><th>Firma</th><th>E-Mail</th><th>Passwort</th><th>Profil</th></tr></thead>
+    <tbody>
+    {% for s in test_company_seeds %}
+      <tr>
+        <td>{{ s.company_name }}</td>
+        <td class="mono">{{ s.email }}</td>
+        <td class="mono">{{ s.password }}</td>
+        <td class="mono">{{ s.canton }} / {{ s.project_subtype }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <button type="button" class="btn-seed" id="seed-btn">Jetzt 5 Test-Firmen anlegen</button>
+  <div id="seed-result"></div>
+</div>
 
 <div class="grid-meta">
   <div class="kpi"><div class="label">Test-User</div><div class="val">{{ rows|length }}</div></div>
@@ -127,6 +165,38 @@
   {% endfor %}
   </tbody>
 </table>
+
+<script>
+(function() {
+  var btn = document.getElementById('seed-btn');
+  var out = document.getElementById('seed-result');
+  if (!btn || !out) return;
+  btn.addEventListener('click', function() {
+    btn.disabled = true;
+    out.classList.remove('show', 'err');
+    out.textContent = 'Anlegen…';
+    out.classList.add('show');
+    fetch('/api/admin/seed-test-companies', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+      .then(function(r) { return r.json().then(function(j) { return { ok: r.ok, body: j }; }); })
+      .then(function(x) {
+        var j = x.body;
+        if (!x.ok && j.error === 'disabled') {
+          out.textContent = 'API deaktiviert (ENABLE_TEST_DASHBOARD).';
+          out.classList.add('err');
+          return;
+        }
+        out.textContent = JSON.stringify(j, null, 2);
+        if (!j.success) out.classList.add('err');
+        else setTimeout(function() { location.reload(); }, 1200);
+      })
+      .catch(function(e) {
+        out.textContent = 'Fehler: ' + (e && e.message ? e.message : e);
+        out.classList.add('err');
+      })
+      .finally(function() { btn.disabled = false; });
+  });
+})();
+</script>
 
 </body>
 </html>

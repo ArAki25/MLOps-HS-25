@@ -5,7 +5,7 @@ Alle Website-Tabellen liegen im 'ui' Schema.
 """
 
 from supabase import create_client, Client
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Any
 import os
 import json
 import math
@@ -610,6 +610,158 @@ def update_single_rating(user_id, tender_id, rating, source='project'):
     except Exception as e:
         print(f"❌ update_single_rating Fehler: {e}")
         return {'success': False, 'error': str(e)}
+
+
+# Vordefinierte Test-Firmen fuer lokale Empfehlungs-Tests (Domain @recommender.dev)
+TEST_COMPANY_SEEDS: List[Dict[str, Any]] = [
+    {
+        "email": "test.bau.zh@recommender.dev",
+        "password": "TestBauZH!2026",
+        "company_name": "Muster Bau AG Zuerich",
+        "employee_count": 45,
+        "headquarters": "Zuerich",
+        "canton": "ZH",
+        "project_subtype": "construction",
+        "award_amount_min": 100000,
+        "award_amount_max": 5000000,
+    },
+    {
+        "email": "test.bau.be@recommender.dev",
+        "password": "TestBauBE!2026",
+        "company_name": "Alpen Hochbau Bern AG",
+        "employee_count": 30,
+        "headquarters": "Bern",
+        "canton": "BE",
+        "project_subtype": "construction",
+        "award_amount_min": 50000,
+        "award_amount_max": 2000000,
+    },
+    {
+        "email": "test.service.zh@recommender.dev",
+        "password": "TestServZH!2026",
+        "company_name": "City Services ZH GmbH",
+        "employee_count": 12,
+        "headquarters": "Zuerich",
+        "canton": "ZH",
+        "project_subtype": "service",
+        "award_amount_min": 20000,
+        "award_amount_max": 800000,
+    },
+    {
+        "email": "test.supply.zh@recommender.dev",
+        "password": "TestSuppZH!2026",
+        "company_name": "Tech Supply Zuerich AG",
+        "employee_count": 80,
+        "headquarters": "Zuerich",
+        "canton": "ZH",
+        "project_subtype": "supply",
+        "award_amount_min": 10000,
+        "award_amount_max": 1500000,
+    },
+    {
+        "email": "test.bau.gr@recommender.dev",
+        "password": "TestBauGR!2026",
+        "company_name": "Graubuenden Holzbau AG",
+        "employee_count": 22,
+        "headquarters": "Chur",
+        "canton": "GR",
+        "project_subtype": "construction",
+        "award_amount_min": 80000,
+        "award_amount_max": 3000000,
+    },
+]
+
+
+def seed_test_companies(write_json_path: Optional[str] = None) -> Dict[str, Any]:
+    """Legt TEST_COMPANY_SEEDS an (Auth + ui.user_profiles). Idempotent.
+
+    Benoetigt SUPABASE_URL und SUPABASE_SERVICE_ROLE_KEY (Profil-Upsert).
+    Registrierung laeuft ueber register_user/login_user (gleicher Key wie init).
+
+    Optional: write_json_path z.B. scripts/test_companies.json (CLI).
+    """
+    url = os.getenv("SUPABASE_URL")
+    service = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    if not url or not service:
+        return {
+            "success": False,
+            "error": "SUPABASE_URL oder SUPABASE_SERVICE_ROLE_KEY fehlt in der Umgebung.",
+            "results": [],
+        }
+
+    admin = create_client(url, service)
+    results: List[Dict[str, Any]] = []
+
+    for c in TEST_COMPANY_SEEDS:
+        email = c["email"]
+        reg = register_user(email, c["password"], c["company_name"])
+        if reg.get("success"):
+            user_id = reg["user"]["id"]
+            status = "created"
+        else:
+            login = login_user(email, c["password"])
+            if not login.get("success"):
+                results.append({
+                    "status": "error",
+                    "email": email,
+                    "company_name": c["company_name"],
+                    "error": f"{reg.get('error')} / {login.get('error')}",
+                })
+                continue
+            user_id = login["user"]["id"]
+            status = "exists"
+
+        profile = {
+            "user_id": user_id,
+            "company_name": c["company_name"],
+            "employee_count": c["employee_count"],
+            "headquarters": c["headquarters"],
+            "canton": c["canton"],
+            "project_subtype": c["project_subtype"],
+            "award_amount_min": c["award_amount_min"],
+            "award_amount_max": c["award_amount_max"],
+            "onboarding_completed": False,
+        }
+        try:
+            admin.schema(UI_SCHEMA).table("user_profiles").upsert(
+                profile, on_conflict="user_id"
+            ).execute()
+            admin.schema(UI_SCHEMA).table("users").update(
+                {"company_name": c["company_name"]}
+            ).eq("id", user_id).execute()
+        except Exception as e:
+            results.append({
+                "status": "profile_error",
+                "email": email,
+                "company_name": c["company_name"],
+                "user_id": user_id,
+                "error": str(e),
+            })
+            continue
+
+        results.append({
+            "status": status,
+            "user_id": user_id,
+            "email": email,
+            "password": c["password"],
+            "company_name": c["company_name"],
+            "canton": c["canton"],
+            "project_subtype": c["project_subtype"],
+        })
+
+    ok = any(r.get("status") in ("created", "exists") for r in results)
+    if write_json_path:
+        try:
+            with open(write_json_path, "w", encoding="utf-8") as f:
+                json.dump(results, f, indent=2)
+        except OSError as e:
+            return {
+                "success": ok,
+                "error": f"JSON schreiben fehlgeschlagen: {e}",
+                "results": results,
+            }
+
+    return {"success": ok, "results": results}
 
 
 def get_test_runs_overview(top_n: int = 10) -> List[Dict]:
