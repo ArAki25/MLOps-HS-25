@@ -124,8 +124,8 @@
 
         /* ========== TABLE ========== */
         .pub-table { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
-        .pub-table-head { display: grid; grid-template-columns: 1fr 200px 160px 48px; padding: 0.75rem 1.25rem; background: var(--bg); border-bottom: 1px solid var(--border); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-        .pub-row { display: grid; grid-template-columns: 1fr 200px 160px 48px; padding: 1.125rem 1.25rem; border-bottom: 1px solid var(--border-light); align-items: start; cursor: pointer; transition: background 0.1s; }
+        .pub-table-head { display: grid; grid-template-columns: 1fr 200px 160px 96px 48px; padding: 0.75rem 1.25rem; background: var(--bg); border-bottom: 1px solid var(--border); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+        .pub-row { display: grid; grid-template-columns: 1fr 200px 160px 96px 48px; padding: 1.125rem 1.25rem; border-bottom: 1px solid var(--border-light); align-items: start; cursor: pointer; transition: background 0.1s; }
         .pub-row:last-child { border-bottom: none; }
         .pub-row:hover { background: var(--surface-hover); }
         .pub-detail { display: none; padding: 0 1.25rem 1.25rem 1.25rem; border-bottom: 1px solid var(--border-light); animation: slideOpen 0.2s ease; }
@@ -155,6 +155,15 @@
         .pub-fav-btn { width: 32px; height: 32px; border: none; background: transparent; cursor: pointer; border-radius: 6px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
         .pub-fav-btn:hover { background: var(--warning-bg); color: var(--warning); }
         .pub-fav-btn.favorited { color: var(--warning); }
+
+        /* ========== FEED RATE (Tab 1 Like/Dislike) ========== */
+        .pub-rate { display: flex; gap: 0.25rem; align-items: center; justify-content: center; }
+        .pub-rate-btn { width: 32px; height: 32px; border: 1px solid var(--border); background: transparent; cursor: pointer; border-radius: 6px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; transition: all 0.12s; }
+        .pub-rate-btn:hover { transform: translateY(-1px); }
+        .pub-rate-btn.up:hover,
+        .pub-rate-btn.up.active { background: rgba(16,185,129,0.15); border-color: #10b981; color: #34d399; }
+        .pub-rate-btn.down:hover,
+        .pub-rate-btn.down.active { background: rgba(239,68,68,0.15); border-color: #ef4444; color: #f87171; }
 
         /* ========== LOADING / EMPTY ========== */
         .loading-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
@@ -350,7 +359,7 @@
 
                 <div class="pub-table">
                     <div class="pub-table-head">
-                        <span>Titel</span><span>Vergabestelle</span><span style="text-align:right;">Veröffentlicht</span><span></span>
+                        <span>Titel</span><span>Vergabestelle</span><span style="text-align:right;">Veröffentlicht</span><span style="text-align:center;">Bewerten</span><span></span>
                     </div>
                     <div id="pub-list"><div class="loading-state"><div class="spinner"></div>Ausschreibungen werden geladen...</div></div>
                 </div>
@@ -397,6 +406,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadFilterOptions();
             loadFavorites();
+            loadFeedRatings();
             loadPage(1);
             setupEventListeners();
         });
@@ -587,6 +597,12 @@
             fetch('/api/favorites').then(function(res) { return res.json(); }).then(function(data) { favoriteIds = new Set(data.favorites || []); }).catch(function() {});
         }
 
+        function loadFeedRatings() {
+            fetch('/api/feed-ratings').then(function(r) { return r.json(); }).then(function(data) {
+                userRatings = data.ratings || {};
+            }).catch(function() {});
+        }
+
         function performSearch() { searchQuery = document.getElementById('search-input').value.trim(); loadPage(1); }
         function sortProjects() { sortBy = document.getElementById('sort-select').value; loadPage(1); }
 
@@ -660,10 +676,22 @@
                 if (p.order_type) tags += '<span class="pub-tag">' + capitalize(p.order_type) + '</span>';
                 var rowId = 'row-' + i;
 
+                var currentRating = userRatings[p.id] || 0;
+                var upActive = currentRating === 1 ? ' active' : '';
+                var downActive = currentRating === -1 ? ' active' : '';
+
                 html += '<div class="pub-row" id="' + rowId + '" onclick="toggleDetail(\'' + rowId + '\')">' +
                     '<div class="pub-title-col"><div class="pub-title">' + escapeHtml(p.title) + '</div><div class="pub-location">' + loc + '</div><div class="pub-tags">' + tags + '</div></div>' +
                     '<div class="pub-office">' + escapeHtml(p.organization||'-') + '</div>' +
                     '<div class="pub-date-col"><div class="pub-time-ago ' + (isRecent?'':'old') + '">' + getTimeAgo(p.publication_date) + '</div><div class="pub-date-exact">' + formatDate(p.publication_date) + '</div></div>' +
+                    '<div class="pub-rate">' +
+                        '<button class="pub-rate-btn up' + upActive + '" data-rate-pid="' + p.id + '" data-rate-val="1" onclick="event.stopPropagation();rateInFeed(\'' + p.id + '\',1)" title="Relevant">' +
+                            '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>' +
+                        '</button>' +
+                        '<button class="pub-rate-btn down' + downActive + '" data-rate-pid="' + p.id + '" data-rate-val="-1" onclick="event.stopPropagation();rateInFeed(\'' + p.id + '\',-1)" title="Nicht relevant">' +
+                            '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" style="transform:rotate(180deg);"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>' +
+                        '</button>' +
+                    '</div>' +
                     '<div class="pub-actions"><button class="pub-fav-btn ' + (isFav?'favorited':'') + '" onclick="event.stopPropagation();toggleFavorite(\'' + p.id + '\',this)" title="' + (isFav?'Entfernen':'Merken') + '">' + (isFav?starFilled:starEmpty) + '</button></div>' +
                 '</div>' +
                 '<div class="pub-detail" id="detail-' + rowId + '"><div class="pub-detail-inner"><div class="pub-detail-desc">' + escapeHtml(p.description||'') + '</div><div class="pub-detail-actions"><a href="' + escapeHtml(p.simap_url||'#') + '" target="_blank" class="btn-simap" onclick="event.stopPropagation()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Auf simap.ch ansehen</a><span class="pub-detail-meta">Projekt #' + (p.project_number||'-') + '</span></div></div></div>';
@@ -704,6 +732,39 @@
         function stripHtml(t) { return t ? t.replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').trim() : ''; }
         function showLoading() { document.getElementById('pub-list').innerHTML = '<div class="loading-state"><div class="spinner"></div>Laden...</div>'; }
         function toggleUserMenu() { document.getElementById('user-dropdown').classList.toggle('show'); }
+
+        // Feed-Rate (Tab 1): idempotenter Toggle 1 / -1 / 0
+        function rateInFeed(pid, value) {
+            var prev = userRatings[pid] || 0;
+            // Toggle: gleicher Button erneut -> unrate (0)
+            var next = (prev === value) ? 0 : value;
+            userRatings[pid] = next;
+            updateRateButtons(pid, next);
+            // Recommendation-Cache invalidieren
+            recLoaded = false;
+
+            fetch('/api/feed-rate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tender_id: pid, rating: next, source: 'project' })
+            }).then(function(r) { return r.json(); }).then(function(res) {
+                if (!res || !res.success) {
+                    userRatings[pid] = prev;
+                    updateRateButtons(pid, prev);
+                }
+            }).catch(function() {
+                userRatings[pid] = prev;
+                updateRateButtons(pid, prev);
+            });
+        }
+
+        function updateRateButtons(pid, rating) {
+            document.querySelectorAll('.pub-rate-btn[data-rate-pid="' + pid + '"]').forEach(function(btn) {
+                var val = parseInt(btn.getAttribute('data-rate-val'), 10);
+                if (val === rating && rating !== 0) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
 
         // Favorites
         function toggleFavorite(pid, btn) {

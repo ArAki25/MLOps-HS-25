@@ -5,7 +5,7 @@ Alle Website-Tabellen liegen im 'ui' Schema.
 """
 
 from supabase import create_client, Client
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Any
 import os
 import json
 import math
@@ -612,6 +612,314 @@ def update_single_rating(user_id, tender_id, rating, source='project'):
         return {'success': False, 'error': str(e)}
 
 
+# Vordefinierte Test-Firmen fuer lokale Empfehlungs-Tests (Domain @recommender.dev)
+TEST_COMPANY_SEEDS: List[Dict[str, Any]] = [
+    {
+        "email": "test.bau.zh@recommender.dev",
+        "password": "TestBauZH!2026",
+        "company_name": "Muster Bau AG Zuerich",
+        "employee_count": 45,
+        "headquarters": "Zuerich",
+        "canton": "ZH",
+        "project_subtype": "construction",
+        "award_amount_min": 100000,
+        "award_amount_max": 5000000,
+    },
+    {
+        "email": "test.bau.be@recommender.dev",
+        "password": "TestBauBE!2026",
+        "company_name": "Alpen Hochbau Bern AG",
+        "employee_count": 30,
+        "headquarters": "Bern",
+        "canton": "BE",
+        "project_subtype": "construction",
+        "award_amount_min": 50000,
+        "award_amount_max": 2000000,
+    },
+    {
+        "email": "test.service.zh@recommender.dev",
+        "password": "TestServZH!2026",
+        "company_name": "City Services ZH GmbH",
+        "employee_count": 12,
+        "headquarters": "Zuerich",
+        "canton": "ZH",
+        "project_subtype": "service",
+        "award_amount_min": 20000,
+        "award_amount_max": 800000,
+    },
+    {
+        "email": "test.supply.zh@recommender.dev",
+        "password": "TestSuppZH!2026",
+        "company_name": "Tech Supply Zuerich AG",
+        "employee_count": 80,
+        "headquarters": "Zuerich",
+        "canton": "ZH",
+        "project_subtype": "supply",
+        "award_amount_min": 10000,
+        "award_amount_max": 1500000,
+    },
+    {
+        "email": "test.bau.gr@recommender.dev",
+        "password": "TestBauGR!2026",
+        "company_name": "Graubuenden Holzbau AG",
+        "employee_count": 22,
+        "headquarters": "Chur",
+        "canton": "GR",
+        "project_subtype": "construction",
+        "award_amount_min": 80000,
+        "award_amount_max": 3000000,
+    },
+]
+
+
+def seed_test_companies(write_json_path: Optional[str] = None) -> Dict[str, Any]:
+    """Legt TEST_COMPANY_SEEDS an (Auth + ui.user_profiles). Idempotent.
+
+    Benoetigt SUPABASE_URL und SUPABASE_SERVICE_ROLE_KEY (Profil-Upsert).
+    Registrierung laeuft ueber register_user/login_user (gleicher Key wie init).
+
+    Optional: write_json_path z.B. scripts/test_companies.json (CLI).
+    """
+    url = os.getenv("SUPABASE_URL")
+    service = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    if not url or not service:
+        return {
+            "success": False,
+            "error": "SUPABASE_URL oder SUPABASE_SERVICE_ROLE_KEY fehlt in der Umgebung.",
+            "results": [],
+        }
+
+    admin = create_client(url, service)
+    results: List[Dict[str, Any]] = []
+
+    for c in TEST_COMPANY_SEEDS:
+        email = c["email"]
+        reg = register_user(email, c["password"], c["company_name"])
+        if reg.get("success"):
+            user_id = reg["user"]["id"]
+            status = "created"
+        else:
+            login = login_user(email, c["password"])
+            if not login.get("success"):
+                results.append({
+                    "status": "error",
+                    "email": email,
+                    "company_name": c["company_name"],
+                    "error": f"{reg.get('error')} / {login.get('error')}",
+                })
+                continue
+            user_id = login["user"]["id"]
+            status = "exists"
+
+        profile = {
+            "user_id": user_id,
+            "company_name": c["company_name"],
+            "employee_count": c["employee_count"],
+            "headquarters": c["headquarters"],
+            "canton": c["canton"],
+            "project_subtype": c["project_subtype"],
+            "award_amount_min": c["award_amount_min"],
+            "award_amount_max": c["award_amount_max"],
+            "onboarding_completed": False,
+        }
+        try:
+            admin.schema(UI_SCHEMA).table("user_profiles").upsert(
+                profile, on_conflict="user_id"
+            ).execute()
+            admin.schema(UI_SCHEMA).table("users").update(
+                {"company_name": c["company_name"]}
+            ).eq("id", user_id).execute()
+        except Exception as e:
+            results.append({
+                "status": "profile_error",
+                "email": email,
+                "company_name": c["company_name"],
+                "user_id": user_id,
+                "error": str(e),
+            })
+            continue
+
+        results.append({
+            "status": status,
+            "user_id": user_id,
+            "email": email,
+            "password": c["password"],
+            "company_name": c["company_name"],
+            "canton": c["canton"],
+            "project_subtype": c["project_subtype"],
+        })
+
+    ok = any(r.get("status") in ("created", "exists") for r in results)
+    if write_json_path:
+        try:
+            with open(write_json_path, "w", encoding="utf-8") as f:
+                json.dump(results, f, indent=2)
+        except OSError as e:
+            return {
+                "success": ok,
+                "error": f"JSON schreiben fehlgeschlagen: {e}",
+                "results": results,
+            }
+
+    return {"success": ok, "results": results}
+
+
+def get_test_runs_overview(top_n: int = 10) -> List[Dict]:
+    """Aggregierter Ueberblick fuer /admin/test-runs.
+
+    Fuer jeden Nutzer mit Test-E-Mail (Domain @recommender.dev):
+      - company_name, canton, project_subtype
+      - n_likes, n_dislikes (gesamt), has_taste_vector
+      - avg_pairwise_cosine (Diversity), avg_similarity_top_n
+      - Top-5 Empfehlungen (title + similarity)
+
+    Rein Read-only, fuer lokale Tests gedacht.
+    """
+    try:
+        users = ui('users') \
+            .select('id,email,company_name') \
+            .like('email', '%@recommender.dev') \
+            .execute().data or []
+    except Exception as e:
+        print(f"❌ get_test_runs_overview (users): {e}")
+        return []
+
+    overview = []
+    for u in users:
+        uid = u.get('id')
+        email = u.get('email')
+        if not uid:
+            continue
+
+        row = {
+            'user_id': uid,
+            'email': email,
+            'company_name': u.get('company_name'),
+            'canton': None,
+            'project_subtype': None,
+            'n_likes': 0,
+            'n_dislikes': 0,
+            'has_taste_vector': False,
+            'avg_pairwise_cosine_baseline': None,
+            'avg_pairwise_cosine_mmr': None,
+            'avg_similarity_top_n': None,
+            'top5': [],
+        }
+
+        try:
+            prof = ui('user_profiles') \
+                .select('canton,project_subtype') \
+                .eq('user_id', uid) \
+                .execute().data or []
+            if prof:
+                row['canton'] = prof[0].get('canton')
+                row['project_subtype'] = prof[0].get('project_subtype')
+        except Exception as e:
+            print(f"⚠️ test-runs profile: {e}")
+
+        try:
+            tv = ui('user_taste_vectors') \
+                .select('n_likes,n_dislikes') \
+                .eq('user_id', uid) \
+                .execute().data or []
+            if tv:
+                row['has_taste_vector'] = True
+                row['n_likes'] = int(tv[0].get('n_likes') or 0)
+                row['n_dislikes'] = int(tv[0].get('n_dislikes') or 0)
+            else:
+                ratings = ui('user_tender_ratings') \
+                    .select('rating') \
+                    .eq('user_id', uid) \
+                    .execute().data or []
+                row['n_likes'] = sum(1 for r in ratings if int(r.get('rating', 0)) == 1)
+                row['n_dislikes'] = sum(1 for r in ratings if int(r.get('rating', 0)) == -1)
+        except Exception as e:
+            print(f"⚠️ test-runs taste: {e}")
+
+        if row['has_taste_vector']:
+            try:
+                m = recommendation_diversity_metric(uid, top_n)
+                row['avg_pairwise_cosine_baseline'] = m.get('avg_pairwise_cosine_baseline')
+                row['avg_pairwise_cosine_mmr'] = m.get('avg_pairwise_cosine_mmr')
+            except Exception as e:
+                print(f"⚠️ test-runs metric: {e}")
+
+            try:
+                recs = get_user_recommendations(uid, top_n) or []
+                sims = [r.get('similarity') for r in recs if isinstance(r.get('similarity'), (int, float))]
+                if sims:
+                    row['avg_similarity_top_n'] = round(sum(sims) / len(sims), 4)
+                row['top5'] = [{
+                    'id': r.get('id'),
+                    'title': (r.get('title_de') or '')[:90],
+                    'similarity': round(r.get('similarity', 0.0), 4),
+                } for r in recs[:5]]
+            except Exception as e:
+                print(f"⚠️ test-runs recs: {e}")
+
+        overview.append(row)
+    return overview
+
+
+def get_feed_ratings_map(user_id, source='project'):
+    """Gibt {tender_id: rating} fuer einen User zurueck (fuer UI-Sync)."""
+    if not user_id:
+        return {}
+    try:
+        rows = ui('user_tender_ratings') \
+            .select('tender_id,rating,source') \
+            .eq('user_id', user_id) \
+            .eq('source', source) \
+            .execute().data or []
+        return {r['tender_id']: int(r['rating']) for r in rows if r.get('rating') in (-1, 1)}
+    except Exception as e:
+        print(f"❌ get_feed_ratings_map Fehler: {e}")
+        return {}
+
+
+def upsert_feed_rating(user_id, tender_id, rating, source='project'):
+    """
+    Idempotentes Rating aus dem Live-Feed:
+      rating ==  1  -> Like
+      rating == -1  -> Dislike
+      rating ==  0  -> Entfernen (Unrate)
+
+    Upsert auf Unique-Key (user_id, tender_id, source).
+    Trigger ui.tg_user_tender_ratings_refresh_taste aktualisiert danach
+    automatisch ui.user_taste_vectors (Rocchio).
+    """
+    if not user_id or not tender_id:
+        return {'success': False, 'error': 'Ungültige Parameter'}
+    if rating not in (-1, 0, 1):
+        return {'success': False, 'error': 'rating muss -1, 0 oder 1 sein'}
+    if source not in ('project', 'archive'):
+        source = 'project'
+
+    try:
+        if rating == 0:
+            ui('user_tender_ratings') \
+                .delete() \
+                .eq('user_id', user_id) \
+                .eq('tender_id', str(tender_id)) \
+                .eq('source', source) \
+                .execute()
+            return {'success': True, 'action': 'deleted'}
+
+        ui('user_tender_ratings').upsert(
+            {
+                'user_id': user_id,
+                'tender_id': str(tender_id),
+                'rating': rating,
+                'source': source,
+            },
+            on_conflict='user_id,tender_id,source',
+        ).execute()
+        return {'success': True, 'action': 'upsert', 'rating': rating}
+    except Exception as e:
+        print(f"❌ upsert_feed_rating Fehler: {e}")
+        return {'success': False, 'error': str(e)}
+
+
 
 # ============================================
 # SUPABASE AUTH
@@ -721,7 +1029,7 @@ def get_user_by_id(user_id: str):
 
 
 # ============================================
-# ONBOARDING — NEU mit Embedding-Support
+# ONBOARDING - NEU mit Embedding-Support
 # ============================================
 
 def save_user_profile(user_id, data):
@@ -1014,17 +1322,14 @@ def recommendation_diversity_metric(user_id, count: int = 10) -> Dict:
 
 
 # ============================================
-# Alte Funktionen — bleiben für Kompatibilität, werden aber nicht mehr genutzt
+# Alte Funktionen - bleiben für Kompatibilität, werden aber nicht mehr genutzt
 # ============================================
 
 def save_user_ratings(user_id, ratings_list):
-    """[DEPRECATED] alte Version — bitte save_user_ratings_v2 verwenden"""
-    print("⚠️ save_user_ratings (alt) aufgerufen — sollte save_user_ratings_v2 sein")
+    """[DEPRECATED] alte Version - bitte save_user_ratings_v2 verwenden"""
+    print("⚠️ save_user_ratings (alt) aufgerufen - sollte save_user_ratings_v2 sein")
     return save_user_ratings_v2(user_id, ratings_list)
 
-def get_random_archive_tenders(count=20):
-    """Hole zufällige Ausschreibungen aus dem Archiv für Rating.
-    archiv_daten_2010-2024 liegt in public Schema.
 def get_filtered_sample_projects(user_id, sample_size=20):
     """
     Ruft die RPC auf und gibt die Mischung aus project + archive zurück.
@@ -1117,12 +1422,12 @@ def get_user_recommendations(user_id, count=20):
 
 
 # ============================================
-# Alte Funktionen — bleiben für Kompatibilität, werden aber nicht mehr genutzt
+# Alte Funktionen - bleiben für Kompatibilität, werden aber nicht mehr genutzt
 # ============================================
 
 def save_user_ratings(user_id, ratings_list):
-    """[DEPRECATED] alte Version — bitte save_user_ratings_v2 verwenden"""
-    print("⚠️ save_user_ratings (alt) aufgerufen — sollte save_user_ratings_v2 sein")
+    """[DEPRECATED] alte Version - bitte save_user_ratings_v2 verwenden"""
+    print("⚠️ save_user_ratings (alt) aufgerufen - sollte save_user_ratings_v2 sein")
     return save_user_ratings_v2(user_id, ratings_list)
 
 
@@ -1133,7 +1438,7 @@ def get_random_archive_tenders(count=20):
 
 
 def mark_onboarding_complete(user_id):
-    """Markiere Onboarding als abgeschlossen — KORRIGIERT auf 'onboarding_completed'"""
+    """Markiere Onboarding als abgeschlossen - KORRIGIERT auf 'onboarding_completed'"""
     try:
         ui('user_profiles') \
             .update({'onboarding_completed': True, 'updated_at': datetime.utcnow().isoformat()}) \
@@ -1145,7 +1450,7 @@ def mark_onboarding_complete(user_id):
 
 
 def is_onboarding_complete(user_id):
-    """Prüfe ob User Onboarding abgeschlossen hat — KORRIGIERT auf 'onboarding_completed'"""
+    """Prüfe ob User Onboarding abgeschlossen hat - KORRIGIERT auf 'onboarding_completed'"""
     if not user_id:
         return False
 

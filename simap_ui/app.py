@@ -38,7 +38,6 @@ from supabase_client import (
     save_user_simap_ids,
     save_user_ratings,
     get_random_archive_tenders,
-    find_similar_tenders,
     get_onboarding_filter_options,
     get_filtered_sample_projects,
     save_user_ratings_v2,
@@ -46,6 +45,11 @@ from supabase_client import (
     recommendation_diversity_metric,
     get_user_ratings_with_details,
     update_single_rating,
+    upsert_feed_rating,
+    get_feed_ratings_map,
+    get_test_runs_overview,
+    TEST_COMPANY_SEEDS,
+    seed_test_companies,
 )
 
 load_dotenv()
@@ -461,6 +465,73 @@ def api_update_rating():
     )
     return jsonify(result)
 
+
+@app.route('/api/feed-rate', methods=['POST'])
+def api_feed_rate():
+    """Idempotentes Rating aus dem Live-Feed (Tab 'Ausschreibungen').
+    Body: {tender_id: uuid, rating: -1|0|1, source?: 'project'|'archive'}
+    """
+    if not session.get('user_logged_in'):
+        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
+    data = request.get_json() or {}
+    result = upsert_feed_rating(
+        session.get('user_id'),
+        data.get('tender_id'),
+        data.get('rating'),
+        data.get('source', 'project'),
+    )
+    return jsonify(result)
+
+
+@app.route('/api/feed-ratings', methods=['GET'])
+def api_feed_ratings():
+    """Aktuelle Ratings des Users als Map {tender_id: rating} fuer Tab 1."""
+    if not session.get('user_logged_in'):
+        return jsonify({'ratings': {}}), 401
+    return jsonify({'ratings': get_feed_ratings_map(session.get('user_id'))})
+
+
+# ============================================
+# TEST-RUN DASHBOARD (nur lokal, ENV-gated)
+# ============================================
+def _test_runs_enabled() -> bool:
+    return os.getenv('ENABLE_TEST_DASHBOARD', 'false').lower() in ('1', 'true', 'yes')
+
+
+@app.route('/admin/test-runs')
+def admin_test_runs():
+    """Minimal-Dashboard zur Test-Auswertung (nur wenn ENABLE_TEST_DASHBOARD=true).
+
+    Zeigt pro Test-User (@recommender.dev): Likes/Dislikes, Taste-Vector-Status,
+    Diversity-Score (baseline vs MMR) und Top-5 Empfehlungen.
+    """
+    if not _test_runs_enabled():
+        return 'Test-Dashboard deaktiviert. Setze ENABLE_TEST_DASHBOARD=true.', 404
+    overview = get_test_runs_overview(top_n=10)
+    return render_template(
+        'admin_test_runs.html',
+        rows=overview,
+        test_company_seeds=TEST_COMPANY_SEEDS,
+    )
+
+
+@app.route('/api/admin/test-runs')
+def api_admin_test_runs():
+    """JSON-Variante des Dashboards (praktisch fuer Skripte)."""
+    if not _test_runs_enabled():
+        return jsonify({'error': 'disabled'}), 404
+    return jsonify({'rows': get_test_runs_overview(top_n=10)})
+
+
+@app.route('/api/admin/seed-test-companies', methods=['POST'])
+def api_admin_seed_test_companies():
+    """Legt die 5 vordefinierten Test-Firmen an (Auth + Profil). Gleiche Logik wie scripts/create_test_companies.py."""
+    if not _test_runs_enabled():
+        return jsonify({'error': 'disabled'}), 404
+    out = seed_test_companies()
+    code = 200 if out.get('success') else 400
+    return jsonify(out), code
+
 # ============================================
 # FAVORITES / MERKLISTE ROUTES
 # ============================================
@@ -711,12 +782,12 @@ def pro_bkp_calculator():
 
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
     print("\n" + "=" * 60)
     print("🌐 SAJF Strategies - Tender Platform")
     print("📊 Datenbank: Supabase")
-    print("🔗 URL: http://127.0.0.1:5000")
-    print("🔐 Admin: http://127.0.0.1:5000/admin")
+    print(f"🔗 URL: http://127.0.0.1:{port}")
+    print(f"🔐 Admin: http://127.0.0.1:{port}/admin")
     print("=" * 60)
 
-    port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
