@@ -38,7 +38,6 @@ from supabase_client import (
     save_user_simap_ids,
     save_user_ratings,
     get_random_archive_tenders,
-    find_similar_tenders,
     get_onboarding_filter_options,
     get_filtered_sample_projects,
     save_user_ratings_v2,
@@ -783,12 +782,12 @@ def pro_bkp_calculator():
 
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
     print("\n" + "=" * 60)
     print("🌐 SAJF Strategies - Tender Platform")
     print("📊 Datenbank: Supabase")
-    print("🔗 URL: http://127.0.0.1:5000")
-    print("🔐 Admin: http://127.0.0.1:5000/admin")
+    print(f"🔗 URL: http://127.0.0.1:{port}")
+    print(f"🔐 Admin: http://127.0.0.1:{port}/admin")
     print("=" * 60)
 
-    port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
