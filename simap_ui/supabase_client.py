@@ -5,9 +5,13 @@ Alle Website-Tabellen liegen im 'ui' Schema.
 """
 
 from supabase import create_client, Client
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 import os
+import json
+import math
 from datetime import datetime, timezone
+
+import numpy as np
 
 # ============================================
 # GLOBAL CLIENT
@@ -706,6 +710,216 @@ def save_user_ratings(user_id, ratings_list):
         print(f"❌ Ratings-Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
+
+# ============================================
+# RECOMMENDATIONS (Task 4 + Task 5)
+#
+# Pipeline:
+#   1. RPC ui.recommend_projects_for_user_v2 liefert einen groesseren
+#      Kandidaten-Pool (Default 50) inkl. der 1024-d Embeddings.
+#      Der Taste-Vektor wird in der Datenbank aus ui.user_taste_vectors
+#      gelesen (materialisiert via Rocchio-Trigger, siehe
+#      ui.refresh_user_taste).
+#   2. mmr_rerank() selektiert daraus per Maximal Marginal Relevance
+#      die final sichtbaren N Empfehlungen und erzwingt dabei eine
+#      Mindest-Diversitaet (Cosine-Distanz >= MMR_MIN_DIVERSITY) zum
+#      bereits ausgewaehlten Satz.
+#
+# Messbarkeit:
+#   recommendation_diversity_metric() berechnet die mittlere
+#   pairwise-Cosine-Aehnlichkeit ueber die Top-N; Zielwert <= 0.75.
+# ============================================
+
+MMR_LAMBDA = 0.7            # Gewichtung Relevanz vs. Diversitaet
+MMR_MIN_DIVERSITY = 0.3     # min. Cosine-Distanz zum Selected-Set
+MMR_POOL_SIZE = 50          # Kandidaten-Pool aus dem RPC
+# -> max_allowed_sim_to_selected = 1 - MMR_MIN_DIVERSITY
+
+
+def _parse_pgvector(raw) -> Optional[np.ndarray]:
+    """pgvector kommt ueber PostgREST als JSON-Array-String ("[0.12,-0.03,...]")
+    oder bereits als list/tuple zurueck. Diese Funktion parst beides."""
+    if raw is None:
+        return None
+    if isinstance(raw, np.ndarray):
+        return raw.astype(np.float32, copy=False)
+    if isinstance(raw, (list, tuple)):
+        return np.asarray(raw, dtype=np.float32)
+    if isinstance(raw, str):
+        try:
+            return np.asarray(json.loads(raw), dtype=np.float32)
+        except (json.JSONDecodeError, ValueError):
+            return None
+    return None
+
+
+def _mmr_rerank(
+    candidates: List[Dict],
+    k: int,
+    lambda_param: float = MMR_LAMBDA,
+    min_diversity: float = MMR_MIN_DIVERSITY,
+) -> List[Dict]:
+    """Maximal Marginal Relevance.
+
+    candidates: Liste von Dicts mit Keys 'similarity' (float) und
+                'embedding' (np.ndarray, L2-normalisiert).
+    Gibt die ausgewaehlten Kandidaten in gewaehlter Reihenfolge zurueck.
+
+    Einschub im Vergleich zum Standard-MMR: wir lassen die Diversitaets-
+    Constraint als harte Kappung wirken (Kandidaten mit zu hoher
+    Aehnlichkeit zum bereits gewaehlten Set werden uebersprungen),
+    damit das UX-Ziel "nie mehr als ein Gewerk desselben Bauvorhabens"
+    wirklich durchgesetzt wird. Wird dadurch k nicht erreicht, faellt
+    die Kappung stufenweise, um nicht leer zurueckzugeben.
+    """
+    if not candidates:
+        return []
+
+    pool = [c for c in candidates if c.get('embedding') is not None]
+    if not pool:
+        return candidates[:k]
+
+    max_sim_to_selected = 1.0 - min_diversity  # = 0.7 bei Default
+
+    selected: List[Dict] = []
+    selected_mat: List[np.ndarray] = []
+    remaining = list(pool)
+
+    while remaining and len(selected) < k:
+        best_idx = -1
+        best_score = -math.inf
+
+        for i, cand in enumerate(remaining):
+            rel = float(cand['similarity'])
+            if selected_mat:
+                cand_vec = cand['embedding']
+                sim_to_selected = max(
+                    float(np.dot(cand_vec, s)) for s in selected_mat
+                )
+                if sim_to_selected > max_sim_to_selected:
+                    continue
+                mmr_score = lambda_param * rel - (1 - lambda_param) * sim_to_selected
+            else:
+                mmr_score = rel
+
+            if mmr_score > best_score:
+                best_score = mmr_score
+                best_idx = i
+
+        if best_idx == -1:
+            # Alle verbleibenden Kandidaten verletzen die Diversitaets-
+            # Kappung. Kappung lockern und weiter auffuellen.
+            max_sim_to_selected = min(1.0, max_sim_to_selected + 0.05)
+            continue
+
+        chosen = remaining.pop(best_idx)
+        selected.append(chosen)
+        selected_mat.append(chosen['embedding'])
+
+    return selected
+
+
+def _strip_embedding(rec: Dict) -> Dict:
+    """Embedding entfernen bevor das Result ans Frontend geht."""
+    out = {k: v for k, v in rec.items() if k != 'embedding'}
+    return out
+
+
+def get_user_recommendations(user_id, count: int = 20):
+    """Personalisierte Empfehlungen: Rocchio-Taste-Vektor (materialisiert)
+    kombiniert mit MMR-Reranking fuer Diversitaet."""
+    if not user_id:
+        return []
+    try:
+        pool_size = max(MMR_POOL_SIZE, count * 3)
+        result = ui_rpc('recommend_projects_for_user_v2', {
+            'p_user_id': user_id,
+            'match_count_pool': pool_size,
+        }).execute()
+        raw = result.data or []
+
+        candidates: List[Dict] = []
+        for row in raw:
+            vec = _parse_pgvector(row.get('embedding'))
+            if vec is None:
+                continue
+            n = float(np.linalg.norm(vec))
+            if n > 0 and abs(n - 1.0) > 1e-3:
+                vec = vec / n
+            candidates.append({**row, 'embedding': vec})
+
+        reranked = _mmr_rerank(candidates, k=count)
+        clean = [_strip_embedding(c) for c in reranked]
+
+        print(f"✅ {len(clean)} recommendations (pool={len(candidates)}) für User: {user_id}")
+        return clean
+    except Exception as e:
+        print(f"❌ get_user_recommendations Fehler: {e}")
+        return []
+
+
+def recommendation_diversity_metric(user_id, count: int = 10) -> Dict:
+    """Misst die Diversitaet der Top-N Empfehlungen eines Users:
+    durchschnittliche pairwise-Cosine-Aehnlichkeit.
+    Ziel (siehe Task 4): <= 0.75.
+
+    Gibt zusaetzlich das Ergebnis der Baseline (vor MMR) zurueck, damit
+    der Effekt von MMR direkt vergleichbar ist.
+    """
+    if not user_id:
+        return {'error': 'Kein user_id'}
+    try:
+        pool_size = max(MMR_POOL_SIZE, count * 3)
+        result = ui_rpc('recommend_projects_for_user_v2', {
+            'p_user_id': user_id,
+            'match_count_pool': pool_size,
+        }).execute()
+        raw = result.data or []
+        if not raw:
+            return {'user_id': user_id, 'error': 'Keine Empfehlungen.'}
+
+        parsed = []
+        for row in raw:
+            vec = _parse_pgvector(row.get('embedding'))
+            if vec is not None:
+                n = float(np.linalg.norm(vec))
+                if n > 0 and abs(n - 1.0) > 1e-3:
+                    vec = vec / n
+                parsed.append({**row, 'embedding': vec})
+
+        baseline = parsed[:count]
+        mmr = _mmr_rerank(parsed, k=count)
+
+        def avg_pairwise_cos(items):
+            vecs = [x['embedding'] for x in items if x.get('embedding') is not None]
+            if len(vecs) < 2:
+                return None
+            M = np.vstack(vecs)
+            S = M @ M.T
+            iu = np.triu_indices(len(vecs), k=1)
+            return float(S[iu].mean())
+
+        return {
+            'user_id': user_id,
+            'pool_size': len(parsed),
+            'top_n': count,
+            'avg_pairwise_cosine_baseline': avg_pairwise_cos(baseline),
+            'avg_pairwise_cosine_mmr': avg_pairwise_cos(mmr),
+            'target_max': 0.75,
+        }
+    except Exception as e:
+        print(f"❌ recommendation_diversity_metric Fehler: {e}")
+        return {'error': str(e)}
+
+
+# ============================================
+# Alte Funktionen — bleiben für Kompatibilität, werden aber nicht mehr genutzt
+# ============================================
+
+def save_user_ratings(user_id, ratings_list):
+    """[DEPRECATED] alte Version — bitte save_user_ratings_v2 verwenden"""
+    print("⚠️ save_user_ratings (alt) aufgerufen — sollte save_user_ratings_v2 sein")
+    return save_user_ratings_v2(user_id, ratings_list)
 
 def get_random_archive_tenders(count=20):
     """Hole zufällige Ausschreibungen aus dem Archiv für Rating.

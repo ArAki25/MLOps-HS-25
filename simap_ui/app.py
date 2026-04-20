@@ -39,6 +39,13 @@ from supabase_client import (
     save_user_ratings,
     get_random_archive_tenders,
     find_similar_tenders,
+    get_onboarding_filter_options,
+    get_filtered_sample_projects,
+    save_user_ratings_v2,
+    get_user_recommendations,
+    recommendation_diversity_metric,
+    get_user_ratings_with_details,
+    update_single_rating,
 )
 
 load_dotenv()
@@ -407,6 +414,69 @@ def pro_recommended():
                            company_name=company_name,
                            avg_match=avg_match)
 
+@app.route('/api/onboarding/filter-options', methods=['GET'])
+def api_onboarding_filter_options():
+    return jsonify(get_onboarding_filter_options())
+
+
+@app.route('/api/onboarding/sample-projects', methods=['GET'])
+def api_sample_projects():
+    if not session.get('user_logged_in'):
+        return jsonify({'projects': []}), 401
+    projects = get_filtered_sample_projects(session.get('user_id'),20)
+    return jsonify({'projects': projects})
+
+
+@app.route('/api/onboarding/submit-ratings', methods=['POST'])
+def api_submit_ratings():
+    if not session.get('user_logged_in'):
+        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
+    data = request.get_json()
+    result = save_user_ratings_v2(session.get('user_id'), data.get('ratings', []))
+    return jsonify(result)
+
+
+@app.route('/api/recommendations', methods=['GET'])
+def api_recommendations():
+    if not session.get('user_logged_in'):
+        return jsonify({'recommendations': []}), 401
+    recs = get_user_recommendations(session.get('user_id'), 20)
+    return jsonify({'recommendations': recs})
+
+
+@app.route('/api/recommendations/diversity', methods=['GET'])
+def api_recommendations_diversity():
+    """Messmetrik fuer Task 4: durchschnittliche pairwise-Cosine der Top-N
+    Empfehlungen, mit und ohne MMR. Zielwert <= 0.75."""
+    if not session.get('user_logged_in'):
+        return jsonify({'error': 'not authenticated'}), 401
+    try:
+        count = int(request.args.get('count', 10))
+    except (TypeError, ValueError):
+        count = 10
+    return jsonify(recommendation_diversity_metric(session.get('user_id'), count))
+
+@app.route('/api/user-ratings', methods=['GET'])
+def api_user_ratings():
+    """Alle Bewertungen des Users mit Projekt-Details"""
+    if not session.get('user_logged_in'):
+        return jsonify({'ratings': []}), 401
+    ratings = get_user_ratings_with_details(session.get('user_id'))
+    return jsonify({'ratings': ratings})
+
+
+@app.route('/api/update-rating', methods=['POST'])
+def api_update_rating():
+    """Einzelne Bewertung ändern"""
+    if not session.get('user_logged_in'):
+        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
+    data = request.get_json()
+    result = update_single_rating(
+        session.get('user_id'),
+        data.get('tender_id'),
+        data.get('rating')
+    )
+    return jsonify(result)
 
 # ============================================
 # FAVORITES / MERKLISTE ROUTES
