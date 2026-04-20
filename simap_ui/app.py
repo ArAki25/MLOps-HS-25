@@ -43,6 +43,8 @@ from supabase_client import (
     get_filtered_sample_projects,
     save_user_ratings_v2,
     get_user_recommendations,
+    get_user_ratings_with_details,
+    update_single_rating,
 )
 from supabase_client import (
     init_supabase,
@@ -454,6 +456,28 @@ def api_recommendations():
         return jsonify({'recommendations': []}), 401
     recs = get_user_recommendations(session.get('user_id'), 20)
     return jsonify({'recommendations': recs})
+
+@app.route('/api/user-ratings', methods=['GET'])
+def api_user_ratings():
+    """Alle Bewertungen des Users mit Projekt-Details"""
+    if not session.get('user_logged_in'):
+        return jsonify({'ratings': []}), 401
+    ratings = get_user_ratings_with_details(session.get('user_id'))
+    return jsonify({'ratings': ratings})
+
+
+@app.route('/api/update-rating', methods=['POST'])
+def api_update_rating():
+    """Einzelne Bewertung ändern"""
+    if not session.get('user_logged_in'):
+        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
+    data = request.get_json()
+    result = update_single_rating(
+        session.get('user_id'),
+        data.get('tender_id'),
+        data.get('rating')
+    )
+    return jsonify(result)
 
 
 # ============================================

@@ -490,6 +490,70 @@ def get_user_favorites_ids(user_id: str) -> List[str]:
         return []
 
 
+def get_user_ratings_with_details(user_id):
+    """Alle Bewertungen eines Users mit Projekt-Details"""
+    if not user_id:
+        return []
+    try:
+        # Ratings holen
+        ratings_res = ui('user_tender_ratings') \
+            .select('tender_id, rating') \
+            .eq('user_id', user_id) \
+            .execute()
+
+        if not ratings_res.data:
+            return []
+
+        # Projekt-Details für jede tender_id laden
+        tender_ids = [r['tender_id'] for r in ratings_res.data if r.get('tender_id')]
+        if not tender_ids:
+            return []
+
+        projects_res = ui('projects_ui') \
+            .select('id, title_de, canton, project_subtype, award_amount') \
+            .in_('id', tender_ids) \
+            .execute()
+
+        # Zusammenführen
+        project_map = {str(p['id']): p for p in (projects_res.data or [])}
+
+        result = []
+        for r in ratings_res.data:
+            tid = r.get('tender_id', '')
+            proj = project_map.get(tid, {})
+            result.append({
+                'tender_id': tid,
+                'rating': r.get('rating'),
+                'title_de': proj.get('title_de', 'Unbekannt'),
+                'canton': proj.get('canton', ''),
+                'project_subtype': proj.get('project_subtype', ''),
+                'award_amount': proj.get('award_amount'),
+            })
+
+        print(f"✅ {len(result)} Bewertungen geladen für User: {user_id}")
+        return result
+    except Exception as e:
+        print(f"❌ get_user_ratings_with_details Fehler: {e}")
+        return []
+
+
+def update_single_rating(user_id, tender_id, rating):
+    """Einzelne Bewertung aktualisieren"""
+    if not user_id or not tender_id or rating not in (-1, 1):
+        return {'success': False, 'error': 'Ungültige Parameter'}
+    try:
+        ui('user_tender_ratings') \
+            .update({'rating': rating}) \
+            .eq('user_id', user_id) \
+            .eq('tender_id', tender_id) \
+            .execute()
+        print(f"✅ Rating aktualisiert: {tender_id} → {rating}")
+        return {'success': True}
+    except Exception as e:
+        print(f"❌ update_single_rating Fehler: {e}")
+        return {'success': False, 'error': str(e)}
+
+
 # ============================================
 # SUPABASE AUTH
 # ============================================
