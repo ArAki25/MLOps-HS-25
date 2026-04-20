@@ -46,6 +46,9 @@ from supabase_client import (
     recommendation_diversity_metric,
     get_user_ratings_with_details,
     update_single_rating,
+    upsert_feed_rating,
+    get_feed_ratings_map,
+    get_test_runs_overview,
 )
 
 load_dotenv()
@@ -460,6 +463,59 @@ def api_update_rating():
         data.get('rating')
     )
     return jsonify(result)
+
+
+@app.route('/api/feed-rate', methods=['POST'])
+def api_feed_rate():
+    """Idempotentes Rating aus dem Live-Feed (Tab 'Ausschreibungen').
+    Body: {tender_id: uuid, rating: -1|0|1, source?: 'project'|'archive'}
+    """
+    if not session.get('user_logged_in'):
+        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
+    data = request.get_json() or {}
+    result = upsert_feed_rating(
+        session.get('user_id'),
+        data.get('tender_id'),
+        data.get('rating'),
+        data.get('source', 'project'),
+    )
+    return jsonify(result)
+
+
+@app.route('/api/feed-ratings', methods=['GET'])
+def api_feed_ratings():
+    """Aktuelle Ratings des Users als Map {tender_id: rating} fuer Tab 1."""
+    if not session.get('user_logged_in'):
+        return jsonify({'ratings': {}}), 401
+    return jsonify({'ratings': get_feed_ratings_map(session.get('user_id'))})
+
+
+# ============================================
+# TEST-RUN DASHBOARD (nur lokal, ENV-gated)
+# ============================================
+def _test_runs_enabled() -> bool:
+    return os.getenv('ENABLE_TEST_DASHBOARD', 'false').lower() in ('1', 'true', 'yes')
+
+
+@app.route('/admin/test-runs')
+def admin_test_runs():
+    """Minimal-Dashboard zur Test-Auswertung (nur wenn ENABLE_TEST_DASHBOARD=true).
+
+    Zeigt pro Test-User (@recommender.dev): Likes/Dislikes, Taste-Vector-Status,
+    Diversity-Score (baseline vs MMR) und Top-5 Empfehlungen.
+    """
+    if not _test_runs_enabled():
+        return 'Test-Dashboard deaktiviert. Setze ENABLE_TEST_DASHBOARD=true.', 404
+    overview = get_test_runs_overview(top_n=10)
+    return render_template('admin_test_runs.html', rows=overview)
+
+
+@app.route('/api/admin/test-runs')
+def api_admin_test_runs():
+    """JSON-Variante des Dashboards (praktisch fuer Skripte)."""
+    if not _test_runs_enabled():
+        return jsonify({'error': 'disabled'}), 404
+    return jsonify({'rows': get_test_runs_overview(top_n=10)})
 
 # ============================================
 # FAVORITES / MERKLISTE ROUTES

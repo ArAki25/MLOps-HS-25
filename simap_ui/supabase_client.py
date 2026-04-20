@@ -612,6 +612,162 @@ def update_single_rating(user_id, tender_id, rating, source='project'):
         return {'success': False, 'error': str(e)}
 
 
+def get_test_runs_overview(top_n: int = 10) -> List[Dict]:
+    """Aggregierter Ueberblick fuer /admin/test-runs.
+
+    Fuer jeden Nutzer mit Test-E-Mail (Domain @recommender.dev):
+      - company_name, canton, project_subtype
+      - n_likes, n_dislikes (gesamt), has_taste_vector
+      - avg_pairwise_cosine (Diversity), avg_similarity_top_n
+      - Top-5 Empfehlungen (title + similarity)
+
+    Rein Read-only, fuer lokale Tests gedacht.
+    """
+    try:
+        users = ui('users') \
+            .select('id,email,company_name') \
+            .like('email', '%@recommender.dev') \
+            .execute().data or []
+    except Exception as e:
+        print(f"❌ get_test_runs_overview (users): {e}")
+        return []
+
+    overview = []
+    for u in users:
+        uid = u.get('id')
+        email = u.get('email')
+        if not uid:
+            continue
+
+        row = {
+            'user_id': uid,
+            'email': email,
+            'company_name': u.get('company_name'),
+            'canton': None,
+            'project_subtype': None,
+            'n_likes': 0,
+            'n_dislikes': 0,
+            'has_taste_vector': False,
+            'avg_pairwise_cosine_baseline': None,
+            'avg_pairwise_cosine_mmr': None,
+            'avg_similarity_top_n': None,
+            'top5': [],
+        }
+
+        try:
+            prof = ui('user_profiles') \
+                .select('canton,project_subtype') \
+                .eq('user_id', uid) \
+                .execute().data or []
+            if prof:
+                row['canton'] = prof[0].get('canton')
+                row['project_subtype'] = prof[0].get('project_subtype')
+        except Exception as e:
+            print(f"⚠️ test-runs profile: {e}")
+
+        try:
+            tv = ui('user_taste_vectors') \
+                .select('n_likes,n_dislikes') \
+                .eq('user_id', uid) \
+                .execute().data or []
+            if tv:
+                row['has_taste_vector'] = True
+                row['n_likes'] = int(tv[0].get('n_likes') or 0)
+                row['n_dislikes'] = int(tv[0].get('n_dislikes') or 0)
+            else:
+                ratings = ui('user_tender_ratings') \
+                    .select('rating') \
+                    .eq('user_id', uid) \
+                    .execute().data or []
+                row['n_likes'] = sum(1 for r in ratings if int(r.get('rating', 0)) == 1)
+                row['n_dislikes'] = sum(1 for r in ratings if int(r.get('rating', 0)) == -1)
+        except Exception as e:
+            print(f"⚠️ test-runs taste: {e}")
+
+        if row['has_taste_vector']:
+            try:
+                m = recommendation_diversity_metric(uid, top_n)
+                row['avg_pairwise_cosine_baseline'] = m.get('avg_pairwise_cosine_baseline')
+                row['avg_pairwise_cosine_mmr'] = m.get('avg_pairwise_cosine_mmr')
+            except Exception as e:
+                print(f"⚠️ test-runs metric: {e}")
+
+            try:
+                recs = get_user_recommendations(uid, top_n) or []
+                sims = [r.get('similarity') for r in recs if isinstance(r.get('similarity'), (int, float))]
+                if sims:
+                    row['avg_similarity_top_n'] = round(sum(sims) / len(sims), 4)
+                row['top5'] = [{
+                    'id': r.get('id'),
+                    'title': (r.get('title_de') or '')[:90],
+                    'similarity': round(r.get('similarity', 0.0), 4),
+                } for r in recs[:5]]
+            except Exception as e:
+                print(f"⚠️ test-runs recs: {e}")
+
+        overview.append(row)
+    return overview
+
+
+def get_feed_ratings_map(user_id, source='project'):
+    """Gibt {tender_id: rating} fuer einen User zurueck (fuer UI-Sync)."""
+    if not user_id:
+        return {}
+    try:
+        rows = ui('user_tender_ratings') \
+            .select('tender_id,rating,source') \
+            .eq('user_id', user_id) \
+            .eq('source', source) \
+            .execute().data or []
+        return {r['tender_id']: int(r['rating']) for r in rows if r.get('rating') in (-1, 1)}
+    except Exception as e:
+        print(f"❌ get_feed_ratings_map Fehler: {e}")
+        return {}
+
+
+def upsert_feed_rating(user_id, tender_id, rating, source='project'):
+    """
+    Idempotentes Rating aus dem Live-Feed:
+      rating ==  1  -> Like
+      rating == -1  -> Dislike
+      rating ==  0  -> Entfernen (Unrate)
+
+    Upsert auf Unique-Key (user_id, tender_id, source).
+    Trigger ui.tg_user_tender_ratings_refresh_taste aktualisiert danach
+    automatisch ui.user_taste_vectors (Rocchio).
+    """
+    if not user_id or not tender_id:
+        return {'success': False, 'error': 'Ungültige Parameter'}
+    if rating not in (-1, 0, 1):
+        return {'success': False, 'error': 'rating muss -1, 0 oder 1 sein'}
+    if source not in ('project', 'archive'):
+        source = 'project'
+
+    try:
+        if rating == 0:
+            ui('user_tender_ratings') \
+                .delete() \
+                .eq('user_id', user_id) \
+                .eq('tender_id', str(tender_id)) \
+                .eq('source', source) \
+                .execute()
+            return {'success': True, 'action': 'deleted'}
+
+        ui('user_tender_ratings').upsert(
+            {
+                'user_id': user_id,
+                'tender_id': str(tender_id),
+                'rating': rating,
+                'source': source,
+            },
+            on_conflict='user_id,tender_id,source',
+        ).execute()
+        return {'success': True, 'action': 'upsert', 'rating': rating}
+    except Exception as e:
+        print(f"❌ upsert_feed_rating Fehler: {e}")
+        return {'success': False, 'error': str(e)}
+
+
 
 # ============================================
 # SUPABASE AUTH
@@ -721,7 +877,7 @@ def get_user_by_id(user_id: str):
 
 
 # ============================================
-# ONBOARDING — NEU mit Embedding-Support
+# ONBOARDING - NEU mit Embedding-Support
 # ============================================
 
 def save_user_profile(user_id, data):
@@ -1014,17 +1170,14 @@ def recommendation_diversity_metric(user_id, count: int = 10) -> Dict:
 
 
 # ============================================
-# Alte Funktionen — bleiben für Kompatibilität, werden aber nicht mehr genutzt
+# Alte Funktionen - bleiben für Kompatibilität, werden aber nicht mehr genutzt
 # ============================================
 
 def save_user_ratings(user_id, ratings_list):
-    """[DEPRECATED] alte Version — bitte save_user_ratings_v2 verwenden"""
-    print("⚠️ save_user_ratings (alt) aufgerufen — sollte save_user_ratings_v2 sein")
+    """[DEPRECATED] alte Version - bitte save_user_ratings_v2 verwenden"""
+    print("⚠️ save_user_ratings (alt) aufgerufen - sollte save_user_ratings_v2 sein")
     return save_user_ratings_v2(user_id, ratings_list)
 
-def get_random_archive_tenders(count=20):
-    """Hole zufällige Ausschreibungen aus dem Archiv für Rating.
-    archiv_daten_2010-2024 liegt in public Schema.
 def get_filtered_sample_projects(user_id, sample_size=20):
     """
     Ruft die RPC auf und gibt die Mischung aus project + archive zurück.
@@ -1117,12 +1270,12 @@ def get_user_recommendations(user_id, count=20):
 
 
 # ============================================
-# Alte Funktionen — bleiben für Kompatibilität, werden aber nicht mehr genutzt
+# Alte Funktionen - bleiben für Kompatibilität, werden aber nicht mehr genutzt
 # ============================================
 
 def save_user_ratings(user_id, ratings_list):
-    """[DEPRECATED] alte Version — bitte save_user_ratings_v2 verwenden"""
-    print("⚠️ save_user_ratings (alt) aufgerufen — sollte save_user_ratings_v2 sein")
+    """[DEPRECATED] alte Version - bitte save_user_ratings_v2 verwenden"""
+    print("⚠️ save_user_ratings (alt) aufgerufen - sollte save_user_ratings_v2 sein")
     return save_user_ratings_v2(user_id, ratings_list)
 
 
@@ -1133,7 +1286,7 @@ def get_random_archive_tenders(count=20):
 
 
 def mark_onboarding_complete(user_id):
-    """Markiere Onboarding als abgeschlossen — KORRIGIERT auf 'onboarding_completed'"""
+    """Markiere Onboarding als abgeschlossen - KORRIGIERT auf 'onboarding_completed'"""
     try:
         ui('user_profiles') \
             .update({'onboarding_completed': True, 'updated_at': datetime.utcnow().isoformat()}) \
@@ -1145,7 +1298,7 @@ def mark_onboarding_complete(user_id):
 
 
 def is_onboarding_complete(user_id):
-    """Prüfe ob User Onboarding abgeschlossen hat — KORRIGIERT auf 'onboarding_completed'"""
+    """Prüfe ob User Onboarding abgeschlossen hat - KORRIGIERT auf 'onboarding_completed'"""
     if not user_id:
         return False
 
