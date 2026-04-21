@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_DIR="${ROOT_DIR}/.venv"
+UI_DIR="${ROOT_DIR}/simap_ui"
+ENV_FILE="${ROOT_DIR}/.env"
+ENV_EXAMPLE="${ROOT_DIR}/.env.example"
+
+usage() {
+  cat <<'EOF'
+Lokalen Server starten.
+
+Usage:
+  ./dev                  # startet Flask UI auf http://127.0.0.1:<PORT>
+  ./dev --test-dashboard # setzt ENABLE_TEST_DASHBOARD=true
+
+Voraussetzung:
+  In .env müssen SUPABASE_URL und SUPABASE_ANON_KEY (oder SERVICE_ROLE) stehen.
+EOF
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+ENABLE_TEST_DASHBOARD="${ENABLE_TEST_DASHBOARD:-}"
+if [[ "${1:-}" == "--test-dashboard" ]]; then
+  ENABLE_TEST_DASHBOARD="true"
+fi
+
+if [[ ! -d "${UI_DIR}" ]]; then
+  echo "❌ Ordner nicht gefunden: ${UI_DIR}"
+  exit 1
+fi
+
+if [[ ! -f "${ENV_FILE}" && -f "${ENV_EXAMPLE}" ]]; then
+  cp "${ENV_EXAMPLE}" "${ENV_FILE}"
+  echo "ℹ️  ${ENV_FILE} erstellt (bitte Werte eintragen)."
+fi
+
+if [[ ! -d "${VENV_DIR}" ]]; then
+  echo "🔧 Erstelle virtuelle Umgebung in ${VENV_DIR}"
+  python3 -m venv "${VENV_DIR}"
+fi
+
+PY="${VENV_DIR}/bin/python"
+PIP="${VENV_DIR}/bin/pip"
+
+if [[ ! -x "${PY}" ]]; then
+  echo "❌ Python in venv nicht gefunden: ${PY}"
+  exit 1
+fi
+
+echo "📦 Installiere Dependencies (simap_ui/requirements.txt)"
+"${PIP}" -q install --upgrade pip >/dev/null
+"${PIP}" -q install -r "${UI_DIR}/requirements.txt"
+
+if [[ -z "${ENABLE_TEST_DASHBOARD}" ]]; then
+  echo "🚀 Starte Flask UI…"
+else
+  echo "🚀 Starte Flask UI (ENABLE_TEST_DASHBOARD=${ENABLE_TEST_DASHBOARD})…"
+fi
+
+set -a
+if [[ -f "${ENV_FILE}" ]]; then
+  # shellcheck disable=SC1090
+  source "${ENV_FILE}"
+fi
+set +a
+
+export ENABLE_TEST_DASHBOARD="${ENABLE_TEST_DASHBOARD:-false}"
+
+# Port-Handling: bevorzugt ${PORT:-5000}, ansonsten nächsten freien Port nehmen.
+BASE_PORT="${PORT:-5000}"
+PORT="$(
+  python3 - <<PY
+import socket
+base = int("${BASE_PORT}")
+for p in range(base, base + 100):
+    s = socket.socket()
+    try:
+        s.bind(("127.0.0.1", p))
+    except OSError:
+        pass
+    else:
+        s.close()
+        print(p)
+        raise SystemExit(0)
+    finally:
+        try: s.close()
+        except Exception: pass
+raise SystemExit("Kein freier Port im Bereich %d..%d" % (base, base + 99))
+PY
+)"
+export PORT
+echo "🌐 URL: http://127.0.0.1:${PORT}"
+
+cd "${UI_DIR}"
+exec "${PY}" app.py
