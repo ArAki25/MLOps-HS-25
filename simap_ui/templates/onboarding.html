@@ -80,7 +80,6 @@
 
     .onb-rcard { background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 1.5rem; transition: all 0.3s ease; }
     .onb-rcard.rated-yes { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.05); }
-    .onb-rcard.rated-no { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.03); }
 
     /* Archive-Header (prominent oben) */
     .onb-arch-header {
@@ -123,10 +122,8 @@
     .onb-rcard-tag { padding: 0.2rem 0.5rem; background: rgba(6,182,212,0.12); color: var(--accent, #06b6d4); border-radius: 5px; font-size: 0.7rem; font-weight: 600; border: 1px solid rgba(6,182,212,0.2); }
 
     .onb-rcard-btns { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: flex-start; }
-    .onb-rbtn { padding: 0.5rem 0.875rem; border-radius: 10px; font-weight: 600; font-size: 0.8125rem; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.35rem; }
-    .onb-rbtn-no { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: #f87171; }
-    .onb-rbtn-no:hover, .onb-rbtn-no.active { background: rgba(239,68,68,0.2); border-color: #ef4444; color: #fff; }
-    .onb-rbtn-yes { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: #34d399; }
+    .onb-rbtn { padding: 0.5rem 0.875rem; border-radius: 10px; font-weight: 600; font-size: 0.8125rem; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.35rem; border: 1px solid transparent; }
+    .onb-rbtn-yes { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.2); color: #34d399; }
     .onb-rbtn-yes:hover, .onb-rbtn-yes.active { background: rgba(16,185,129,0.2); border-color: #10b981; color: #fff; }
 
     .onb-rcard-status { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.5rem; font-size: 0.75rem; font-weight: 600; }
@@ -207,32 +204,18 @@
                 </div>
 
                 <div class="onb-section-title">Was suchen Sie?</div>
-                <div class="onb-form-row">
-                    <div class="onb-form-group">
-                        <label class="onb-label">Kanton<span class="required">*</span></label>
-                        <select class="onb-select" id="canton">
-                            <option value="">Bitte wählen</option>
-                            <option value="AG">Aargau</option><option value="AI">Appenzell Innerrhoden</option>
-                            <option value="AR">Appenzell Ausserrhoden</option><option value="BE">Bern</option>
-                            <option value="BL">Basel-Landschaft</option><option value="BS">Basel-Stadt</option>
-                            <option value="FR">Freiburg</option><option value="GE">Genf</option>
-                            <option value="GL">Glarus</option><option value="GR">Graubünden</option>
-                            <option value="JU">Jura</option><option value="LU">Luzern</option>
-                            <option value="NE">Neuenburg</option><option value="NW">Nidwalden</option>
-                            <option value="OW">Obwalden</option><option value="SG">St. Gallen</option>
-                            <option value="SH">Schaffhausen</option><option value="SO">Solothurn</option>
-                            <option value="SZ">Schwyz</option><option value="TG">Thurgau</option>
-                            <option value="TI">Tessin</option><option value="UR">Uri</option>
-                            <option value="VD">Waadt</option><option value="VS">Wallis</option>
-                            <option value="ZG">Zug</option><option value="ZH">Zürich</option>
-                        </select>
-                    </div>
-                    <div class="onb-form-group">
-                        <label class="onb-label">Projekttyp<span class="required">*</span></label>
-                        <select class="onb-select" id="project-subtype">
-                            <option value="">Wird geladen...</option>
-                        </select>
-                    </div>
+
+                <div class="onb-form-group">
+                    <label class="onb-label">Kantone<span class="required">*</span></label>
+                    {% set initial_cantons = [] %}
+                    {% include '_canton_map.html' %}
+                </div>
+
+                <div class="onb-form-group">
+                    <label class="onb-label">Projekttyp<span class="required">*</span></label>
+                    <select class="onb-select" id="project-subtype">
+                        <option value="">Wird geladen...</option>
+                    </select>
                 </div>
                 <div class="onb-form-group">
                     <label class="onb-label">Auftragsvolumen<span class="required">*</span></label>
@@ -266,7 +249,7 @@
                     <div class="onb-choice" id="choice-rate" onclick="selectChoice('rate')">
                         <div class="onb-choice-icon"><svg width="24" height="24" fill="none" stroke="var(--accent,#06b6d4)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></div>
                         <h3>Ausschreibungen bewerten</h3>
-                        <p>Zeigt mir Beispiele und ich sage ob sie relevant sind oder nicht</p>
+                        <p>Zeigt mir Beispiele und ich markiere die für mich relevanten</p>
                     </div>
                 </div>
                 <div class="onb-actions">
@@ -326,8 +309,8 @@
             <!-- STEP 3b: Rating LISTE -->
             <div class="onb-step" id="step-3b">
                 <div class="onb-header" style="margin-bottom:1rem;">
-                    <h1>Ausschreibungen bewerten</h1>
-                    <p>Markieren Sie, welche Ausschreibungen für Ihr Unternehmen relevant sind. Wir zeigen Ihnen aktive und bereits abgeschlossene Projekte.</p>
+                    <h1>Relevante Ausschreibungen markieren</h1>
+                    <p>Markieren Sie mindestens 3 Ausschreibungen als "Relevant", damit wir Ihren Geschmack lernen können. Wir zeigen Ihnen aktive und bereits abgeschlossene Projekte.</p>
                 </div>
 
                 <div class="onb-rating-progress">
@@ -393,11 +376,13 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         loadSubtypes();
-        ['company-name', 'canton', 'project-subtype'].forEach(function(id) {
+        ['company-name', 'project-subtype'].forEach(function(id) {
             var el = document.getElementById(id);
             if (el) el.addEventListener('input', validateProfile);
             if (el) el.addEventListener('change', validateProfile);
         });
+        // Multi-Kanton-Auswahl (aus _canton_map.html Partial)
+        document.addEventListener('canton-selection-changed', validateProfile);
         var idsArea = document.getElementById('simap-ids');
         if (idsArea) {
             idsArea.addEventListener('input', function() {
@@ -434,9 +419,16 @@
         validateProfile();
     }
 
+    function getSelectedCantons() {
+        var el = document.getElementById('cs-hidden');
+        if (!el || !el.value) return [];
+        return el.value.split(',').map(function(s) { return s.trim().toUpperCase(); })
+                      .filter(function(s) { return s.length > 0; });
+    }
+
     function validateProfile() {
         var ok = document.getElementById('company-name').value.trim() &&
-                 document.getElementById('canton').value &&
+                 getSelectedCantons().length > 0 &&
                  document.getElementById('project-subtype').value &&
                  selectedVolume;
         document.getElementById('btn-step1').disabled = !ok;
@@ -444,11 +436,12 @@
 
     function submitProfile() {
         var vol = VOLUME_MAP[selectedVolume];
+        var cantons = getSelectedCantons();
         var payload = {
             company_name: document.getElementById('company-name').value.trim(),
             employee_count: parseInt(document.getElementById('employee-count').value) || null,
             headquarters: document.getElementById('headquarters').value.trim() || null,
-            canton: document.getElementById('canton').value,
+            preferred_cantons: cantons,
             project_subtype: document.getElementById('project-subtype').value,
             award_amount_min: vol.min,
             award_amount_max: vol.max
@@ -498,9 +491,12 @@
     }
 
     function showFilterPreview() {
-        var cantonCode = document.getElementById('canton').value;
+        var cantons = getSelectedCantons();
+        var cantonLabel = cantons.length === 0
+            ? '—'
+            : cantons.map(function(c) { return KANTON_NAMES[c] || c; }).join(', ');
         var subtypeCode = document.getElementById('project-subtype').value;
-        document.getElementById('filter-preview-canton').textContent = KANTON_NAMES[cantonCode] || cantonCode;
+        document.getElementById('filter-preview-canton').textContent = cantonLabel;
         document.getElementById('filter-preview-subtype').textContent = SUBTYPE_LABELS[subtypeCode] || subtypeCode;
         document.getElementById('filter-preview-volume').textContent = VOLUME_LABELS[selectedVolume] || '—';
     }
@@ -554,7 +550,7 @@
         ratingTenders.forEach(function(t, idx) {
             var pid = t.id;
             var r = ratings[pid] ? ratings[pid].rating : 0;
-            var cardClass = r === 1 ? 'rated-yes' : (r === -1 ? 'rated-no' : '');
+            var cardClass = r === 1 ? 'rated-yes' : '';
             var desc = stripHtml(t.description_de || '');
             var isArchive = t.source === 'archive';
 
@@ -596,15 +592,11 @@
             html += '</div>';
 
             if (r === 1) html += '<div class="onb-rcard-status yes"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Relevant</div>';
-            else if (r === -1) html += '<div class="onb-rcard-status no"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Nicht relevant</div>';
 
             html += '</div>' +
                 '<div class="onb-rcard-btns">' +
-                    '<button class="onb-rbtn onb-rbtn-no' + (r === -1 ? ' active' : '') + '" onclick="rateItem(' + idx + ',-1)">' +
-                        '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Nein' +
-                    '</button>' +
                     '<button class="onb-rbtn onb-rbtn-yes' + (r === 1 ? ' active' : '') + '" onclick="rateItem(' + idx + ',1)">' +
-                        '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Ja' +
+                        '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Relevant' +
                     '</button>' +
                 '</div>' +
             '</div>';
@@ -619,10 +611,11 @@
         var pid = t.id;
         var source = t.source || 'project';
 
-        if (ratings[pid] && ratings[pid].rating === rating) {
+        // Nur Likes: Toggle zwischen "gelikt" (1) und "nicht gelikt" (entfernt)
+        if (ratings[pid]) {
             delete ratings[pid];
         } else {
-            ratings[pid] = { rating: rating, source: source };
+            ratings[pid] = { rating: 1, source: source };
         }
         updateRatingProgress();
         renderRatingList();
@@ -634,17 +627,17 @@
     }
 
     function updateRatingProgress() {
-        var ratedCount = Object.keys(ratings).length;
-        var likeCount = Object.values(ratings).filter(function(v) { return v.rating === 1; }).length;
-        var pct = Math.min(100, Math.round(ratedCount / RATING_TARGET * 100));
+        var likeCount = Object.keys(ratings).length;
+        var pct = Math.min(100, Math.round(likeCount / 3 * 100));
         document.getElementById('rating-fill').style.width = pct + '%';
-        document.getElementById('rating-current').textContent = ratedCount;
+        document.getElementById('rating-current').textContent = likeCount;
+        document.getElementById('rating-total').textContent = 3;
         document.getElementById('btn-finish-rating').disabled = likeCount < 3;
     }
 
     function finishRating() {
-        var likeCount = Object.values(ratings).filter(function(v) { return v.rating === 1; }).length;
-        if (likeCount < 3) { showMsg('Bitte mindestens 3 Ausschreibungen als "Ja" markieren.'); return; }
+        var likeCount = Object.keys(ratings).length;
+        if (likeCount < 3) { showMsg('Bitte mindestens 3 Ausschreibungen als "Relevant" markieren.'); return; }
 
         var ratingsArray = [];
         for (var pid in ratings) {
@@ -664,7 +657,14 @@
         }).catch(function() { showMsg('Verbindungsfehler.'); });
     }
 
-    function showMsg(text) { document.getElementById('msg-container').innerHTML = '<div class="onb-msg-error">' + text + '</div>'; }
+    function showMsg(text) {
+        var c = document.getElementById('msg-container');
+        c.textContent = '';
+        var el = document.createElement('div');
+        el.className = 'onb-msg-error';
+        el.textContent = text;
+        c.appendChild(el);
+    }
     function clearMsg() { document.getElementById('msg-container').innerHTML = ''; }
     function escapeHtml(t) { if(!t)return''; var d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
     function stripHtml(t) { return t ? t.replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').trim() : ''; }

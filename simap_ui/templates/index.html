@@ -508,14 +508,14 @@
 
         <div class="filter-row">
             <div class="filter-group">
-                <span class="filter-label">Canton</span>
+                <span class="filter-label">Kanton</span>
                 <select class="canton-select" id="canton-filter">
                     <option value="">All Cantons</option>
                 </select>
             </div>
 
             <div class="filter-group">
-                <span class="filter-label">Procedure Type</span>
+                <span class="filter-label">Verfahrenstyp</span>
                 <div class="filter-options">
                     <label class="filter-chip" data-filter="process_type" data-value="open">
                         <input type="checkbox"> Open
@@ -530,7 +530,7 @@
             </div>
 
             <div class="filter-group">
-                <span class="filter-label">Order Type</span>
+                <span class="filter-label">Auftragsart</span>
                 <div class="filter-options">
                     <label class="filter-chip" data-filter="order_type" data-value="service">
                         <input type="checkbox"> Service
@@ -815,10 +815,10 @@
         const container = document.getElementById('tenders-list');
         const countEl = document.getElementById('results-count');
 
-        countEl.textContent = `(${filteredProjects.length} results)`;
+        countEl.textContent = `(${filteredProjects.length} Ergebnisse)`;
 
         if (filteredProjects.length === 0) {
-            container.innerHTML = '<div class="empty-state">No tenders found matching your criteria.</div>';
+            container.innerHTML = '<div class="empty-state">Keine Ausschreibungen mit diesen Kriterien gefunden.</div>';
             return;
         }
 
@@ -860,7 +860,7 @@
                                 ${isFavorite ? '❤️' : '🤍'}
                             </button>
                         ` : ''}
-                        ${isNew ? '<span class="badge badge-new">NEW</span>' : ''}
+                        ${isNew ? '<span class="badge badge-new">NEU</span>' : ''}
                         ${processTypeBadge}
                     </div>
                 </div>
@@ -886,25 +886,25 @@
 
                     <div class="tender-info-grid">
                         <div class="tender-info-item">
-                            <span class="tender-info-label">Project Number</span>
+                            <span class="tender-info-label">Projektnummer</span>
                             <span class="tender-info-value">${project.project_number || '-'}</span>
                         </div>
                         <div class="tender-info-item">
-                            <span class="tender-info-label">Order Type</span>
+                            <span class="tender-info-label">Auftragsart</span>
                             <span class="tender-info-value">${capitalize(project.order_type) || '-'}</span>
                         </div>
                         <div class="tender-info-item">
-                            <span class="tender-info-label">Procedure</span>
+                            <span class="tender-info-label">Verfahren</span>
                             <span class="tender-info-value">${capitalize(project.process_type) || '-'}</span>
                         </div>
                         <div class="tender-info-item">
-                            <span class="tender-info-label">Deadline</span>
+                            <span class="tender-info-label">Frist</span>
                             <span class="tender-info-value">${formatDate(project.deadline) || '-'}</span>
                         </div>
                     </div>
 
-                    <a href="${project.simap_url}" target="_blank" rel="noopener" class="simap-link" onclick="event.stopPropagation()">
-                        View on simap.ch
+                    <a href="${project.simap_url}" target="_blank" rel="noopener noreferrer" class="simap-link" onclick="event.stopPropagation()">
+                        Auf simap.ch ansehen
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                         </svg>
@@ -912,7 +912,7 @@
 
                     <div class="tender-disclaimer">
                         ⚠️ Dies ist keine amtliche Veröffentlichung.
-                        <a href="${project.simap_url}" target="_blank">Offizielle Daten auf simap.ch</a>
+                        <a href="${project.simap_url}" target="_blank" rel="noopener noreferrer">Offizielle Daten auf simap.ch</a>
                     </div>
                 </div>
             </div>

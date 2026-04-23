@@ -1,16 +1,12 @@
--- ===========================================================================
--- Rocchio-Taste-Vektor Aktualisierung (TASK 4 + FIX Archive-JOIN)
--- ===========================================================================
--- Berechnet v = alpha*mean(likes) - beta*mean(dislikes), anschliessend
--- L2-normalisiert.
---
--- pgvector 0.8 unterstuetzt keine direkte Scalar-Vector-Multiplikation, daher
--- wird der skalare Faktor per array_fill() in einen 1024-dim Vektor expandiert
--- und elementweise multipliziert.
---
--- Dualer JOIN: beruecksichtigt Likes/Dislikes von Projekten UND Archiv-Items.
--- ===========================================================================
+-- Exportiert aus Remote schema_migrations (version=20260420192357, name=refresh_user_taste_with_archive)
+-- Generator: supabase/scripts/sync_migrations_from_remote.py
 
+-- ============================================================
+-- FIX: refresh_user_taste laesst auch Archive-Ratings in den
+-- Rocchio-Vektor einfliessen (vorher nur source='project').
+-- Begruendung: sample_projects_for_rating liefert 50% Archive-
+-- Items, die ohne diesen Fix komplett ignoriert werden.
+-- ============================================================
 CREATE OR REPLACE FUNCTION ui.refresh_user_taste(p_user_id uuid)
 RETURNS void
 LANGUAGE plpgsql
@@ -44,6 +40,7 @@ BEGIN
     v_dis_factor := NULL;
   END IF;
 
+  -- Dualer JOIN: project ODER archive, je nach r.source.
   SELECT sum(
     CASE
       WHEN r.rating =  1 THEN e.embedding * v_like_factor
@@ -90,3 +87,6 @@ $$;
 
 COMMENT ON FUNCTION ui.refresh_user_taste(uuid) IS
   'Rocchio-Taste-Vektor aus Likes+Dislikes (projects UND archives). alpha=1.0, beta=0.3, L2-normalisiert.';
+
+-- Existierende Taste-Vektoren neu berechnen, damit Archive-Likes korrekt einfliessen.
+SELECT ui.refresh_user_taste(user_id) FROM (SELECT DISTINCT user_id FROM ui.user_tender_ratings) AS s;

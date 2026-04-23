@@ -2,7 +2,9 @@
 
 Ziel: Wir wollen empirisch sehen, ob die Embedding-basierten Empfehlungen
 **mit der Zeit praezieser** werden, wenn ein User (Firma) Ausschreibungen
-liked/disliked.
+liked. Seit Migration `20260421091130_20260421_01_likes_only.sql` kennt das System keine
+Dislikes mehr; der Taste-Vektor ist ein reiner L2-normalisierter Likes-
+Centroid.
 
 ## 1. Voraussetzungen
 
@@ -40,12 +42,12 @@ Legt 5 Firmen-Logins an (idempotent). Ergebnis: `scripts/test_companies.json`.
 1. **Login** mit Testzugang (siehe Ausgabe des Seed-Skripts).
 2. **Onboarding**: ~20 Karten (Mix aus Archive + Projects) bewerten.
    - Likes: 👍 fuer alles, was plausibel zum Firmenprofil passt.
-   - Dislikes: 👎 fuer alles, was offensichtlich nicht passt.
+   - Alles Uebrige ungeklickt lassen (es gibt keinen Dislike mehr).
 3. **Profil abschliessen** → wird auf `/publications` weitergeleitet.
 4. **Tab „Empfehlungen"** oeffnen → erste 10 Vorschlaege sichten.
    Snapshot: Titel der Top-10 notieren (Runde A).
-5. **Tab „Ausschreibungen"**: 5–10 Items liken/disliken
-   (👍 / 👎 rechts in jeder Zeile).
+5. **Tab „Ausschreibungen"**: 5–10 Items liken (👍 rechts in jeder Zeile).
+   Erneuter Klick auf ein aktives Like entfernt es wieder (Unlike).
 6. **Tab „Empfehlungen"** erneut oeffnen → Snapshot Runde B.
 7. Schritt 5 + 6 **2–3 Iterationen** wiederholen, um die Entwicklung zu sehen.
 
@@ -57,7 +59,7 @@ einer Runde** (niedrigerer `avg_pairwise_cosine_mmr`).
 
 Oeffne `http://localhost:5000/admin/test-runs`. Zeigt pro Test-User:
 
-- Anzahl Likes / Dislikes
+- Anzahl Likes
 - Taste-Vektor-Status
 - **avg_similarity_top_n** — wie nah sind die Top-10 am Profil?
   Zielwert `>= 0.55`.

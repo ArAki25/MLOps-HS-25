@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} - SAJF Strategies{% endblock %}
+{% block extra_css %}
+<style>
+    .legal-page { max-width: 720px; margin: 0 auto; padding: 2rem 1rem; }
+    .legal-page h1 { color: var(--primary); margin-bottom: 1rem; }
+    .legal-page p { color: var(--text-secondary); line-height: 1.7; }
+    .legal-page a { color: var(--accent); }
+</style>
+{% endblock %}
+{% block content %}
+<main class="legal-page">
+    <h1>{{ page_title }}</h1>
+    <p>Die ausführliche Fassung dieser Seite wird derzeit vorbereitet. Bei rechtlichen Fragen wenden Sie sich bitte an <a href="mailto:support@sajf-strategies.ch">support@sajf-strategies.ch</a>.</p>
+</main>
+{% endblock %}

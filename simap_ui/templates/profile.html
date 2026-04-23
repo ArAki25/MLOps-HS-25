@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+{% block title %}Mein Profil – SAJF Strategies{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pf-bg-blobs { position: fixed; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; }
+    .pf-blob { position: absolute; filter: blur(120px); opacity: 0.22; border-radius: 50%; }
+    .pf-blob-1 { top: -10%; left: -5%; width: 45vw; height: 45vw; background: rgba(37, 99, 235, 0.35); }
+    .pf-blob-2 { bottom: -10%; right: -5%; width: 40vw; height: 40vw; background: rgba(6, 182, 212, 0.25); }
+
+    .pf-wrapper {
+        min-height: calc(100vh - 72px);
+        padding: 3.5rem 1.5rem 4rem;
+        position: relative;
+        z-index: 1;
+    }
+    .pf-container { max-width: 860px; margin: 0 auto; }
+
+    .pf-head { margin-bottom: 2rem; }
+    .pf-eyebrow {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--accent, #06b6d4);
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    .pf-head h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #fff;
+        margin: 0 0 0.25rem;
+    }
+    .pf-head p {
+        color: #a1a1aa;
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    .pf-card {
+        background: rgba(18, 18, 20, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 2rem 2rem 1.75rem;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        margin-bottom: 1.5rem;
+    }
+
+    .pf-section-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--accent, #06b6d4);
+        margin: 0 0 1.1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.25rem; }
+    .pf-grid-full { grid-column: 1 / -1; }
+    @media (max-width: 640px) { .pf-grid { grid-template-columns: 1fr; } }
+
+    .pf-field { display: flex; flex-direction: column; gap: 0.4rem; }
+    .pf-label {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #e4e4e7;
+    }
+    .pf-hint {
+        font-size: 0.75rem;
+        color: #71717a;
+    }
+    .pf-input, .pf-select {
+        width: 100%;
+        padding: 0.75rem 0.9rem;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.25);
+        color: #fff;
+        font-size: 0.9rem;
+        font-family: inherit;
+        transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+    }
+    .pf-input:focus, .pf-select:focus {
+        outline: none;
+        border-color: var(--accent, #06b6d4);
+        background: rgba(0, 0, 0, 0.4);
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+    }
+    .pf-input[readonly] {
+        opacity: 0.7;
+        cursor: not-allowed;
+        background: rgba(0, 0, 0, 0.15);
+    }
+    .pf-select option { background: #18181b; color: #fff; }
+
+    .pf-range-row {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 0.6rem;
+        align-items: center;
+    }
+    .pf-range-dash {
+        color: #71717a;
+        font-weight: 600;
+        padding-top: 0.2rem;
+    }
+
+    .pf-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 2rem;
+    }
+    .pf-btn {
+        padding: 0.8rem 1.6rem;
+        border-radius: 11px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        transition: transform 0.2s, box-shadow 0.2s, background 0.18s, color 0.18s, border-color 0.18s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .pf-btn-primary {
+        background: linear-gradient(135deg, var(--accent, #06b6d4), #3b82f6);
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(6, 182, 212, 0.25);
+    }
+    .pf-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(6, 182, 212, 0.35); }
+    .pf-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+    .pf-btn-ghost {
+        background: rgba(255, 255, 255, 0.03);
+        color: #e4e4e7;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .pf-btn-ghost:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+
+    .pf-link-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.85rem 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        margin-top: 0.75rem;
+    }
+    .pf-link-row a {
+        color: var(--accent, #06b6d4);
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-decoration: none;
+    }
+    .pf-link-row a:hover { text-decoration: underline; }
+    .pf-link-label {
+        color: #a1a1aa;
+        font-size: 0.875rem;
+    }
+
+    /* ── Toast ── */
+    .pf-toast {
+        position: fixed;
+        bottom: 1.75rem;
+        left: 50%;
+        transform: translateX(-50%) translateY(30px);
+        padding: 0.8rem 1.3rem;
+        background: rgba(18, 18, 20, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        color: #fff;
+        font-size: 0.9rem;
+        box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        transition: opacity 0.22s ease, transform 0.22s ease;
+        pointer-events: none;
+        z-index: 999;
+        backdrop-filter: blur(12px);
+    }
+    .pf-toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    .pf-toast.success { border-color: rgba(16, 185, 129, 0.45); }
+    .pf-toast.error   { border-color: rgba(248, 113, 113, 0.45); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pf-bg-blobs">
+    <div class="pf-blob pf-blob-1"></div>
+    <div class="pf-blob pf-blob-2"></div>
+</div>
+
+<div class="pf-wrapper">
+    <div class="pf-container">
+
+        <div class="pf-head">
+            <div class="pf-eyebrow">Konto</div>
+            <h1>Mein Profil</h1>
+            <p>Passen Sie Ihre Firmendaten und Ausschreibungs-Präferenzen an. Änderungen wirken sich direkt auf Ihre Empfehlungen aus.</p>
+        </div>
+
+        <form id="pf-form" novalidate>
+
+            <!-- FIRMENDATEN -->
+            <section class="pf-card">
+                <h2 class="pf-section-title">Firmendaten</h2>
+                <div class="pf-grid">
+                    <div class="pf-field pf-grid-full">
+                        <label class="pf-label" for="pf-company">Firmenname</label>
+                        <input type="text" id="pf-company" class="pf-input"
+                               placeholder="z.B. Muster Bau AG"
+                               value="{{ profile.company_name or '' }}">
+                    </div>
+                    <div class="pf-field">
+                        <label class="pf-label" for="pf-employees">Mitarbeiteranzahl</label>
+                        <select id="pf-employees" class="pf-select">
+                            <option value="">Bitte wählen</option>
+                            <option value="5"   {% if profile.employee_count == 5 %}selected{% endif %}>1–10</option>
+                            <option value="25"  {% if profile.employee_count == 25 %}selected{% endif %}>11–50</option>
+                            <option value="100" {% if profile.employee_count == 100 %}selected{% endif %}>51–250</option>
+                            <option value="500" {% if profile.employee_count == 500 %}selected{% endif %}>über 250</option>
+                        </select>
+                    </div>
+                    <div class="pf-field">
+                        <label class="pf-label" for="pf-hq">Hauptsitz</label>
+                        <input type="text" id="pf-hq" class="pf-input"
+                               placeholder="z.B. Olten, SO"
+                               value="{{ profile.headquarters or '' }}">
+                    </div>
+                </div>
+            </section>
+
+            <!-- BEVORZUGTE KANTONE -->
+            <section class="pf-card">
+                <h2 class="pf-section-title">Bevorzugte Kantone</h2>
+                {% set initial_cantons = profile.preferred_cantons or ([profile.canton] if profile.canton else []) %}
+                {% include '_canton_map.html' %}
+            </section>
+
+            <!-- AUFTRAGSPRÄFERENZEN -->
+            <section class="pf-card">
+                <h2 class="pf-section-title">Auftragspräferenzen</h2>
+                <div class="pf-grid">
+                    <div class="pf-field pf-grid-full">
+                        <label class="pf-label" for="pf-subtype">Projekttyp</label>
+                        <select id="pf-subtype" class="pf-select" data-current="{{ profile.project_subtype or '' }}">
+                            <option value="">Bitte wählen</option>
+                        </select>
+                        <span class="pf-hint">Bestimmt, welche Art von Ausschreibungen primär empfohlen werden.</span>
+                    </div>
+                    <div class="pf-field pf-grid-full">
+                        <label class="pf-label">Auftragsvolumen (CHF)</label>
+                        <div class="pf-range-row">
+                            <input type="number" id="pf-amount-min" class="pf-input"
+                                   placeholder="Min"
+                                   min="0" step="1000"
+                                   value="{{ profile.award_amount_min if profile.award_amount_min is not none else '' }}">
+                            <span class="pf-range-dash">–</span>
+                            <input type="number" id="pf-amount-max" class="pf-input"
+                                   placeholder="Max (leer = offen)"
+                                   min="0" step="1000"
+                                   value="{{ profile.award_amount_max if profile.award_amount_max is not none else '' }}">
+                        </div>
+                        <span class="pf-hint">Leer lassen für keine Obergrenze.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- KONTO -->
+            <section class="pf-card">
+                <h2 class="pf-section-title">Konto</h2>
+                <div class="pf-grid">
+                    <div class="pf-field pf-grid-full">
+                        <label class="pf-label" for="pf-email">E-Mail</label>
+                        <input type="email" id="pf-email" class="pf-input" readonly
+                               value="{{ session.get('user_email', '') }}">
+                        <span class="pf-hint">Die E-Mail kann aktuell nicht selbst geändert werden.</span>
+                    </div>
+                </div>
+                <div class="pf-link-row">
+                    <span class="pf-link-label">Passwort ändern</span>
+                    <a href="/change-password">Passwort aktualisieren →</a>
+                </div>
+            </section>
+
+            <div class="pf-actions">
+                <a href="/publications" class="pf-btn pf-btn-ghost">Abbrechen</a>
+                <button type="submit" id="pf-save" class="pf-btn pf-btn-primary">
+                    Änderungen speichern
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="pf-toast" id="pf-toast" role="status" aria-live="polite"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        var subtypeSelect = document.getElementById('pf-subtype');
+        var currentSubtype = subtypeSelect.dataset.current || '';
+
+        var SUBTYPE_LABELS = {
+            'construction': 'Bauleistung',
+            'supply':       'Lieferung',
+            'service':      'Dienstleistung'
+        };
+
+        function loadSubtypes() {
+            fetch('/api/onboarding/filter-options')
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    var subtypes = (data.subtypes || []);
+                    var allowed  = ['construction', 'supply', 'service'];
+                    var opts = allowed.filter(function (s) { return subtypes.indexOf(s) !== -1; });
+                    if (opts.length === 0) opts = allowed;
+
+                    subtypeSelect.innerHTML = '<option value="">Bitte wählen</option>';
+                    opts.forEach(function (s) {
+                        var o = document.createElement('option');
+                        o.value = s;
+                        o.textContent = SUBTYPE_LABELS[s] || s;
+                        if (s === currentSubtype) o.selected = true;
+                        subtypeSelect.appendChild(o);
+                    });
+                })
+                .catch(function () {
+                    subtypeSelect.innerHTML = '<option value="">Fehler beim Laden</option>';
+                });
+        }
+
+        function showToast(msg, type) {
+            var toast = document.getElementById('pf-toast');
+            toast.textContent = msg;
+            toast.classList.remove('success', 'error');
+            if (type) toast.classList.add(type);
+            toast.classList.add('show');
+            clearTimeout(showToast._t);
+            showToast._t = setTimeout(function () { toast.classList.remove('show'); }, 2800);
+        }
+
+        function readCantons() {
+            var raw = (document.getElementById('cs-hidden').value || '').trim();
+            if (!raw) return [];
+            return raw.split(',').map(function (s) { return s.trim().toUpperCase(); })
+                      .filter(function (s) { return s.length > 0; });
+        }
+
+        function toIntOrNull(v) {
+            if (v === '' || v === null || v === undefined) return null;
+            var n = parseInt(v, 10);
+            return isNaN(n) ? null : n;
+        }
+
+        document.getElementById('pf-form').addEventListener('submit', function (ev) {
+            ev.preventDefault();
+
+            var saveBtn = document.getElementById('pf-save');
+            var min = toIntOrNull(document.getElementById('pf-amount-min').value);
+            var max = toIntOrNull(document.getElementById('pf-amount-max').value);
+
+            if (min !== null && max !== null && max < min) {
+                showToast('Der Höchstbetrag darf nicht kleiner als der Mindestbetrag sein.', 'error');
+                return;
+            }
+
+            var payload = {
+                company_name:      document.getElementById('pf-company').value.trim() || null,
+                employee_count:    toIntOrNull(document.getElementById('pf-employees').value),
+                headquarters:      document.getElementById('pf-hq').value.trim() || null,
+                project_subtype:   subtypeSelect.value || null,
+                award_amount_min:  min,
+                award_amount_max:  max,
+                preferred_cantons: readCantons()
+            };
+
+            saveBtn.disabled = true;
+            fetch('/api/profile/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, body: d }; }); })
+            .then(function (res) {
+                if (res.ok && res.body && res.body.success) {
+                    showToast('Profil erfolgreich gespeichert.', 'success');
+                } else {
+                    showToast((res.body && res.body.error) || 'Fehler beim Speichern.', 'error');
+                }
+            })
+            .catch(function () {
+                showToast('Verbindungsfehler. Bitte erneut versuchen.', 'error');
+            })
+            .finally(function () { saveBtn.disabled = false; });
+        });
+
+        loadSubtypes();
+    })();
+</script>
+{% endblock %}
