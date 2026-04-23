@@ -127,6 +127,88 @@
         background: var(--surface-hover);
     }
 
+    /* Persistenter gruener Rand, wenn der Nutzer die Karte als "Relevant" markiert hat */
+    .tender-card.is-liked {
+        border: 2px solid #10b981;
+        border-left: 4px solid #10b981;
+        box-shadow: var(--shadow), 0 0 0 1px rgba(16,185,129,0.25), 0 4px 18px rgba(16,185,129,0.08);
+        background: linear-gradient(180deg, rgba(16,185,129,0.05), var(--surface) 60%);
+    }
+    .tender-card.is-liked:hover {
+        border-color: #34d399;
+        box-shadow: var(--shadow-lg), 0 0 0 1px rgba(16,185,129,0.35), 0 6px 22px rgba(16,185,129,0.12);
+    }
+    .tender-card.is-liked .tender-label { color: #34d399; }
+
+    /* Meta-Chips im Karten-Header */
+    .tender-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 0.75rem;
+    }
+    .tender-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.65rem;
+        background: var(--background);
+        border: 1px solid var(--border);
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+        line-height: 1.4;
+    }
+    .tender-chip svg { width: 12px; height: 12px; color: var(--text-secondary); }
+    .tender-chip.accent {
+        background: rgba(59,130,246,0.12);
+        color: #60a5fa;
+        border-color: transparent;
+    }
+    .tender-chip.success {
+        background: rgba(16,185,129,0.12);
+        color: #34d399;
+        border-color: transparent;
+    }
+
+    /* Relevant-Button (Like-Toggle) pro Karte */
+    .tender-actions-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+    .rec-rate-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 0.9rem;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text-secondary);
+        border-radius: 8px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.15s;
+    }
+    .rec-rate-btn:hover {
+        border-color: #10b981;
+        color: #34d399;
+        background: rgba(16,185,129,0.08);
+    }
+    .rec-rate-btn.active {
+        border-color: #10b981;
+        color: #10b981;
+        background: rgba(16,185,129,0.15);
+    }
+    .rec-rate-btn .check-icon { display: none; }
+    .rec-rate-btn.active .check-icon { display: inline-flex; }
+    .rec-rate-btn.active .plus-icon { display: none; }
+
     .tender-header {
         display: flex;
         justify-content: space-between;
@@ -325,22 +407,62 @@
 
     {% if projects and projects|length > 0 %}
         {% for project in projects %}
-        <div class="tender-card" onclick="toggleCard(this)">
+        {% set pid = project.id or project.project_id %}
+        <div class="tender-card" data-pid="{{ pid }}" onclick="toggleCard(this)">
             <div class="tender-header">
-                <div>
+                <div style="min-width:0; flex:1;">
                     <div class="tender-label">📋 EMPFOHLEN</div>
                     <div class="tender-title">{{ project.title or 'Ohne Titel' }}</div>
-                    <div class="tender-preview">{{ (project.description or '')[:150] }}{% if project.description and project.description|length > 150 %}...{% endif %}</div>
+                    <div class="tender-preview">{{ (project.description or '')[:200] }}{% if project.description and project.description|length > 200 %}...{% endif %}</div>
+
+                    <div class="tender-chips">
+                        {% if project.canton %}
+                        <span class="tender-chip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            {{ project.canton }}
+                        </span>
+                        {% endif %}
+                        {% if project.cpv_code %}
+                        <span class="tender-chip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                            CPV {{ project.cpv_code }}
+                        </span>
+                        {% endif %}
+                        {% if project.time_ago %}
+                        <span class="tender-chip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            {{ project.time_ago }}
+                        </span>
+                        {% endif %}
+                        {% if project.project_id %}
+                        <span class="tender-chip">#{{ project.project_id }}</span>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="tender-badges">
                     <span class="badge-match">{{ (project.probability * 100)|round|int }}% Match</span>
                 </div>
             </div>
 
-            <div class="tender-meta">
-                <span class="tender-meta-item">📍 {{ project.canton or '-' }}</span>
-                <span class="tender-meta-item">🏷️ CPV: {{ project.cpv_code or '-' }}</span>
-                <span class="time-ago">{{ project.time_ago or '' }}</span>
+            <div class="tender-actions-row">
+                <button class="rec-rate-btn"
+                        data-rate-pid="{{ pid }}"
+                        onclick="event.stopPropagation(); rateRecommended('{{ pid }}', this)"
+                        aria-pressed="false"
+                        title="Als relevant markieren">
+                    <span class="plus-icon" aria-hidden="true">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"/>
+                            <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+                        </svg>
+                    </span>
+                    <span class="check-icon" aria-hidden="true">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </span>
+                    <span class="rec-rate-label">Als relevant markieren</span>
+                </button>
             </div>
 
             <div class="tender-details">
@@ -363,6 +485,18 @@
                         <span class="tender-info-label">Veröffentlicht</span>
                         <span class="tender-info-value">{{ project.time_ago or '-' }}</span>
                     </div>
+                    {% if project.project_id %}
+                    <div class="tender-info-item">
+                        <span class="tender-info-label">Projekt-Nr.</span>
+                        <span class="tender-info-value">{{ project.project_id }}</span>
+                    </div>
+                    {% endif %}
+                    {% if project.publication_date %}
+                    <div class="tender-info-item">
+                        <span class="tender-info-label">Publikationsdatum</span>
+                        <span class="tender-info-value">{{ project.publication_date[:10] if project.publication_date is string else project.publication_date }}</span>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <a href="{{ project.simap_url }}" target="_blank" rel="noopener" class="simap-link" onclick="event.stopPropagation()">
@@ -371,7 +505,7 @@
 
                 <div class="tender-disclaimer">
                     ⚠️ Dies ist keine amtliche Veröffentlichung.
-                    <a href="{{ project.simap_url }}" target="_blank">Offizielle Daten auf simap.ch</a>
+                    <a href="{{ project.simap_url }}" target="_blank" rel="noopener noreferrer">Offizielle Daten auf simap.ch</a>
                 </div>
             </div>
         </div>
@@ -396,6 +530,67 @@ function toggleCard(card) {
     if (!wasExpanded) {
         card.classList.add('expanded');
     }
+}
+
+// Like-Status (Relevant-Button) fuer die empfohlenen Karten.
+// Quelle: /api/feed-ratings (Map {tender_id: rating}).
+// Toggle: /api/feed-rate (rating 1 = relevant, 0 = entfernen).
+var userRatings = {};
+
+document.addEventListener('DOMContentLoaded', function () {
+    fetch('/api/feed-ratings', { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            userRatings = (data && data.ratings) || {};
+            // Initial-Zustand auf alle bereits gerenderten Karten anwenden.
+            Object.keys(userRatings).forEach(function (pid) {
+                if (userRatings[pid] === 1) applyLikedState(pid, true);
+            });
+        })
+        .catch(function () { /* silent fallback: Initialzustand bleibt neutral */ });
+});
+
+function applyLikedState(pid, liked) {
+    document.querySelectorAll('.tender-card[data-pid="' + pid + '"]').forEach(function (card) {
+        if (liked) card.classList.add('is-liked');
+        else card.classList.remove('is-liked');
+    });
+    document.querySelectorAll('.rec-rate-btn[data-rate-pid="' + pid + '"]').forEach(function (btn) {
+        if (liked) btn.classList.add('active');
+        else btn.classList.remove('active');
+        btn.setAttribute('aria-pressed', liked ? 'true' : 'false');
+        var label = btn.querySelector('.rec-rate-label');
+        if (label) label.textContent = liked ? 'Relevant' : 'Als relevant markieren';
+        btn.title = liked ? 'Markierung entfernen' : 'Als relevant markieren';
+    });
+}
+
+function rateRecommended(pid, btn) {
+    if (!pid) return;
+    var prev = userRatings[pid] || 0;
+    var next = prev === 1 ? 0 : 1;
+
+    // Optimistisches UI-Update: gruener Rand sofort sichtbar/entfernt.
+    userRatings[pid] = next;
+    applyLikedState(pid, next === 1);
+
+    fetch('/api/feed-rate', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tender_id: pid, rating: next, source: 'project' })
+    })
+    .then(function (r) { return r.json().catch(function () { return {}; }); })
+    .then(function (res) {
+        if (!res || res.success !== true) {
+            userRatings[pid] = prev;
+            applyLikedState(pid, prev === 1);
+        }
+    })
+    .catch(function () {
+        userRatings[pid] = prev;
+        applyLikedState(pid, prev === 1);
+    });
 }
 </script>
 {% endblock %}

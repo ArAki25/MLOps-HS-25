@@ -228,7 +228,7 @@
                     <div class="favorite-description">{{ (fav.project_description or '')[:200] }}{% if fav.project_description and fav.project_description|length > 200 %}...{% endif %}</div>
                 </div>
                 <div class="favorite-actions">
-                    <a href="{{ fav.simap_url }}" target="_blank" class="btn-view">Auf simap.ch</a>
+                    <a href="{{ fav.simap_url }}" target="_blank" rel="noopener noreferrer" class="btn-view">Auf simap.ch</a>
                     <button class="btn-remove" onclick="removeFavorite('{{ fav.project_id }}', this)">
                         ✕ Entfernen
                     </button>

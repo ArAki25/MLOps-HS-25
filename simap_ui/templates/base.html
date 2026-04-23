@@ -7,6 +7,103 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <!-- Link to our global premium stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* ─── User-Menü (Nav, nur bei login) ─── */
+        .user-menu { position: relative; }
+        .user-menu-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 0.85rem 0.45rem 0.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            color: #e4e4e7;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: border-color 0.18s, background 0.18s, color 0.18s;
+        }
+        .user-menu-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+        .user-menu-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent, #06b6d4), #3b82f6);
+            color: #000;
+            font-weight: 700;
+            font-size: 0.78rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .user-menu-name {
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .user-menu-caret {
+            transition: transform 0.2s;
+            opacity: 0.7;
+        }
+        .user-menu.open .user-menu-caret { transform: rotate(180deg); }
+
+        .user-menu-dropdown {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            min-width: 220px;
+            padding: 0.4rem;
+            background: rgba(18, 18, 20, 0.96);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(16px);
+            opacity: 0;
+            transform: translateY(-6px);
+            pointer-events: none;
+            transition: opacity 0.15s, transform 0.15s;
+            z-index: 60;
+        }
+        .user-menu.open .user-menu-dropdown {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .user-menu-email {
+            padding: 0.55rem 0.7rem 0.5rem;
+            font-size: 0.78rem;
+            color: #71717a;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 0.3rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .user-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.55rem 0.7rem;
+            border-radius: 8px;
+            color: #e4e4e7;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+        }
+        .user-menu-item:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+        .user-menu-item.danger { color: #fca5a5; }
+        .user-menu-item.danger:hover { background: rgba(248, 113, 113, 0.1); color: #f87171; }
+        .user-menu-item svg { opacity: 0.75; flex-shrink: 0; }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -41,8 +138,49 @@
                 </nav>
             </div>
             <div class="nav-right">
-                <a href="/login" class="btn btn-ghost">Anmelden</a>
-                <a href="/register" class="btn btn-primary">Kostenlos starten</a>
+                {% if session.get('user_logged_in') %}
+                    {% set _company = session.get('user_company_name') or session.get('user_email') or 'Konto' %}
+                    {% set _initial = (_company[:1] | upper) if _company else '?' %}
+                    <div class="user-menu" id="user-menu">
+                        <button type="button" class="user-menu-btn"
+                                aria-haspopup="true" aria-expanded="false"
+                                onclick="toggleUserMenu(event)">
+                            <span class="user-menu-avatar">{{ _initial }}</span>
+                            <span class="user-menu-name">{{ _company }}</span>
+                            <svg class="user-menu-caret" width="14" height="14" fill="none"
+                                 stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+                        <div class="user-menu-dropdown" role="menu">
+                            <div class="user-menu-email">{{ session.get('user_email', '') }}</div>
+                            <a href="/profile" class="user-menu-item" role="menuitem">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                Mein Profil
+                            </a>
+                            <a href="/publications" class="user-menu-item" role="menuitem">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>
+                                </svg>
+                                Ausschreibungen
+                            </a>
+                            <a href="/logout" class="user-menu-item danger" role="menuitem">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                    <polyline points="16 17 21 12 16 7"/>
+                                    <line x1="21" y1="12" x2="9" y2="12"/>
+                                </svg>
+                                Abmelden
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="/login" class="btn btn-ghost">Anmelden</a>
+                    <a href="/register" class="btn btn-primary">Kostenlos starten</a>
+                {% endif %}
                 <button class="mobile-menu-btn" onclick="document.getElementById('nav').classList.toggle('open')">
                     <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -86,9 +224,9 @@
             </div>
             <div>
                 <h4>Rechtliches</h4>
-                <a href="#">Impressum</a>
-                <a href="#">Datenschutz</a>
-                <a href="#">AGB</a>
+                <a href="/impressum">Impressum</a>
+                <a href="/datenschutz">Datenschutz</a>
+                <a href="/agb">AGB</a>
             </div>
             <div>
                 <h4>Kontakt</h4>
@@ -109,6 +247,35 @@
             const nav = document.getElementById('nav');
             nav.classList.toggle('open');
         }
+
+        // User-Menü: toggle + Close-on-Outside-Click / ESC
+        function toggleUserMenu(evt) {
+            if (evt) evt.stopPropagation();
+            var menu = document.getElementById('user-menu');
+            if (!menu) return;
+            var willOpen = !menu.classList.contains('open');
+            menu.classList.toggle('open', willOpen);
+            var btn = menu.querySelector('.user-menu-btn');
+            if (btn) btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        }
+        document.addEventListener('click', function (e) {
+            var menu = document.getElementById('user-menu');
+            if (!menu || !menu.classList.contains('open')) return;
+            if (!menu.contains(e.target)) {
+                menu.classList.remove('open');
+                var btn = menu.querySelector('.user-menu-btn');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') return;
+            var menu = document.getElementById('user-menu');
+            if (menu && menu.classList.contains('open')) {
+                menu.classList.remove('open');
+                var btn = menu.querySelector('.user-menu-btn');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            }
+        });
     </script>
 </body>
 </html>

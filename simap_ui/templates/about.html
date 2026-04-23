@@ -48,6 +48,10 @@
         margin-bottom: 1rem;
     }
 
+    .about-mission {
+        white-space: pre-wrap;
+    }
+
     /* Team Section */
     .team-section {
         margin-top: 3rem;
@@ -169,7 +173,7 @@
         <h2>Unsere Mission</h2>
         <div class="about-text">
             {% if content.mission %}
-                {{ content.mission | safe }}
+                <div class="about-mission">{{ content.mission | e }}</div>
             {% else %}
                 <p>
                     SAJF Strategies wurde mit dem Ziel gegründet, Unternehmen in der Schweiz dabei zu helfen, 

@@ -72,6 +72,11 @@ def ui(table_name: str):
     sb = get_client()
     return sb.schema(UI_SCHEMA).table(table_name)
 
+def public(table_name: str):
+    """Helper: Zugriff auf eine Tabelle im public Schema."""
+    sb = get_client()
+    return sb.table(table_name)
+
 
 def ui_rpc(function_name: str, params: dict):
     """Helper: Aufruf einer Postgres-Funktion im 'ui' Schema."""
@@ -504,26 +509,24 @@ def get_user_favorites_ids(user_id: str) -> List[str]:
 
 def get_user_ratings_with_details(user_id):
     """
-    Alle Bewertungen eines Users mit Projekt-/Archiv-Details.
+    Alle Likes eines Users (rating=1) mit Projekt-/Archiv-Details.
     Joint je nach source aus projects_ui ODER public.archive.
     """
     if not user_id:
         return []
     try:
-        # 1) Alle Ratings laden
         ratings_res = ui('user_tender_ratings') \
             .select('tender_id, rating, source') \
             .eq('user_id', user_id) \
+            .eq('rating', 1) \
             .execute()
 
         if not ratings_res.data:
             return []
 
-        # 2) IDs nach Source aufteilen
         project_ids = [r['tender_id'] for r in ratings_res.data if r.get('source') == 'project' and r.get('tender_id')]
         archive_ids = [r['tender_id'] for r in ratings_res.data if r.get('source') == 'archive' and r.get('tender_id')]
 
-        # 3) Details aus jeweiliger Tabelle laden
         project_map = {}
         if project_ids:
             proj_res = ui('projects_ui') \
@@ -534,20 +537,19 @@ def get_user_ratings_with_details(user_id):
 
         archive_map = {}
         if archive_ids:
-            # archive liegt in public, daher über den Standard-Client
-            from supabase_client import sb  # lokaler Import um Zirkel zu vermeiden
-            arch_res = sb.table('archive') \
-                .select('id, title_de, canton, order_type, award_amount, winner_name, winner_city, award_decision_date') \
-                .in_('id', archive_ids) \
-                .execute()
-            # order_type → project_subtype zurückmappen für konsistente UI
-            reverse_map = {'WORKS': 'construction', 'SERVICES': 'service', 'SUPPLIES': 'supply'}
-            archive_map = {}
-            for a in (arch_res.data or []):
-                a['project_subtype'] = reverse_map.get(a.get('order_type'), a.get('order_type'))
-                archive_map[str(a['id'])] = a
+            try:
+                arch_res = public('archive') \
+                    .select('id, title_de, canton, order_type, award_amount, winner_name, winner_city, award_decision_date') \
+                    .in_('id', archive_ids) \
+                    .execute()
+                reverse_map = {'WORKS': 'construction', 'SERVICES': 'service', 'SUPPLIES': 'supply'}
+                for a in (arch_res.data or []):
+                    a = dict(a)
+                    a['project_subtype'] = reverse_map.get(a.get('order_type'), a.get('order_type'))
+                    archive_map[str(a['id'])] = a
+            except Exception as e:
+                print(f"⚠️ get_user_ratings_with_details archive join: {e}")
 
-        # 4) Zusammenführen
         result = []
         for r in ratings_res.data:
             tid = r.get('tender_id', '')
@@ -582,33 +584,33 @@ def get_user_ratings_with_details(user_id):
                     'award_decision_date': None,
                 })
 
-        print(f"✅ {len(result)} Bewertungen geladen ({len(project_ids)} Projekte + {len(archive_ids)} Archiv)")
+        print(f"✅ {len(result)} Likes geladen ({len(project_ids)} Projekte + {len(archive_ids)} Archiv)")
         return result
     except Exception as e:
         print(f"❌ get_user_ratings_with_details Fehler: {e}")
         return []
 
 
-def update_single_rating(user_id, tender_id, rating, source='project'):
+def remove_user_rating(user_id, tender_id, source='project'):
     """
-    Einzelne Bewertung aktualisieren (Toggle zwischen 1 und -1).
-    source wird benötigt da der Unique-Constraint auf (user_id, tender_id, source) liegt.
+    Einzelnes Like entfernen (Unlike) - rein destruktiv.
+    Der Trigger aktualisiert danach den Taste-Vektor.
     """
-    if not user_id or not tender_id or rating not in (-1, 1):
+    if not user_id or not tender_id:
         return {'success': False, 'error': 'Ungültige Parameter'}
     if source not in ('project', 'archive'):
         source = 'project'
     try:
         ui('user_tender_ratings') \
-            .update({'rating': rating}) \
+            .delete() \
             .eq('user_id', user_id) \
-            .eq('tender_id', tender_id) \
+            .eq('tender_id', str(tender_id)) \
             .eq('source', source) \
             .execute()
-        print(f"✅ Rating aktualisiert: {tender_id} ({source}) → {rating}")
+        print(f"✅ Like entfernt: {tender_id} ({source})")
         return {'success': True}
     except Exception as e:
-        print(f"❌ update_single_rating Fehler: {e}")
+        print(f"❌ remove_user_rating Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -769,7 +771,7 @@ def get_test_runs_overview(top_n: int = 10) -> List[Dict]:
 
     Fuer jeden Nutzer mit Test-E-Mail (Domain @recommender.dev):
       - company_name, canton, project_subtype
-      - n_likes, n_dislikes (gesamt), has_taste_vector
+      - n_likes (gesamt), has_taste_vector
       - avg_pairwise_cosine (Diversity), avg_similarity_top_n
       - Top-5 Empfehlungen (title + similarity)
 
@@ -798,7 +800,6 @@ def get_test_runs_overview(top_n: int = 10) -> List[Dict]:
             'canton': None,
             'project_subtype': None,
             'n_likes': 0,
-            'n_dislikes': 0,
             'has_taste_vector': False,
             'avg_pairwise_cosine_baseline': None,
             'avg_pairwise_cosine_mmr': None,
@@ -819,20 +820,19 @@ def get_test_runs_overview(top_n: int = 10) -> List[Dict]:
 
         try:
             tv = ui('user_taste_vectors') \
-                .select('n_likes,n_dislikes') \
+                .select('n_likes') \
                 .eq('user_id', uid) \
                 .execute().data or []
             if tv:
                 row['has_taste_vector'] = True
                 row['n_likes'] = int(tv[0].get('n_likes') or 0)
-                row['n_dislikes'] = int(tv[0].get('n_dislikes') or 0)
             else:
                 ratings = ui('user_tender_ratings') \
                     .select('rating') \
                     .eq('user_id', uid) \
+                    .eq('rating', 1) \
                     .execute().data or []
-                row['n_likes'] = sum(1 for r in ratings if int(r.get('rating', 0)) == 1)
-                row['n_dislikes'] = sum(1 for r in ratings if int(r.get('rating', 0)) == -1)
+                row['n_likes'] = len(ratings)
         except Exception as e:
             print(f"⚠️ test-runs taste: {e}")
 
@@ -862,7 +862,7 @@ def get_test_runs_overview(top_n: int = 10) -> List[Dict]:
 
 
 def get_feed_ratings_map(user_id, source='project'):
-    """Gibt {tender_id: rating} fuer einen User zurueck (fuer UI-Sync)."""
+    """Gibt {tender_id: 1} fuer alle Likes eines Users zurueck (UI-Sync)."""
     if not user_id:
         return {}
     try:
@@ -870,8 +870,9 @@ def get_feed_ratings_map(user_id, source='project'):
             .select('tender_id,rating,source') \
             .eq('user_id', user_id) \
             .eq('source', source) \
+            .eq('rating', 1) \
             .execute().data or []
-        return {r['tender_id']: int(r['rating']) for r in rows if r.get('rating') in (-1, 1)}
+        return {r['tender_id']: 1 for r in rows if r.get('tender_id')}
     except Exception as e:
         print(f"❌ get_feed_ratings_map Fehler: {e}")
         return {}
@@ -879,19 +880,18 @@ def get_feed_ratings_map(user_id, source='project'):
 
 def upsert_feed_rating(user_id, tender_id, rating, source='project'):
     """
-    Idempotentes Rating aus dem Live-Feed:
-      rating ==  1  -> Like
-      rating == -1  -> Dislike
-      rating ==  0  -> Entfernen (Unrate)
+    Idempotentes Like aus dem Live-Feed:
+      rating == 1  -> Like setzen
+      rating == 0  -> Like entfernen (Unlike)
 
-    Upsert auf Unique-Key (user_id, tender_id, source).
+    Unique-Key (user_id, tender_id, source).
     Trigger ui.tg_user_tender_ratings_refresh_taste aktualisiert danach
-    automatisch ui.user_taste_vectors (Rocchio).
+    automatisch ui.user_taste_vectors (Likes-Centroid).
     """
     if not user_id or not tender_id:
         return {'success': False, 'error': 'Ungültige Parameter'}
-    if rating not in (-1, 0, 1):
-        return {'success': False, 'error': 'rating muss -1, 0 oder 1 sein'}
+    if rating not in (0, 1):
+        return {'success': False, 'error': 'rating muss 0 oder 1 sein'}
     if source not in ('project', 'archive'):
         source = 'project'
 
@@ -909,12 +909,12 @@ def upsert_feed_rating(user_id, tender_id, rating, source='project'):
             {
                 'user_id': user_id,
                 'tender_id': str(tender_id),
-                'rating': rating,
+                'rating': 1,
                 'source': source,
             },
             on_conflict='user_id,tender_id,source',
         ).execute()
-        return {'success': True, 'action': 'upsert', 'rating': rating}
+        return {'success': True, 'action': 'upsert', 'rating': 1}
     except Exception as e:
         print(f"❌ upsert_feed_rating Fehler: {e}")
         return {'success': False, 'error': str(e)}
@@ -1032,23 +1032,77 @@ def get_user_by_id(user_id: str):
 # ONBOARDING - NEU mit Embedding-Support
 # ============================================
 
+def get_user_profile(user_id):
+    """Lese das Firmenprofil eines Users aus ui.user_profiles.
+
+    Gibt ein Dict mit allen Profilfeldern zurueck (inkl. `preferred_cantons`
+    als Liste). Bei unbekanntem User oder Fehlern -> {}.
+    """
+    if not user_id:
+        return {}
+    try:
+        r = ui('user_profiles').select('*').eq('user_id', user_id).execute()
+        if not r.data:
+            return {}
+        profile = r.data[0] or {}
+        pc = profile.get('preferred_cantons')
+        if pc is None:
+            profile['preferred_cantons'] = []
+        elif isinstance(pc, str):
+            # Falls Postgres-Array als String ankommt (sollte nicht passieren)
+            profile['preferred_cantons'] = [s for s in pc.strip('{}').split(',') if s]
+        return profile
+    except Exception as e:
+        print(f"❌ get_user_profile Fehler: {e}")
+        return {}
+
+
 def save_user_profile(user_id, data):
-    """Speichere oder update Firmenprofil mit den neuen Filter-Feldern"""
+    """Speichere oder update Firmenprofil mit den neuen Filter-Feldern.
+
+    Unterstuetzt `preferred_cantons` (Liste). Setzt fuer Backward-Compat
+    das Legacy-Feld `canton` automatisch auf das erste Element der Liste,
+    falls nicht explizit uebergeben.
+    """
     if not user_id:
         return {'success': False, 'error': 'Nicht eingeloggt'}
 
     try:
+        # Preferred cantons normalisieren
+        preferred_cantons = data.get('preferred_cantons')
+        if preferred_cantons is None:
+            preferred_cantons_list = None
+        elif isinstance(preferred_cantons, (list, tuple)):
+            preferred_cantons_list = [
+                str(c).strip().upper()
+                for c in preferred_cantons
+                if c and str(c).strip()
+            ]
+        elif isinstance(preferred_cantons, str):
+            preferred_cantons_list = [
+                s.strip().upper() for s in preferred_cantons.split(',') if s.strip()
+            ]
+        else:
+            preferred_cantons_list = []
+
+        # Backward-Compat: canton = erstes Element, wenn canton nicht explizit gesetzt
+        canton = data.get('canton')
+        if not canton and preferred_cantons_list:
+            canton = preferred_cantons_list[0]
+
         profile = {
             'user_id': user_id,
             'company_name': data.get('company_name'),
             'employee_count': data.get('employee_count'),
             'headquarters': data.get('headquarters'),
-            'canton': data.get('canton'),
+            'canton': canton,
             'project_subtype': data.get('project_subtype'),
             'award_amount_min': data.get('award_amount_min'),
             'award_amount_max': data.get('award_amount_max'),
             'updated_at': datetime.utcnow().isoformat()
         }
+        if preferred_cantons_list is not None:
+            profile['preferred_cantons'] = preferred_cantons_list
 
         existing = ui('user_profiles').select('user_id').eq('user_id', user_id).execute()
         if existing.data:
@@ -1058,7 +1112,8 @@ def save_user_profile(user_id, data):
 
         # company_name auch in ui.users updaten
         try:
-            ui('users').update({'company_name': data.get('company_name')}).eq('id', user_id).execute()
+            if data.get('company_name'):
+                ui('users').update({'company_name': data.get('company_name')}).eq('id', user_id).execute()
         except:
             pass
 
@@ -1321,15 +1376,6 @@ def recommendation_diversity_metric(user_id, count: int = 10) -> Dict:
         return {'error': str(e)}
 
 
-# ============================================
-# Alte Funktionen - bleiben für Kompatibilität, werden aber nicht mehr genutzt
-# ============================================
-
-def save_user_ratings(user_id, ratings_list):
-    """[DEPRECATED] alte Version - bitte save_user_ratings_v2 verwenden"""
-    print("⚠️ save_user_ratings (alt) aufgerufen - sollte save_user_ratings_v2 sein")
-    return save_user_ratings_v2(user_id, ratings_list)
-
 def get_filtered_sample_projects(user_id, sample_size=20):
     """
     Ruft die RPC auf und gibt die Mischung aus project + archive zurück.
@@ -1344,6 +1390,43 @@ def get_filtered_sample_projects(user_id, sample_size=20):
         })
         projects = result.data if hasattr(result, 'data') else result
 
+        def _fallback() -> list:
+            # Default-Auswahl, damit Onboarding nicht blockiert.
+            half = max(1, int(sample_size // 2))
+
+            proj_res = ui('projects_ui') \
+                .select('id,title_de,description_de,canton,project_subtype,award_amount,publication_date') \
+                .order('publication_date', desc=True) \
+                .limit(half) \
+                .execute()
+            proj_rows = proj_res.data or []
+            proj_rows = [{**r, 'source': 'project'} for r in proj_rows]
+
+            arch_rows = []
+            try:
+                arch_res = public('archive') \
+                    .select('id,title_de,description_de,canton,order_type,award_amount,winner_name,winner_city,award_decision_date') \
+                    .order('award_decision_date', desc=True) \
+                    .limit(sample_size - len(proj_rows)) \
+                    .execute()
+                raw_arch = arch_res.data or []
+                reverse_map = {'WORKS': 'construction', 'SERVICES': 'service', 'SUPPLIES': 'supply'}
+                for a in raw_arch:
+                    a = dict(a)
+                    a['project_subtype'] = reverse_map.get(a.get('order_type'), a.get('order_type'))
+                    a['source'] = 'archive'
+                    if a.get('award_decision_date'):
+                        a['award_decision_date'] = str(a['award_decision_date'])
+                    arch_rows.append(a)
+            except Exception as e:
+                print(f"⚠️ Fallback archive sample fehlgeschlagen: {e}")
+
+            return (proj_rows + arch_rows)[:sample_size]
+
+        # Fallback: RPC liefert keine Ergebnisse
+        if not projects:
+            projects = _fallback()
+
         # description_de hat HTML-Tags drin – für die UI ok, Frontend stripped
         for p in (projects or []):
             # award_decision_date als String falls date-Objekt zurückkommt
@@ -1354,15 +1437,56 @@ def get_filtered_sample_projects(user_id, sample_size=20):
         return projects or []
     except Exception as e:
         print(f"❌ get_filtered_sample_projects Fehler: {e}")
-        return []
+        # Fallback auch bei RPC-Fehlern (z.B. Funktion fehlt/RLS/Timeout),
+        # damit das Onboarding trotzdem fortgesetzt werden kann.
+        try:
+            half = max(1, int(sample_size // 2))
+            proj_res = ui('projects_ui') \
+                .select('id,title_de,description_de,canton,project_subtype,award_amount,publication_date') \
+                .order('publication_date', desc=True) \
+                .limit(half) \
+                .execute()
+            proj_rows = proj_res.data or []
+            proj_rows = [{**r, 'source': 'project'} for r in proj_rows]
+
+            arch_rows = []
+            try:
+                arch_res = public('archive') \
+                    .select('id,title_de,description_de,canton,order_type,award_amount,winner_name,winner_city,award_decision_date') \
+                    .order('award_decision_date', desc=True) \
+                    .limit(sample_size - len(proj_rows)) \
+                    .execute()
+                raw_arch = arch_res.data or []
+                reverse_map = {'WORKS': 'construction', 'SERVICES': 'service', 'SUPPLIES': 'supply'}
+                for a in raw_arch:
+                    a = dict(a)
+                    a['project_subtype'] = reverse_map.get(a.get('order_type'), a.get('order_type'))
+                    a['source'] = 'archive'
+                    if a.get('award_decision_date'):
+                        a['award_decision_date'] = str(a['award_decision_date'])
+                    arch_rows.append(a)
+            except Exception as e2:
+                print(f"⚠️ Fallback archive sample fehlgeschlagen: {e2}")
+
+            out = (proj_rows + arch_rows)[:sample_size]
+            for p in out:
+                if p.get('award_decision_date'):
+                    p['award_decision_date'] = str(p['award_decision_date'])
+            print(f"✅ Fallback Sample-Projekte: {len(out)}")
+            return out
+        except Exception as e3:
+            print(f"❌ Fallback Sample-Projekte komplett fehlgeschlagen: {e3}")
+            return []
 
 
 def save_user_ratings_v2(user_id, ratings_list):
     """
-    Ratings speichern - inkl. source ('project' oder 'archive').
+    Likes aus dem Onboarding speichern (nur rating=1).
+    Eintraege ohne rating=1 werden ignoriert. source ('project' oder
+    'archive') ist Teil des Unique-Keys (user_id, tender_id, source).
 
-    Erwartetes Format pro rating:
-        {'project_id': <uuid>, 'rating': 1|-1, 'source': 'project'|'archive'}
+    Erwartetes Format pro Eintrag:
+        {'project_id': <uuid>, 'rating': 1, 'source': 'project'|'archive'}
     """
     if not user_id or not ratings_list:
         return {'success': False, 'error': 'Keine Ratings übergeben'}
@@ -1372,9 +1496,9 @@ def save_user_ratings_v2(user_id, ratings_list):
         for r in ratings_list:
             tender_id = r.get('project_id')
             rating_val = r.get('rating')
-            source = r.get('source', 'project')  # Default: project (für Backwards-Compat)
+            source = r.get('source', 'project')
 
-            if not tender_id or rating_val not in (-1, 1):
+            if not tender_id or rating_val != 1:
                 continue
             if source not in ('project', 'archive'):
                 source = 'project'
@@ -1382,57 +1506,39 @@ def save_user_ratings_v2(user_id, ratings_list):
             rows.append({
                 'user_id': user_id,
                 'tender_id': str(tender_id),
-                'rating': rating_val,
+                'rating': 1,
                 'source': source,
             })
 
         if not rows:
-            return {'success': False, 'error': 'Keine gültigen Ratings'}
+            return {'success': False, 'error': 'Keine Likes zum Speichern'}
 
-        # Upsert damit bei Re-Rating die bestehende Zeile überschrieben wird
         ui('user_tender_ratings').upsert(
             rows,
             on_conflict='user_id,tender_id,source'
         ).execute()
 
-        # Onboarding als abgeschlossen markieren
         mark_onboarding_complete(user_id)
 
-        print(f"✅ {len(rows)} Ratings gespeichert für User: {user_id}")
+        print(f"✅ {len(rows)} Likes gespeichert für User: {user_id}")
         return {'success': True, 'count': len(rows)}
     except Exception as e:
         print(f"❌ save_user_ratings_v2 Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
-def get_user_recommendations(user_id, count=20):
-    """Personalisierte Empfehlungen via Embedding-Similarity"""
-    if not user_id:
-        return []
-    try:
-        result = ui_rpc('recommend_projects_for_user', {
-            'p_user_id': user_id,
-            'match_count': count
-        }).execute()
-        print(f"✅ {len(result.data or [])} recommendations für User: {user_id}")
-        return result.data or []
-    except Exception as e:
-        print(f"❌ get_user_recommendations Fehler: {e}")
-        return []
-
-
 # ============================================
-# Alte Funktionen - bleiben für Kompatibilität, werden aber nicht mehr genutzt
+# Deprecated Kompatibilitaets-Shims
 # ============================================
 
 def save_user_ratings(user_id, ratings_list):
-    """[DEPRECATED] alte Version - bitte save_user_ratings_v2 verwenden"""
-    print("⚠️ save_user_ratings (alt) aufgerufen - sollte save_user_ratings_v2 sein")
+    """[DEPRECATED] bitte save_user_ratings_v2 verwenden."""
+    print("⚠️ save_user_ratings (alt) aufgerufen - leite auf save_user_ratings_v2 um")
     return save_user_ratings_v2(user_id, ratings_list)
 
 
 def get_random_archive_tenders(count=20):
-    """[DEPRECATED] wurde durch get_filtered_sample_projects ersetzt"""
+    """[DEPRECATED] ersetzt durch get_filtered_sample_projects."""
     print("⚠️ get_random_archive_tenders (alt) aufgerufen")
     return []
 

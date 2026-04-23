@@ -156,14 +156,33 @@
         .pub-fav-btn:hover { background: var(--warning-bg); color: var(--warning); }
         .pub-fav-btn.favorited { color: var(--warning); }
 
-        /* ========== FEED RATE (Tab 1 Like/Dislike) ========== */
+        /* ========== FEED RATE (Tab 1 Like-Toggle) ========== */
         .pub-rate { display: flex; gap: 0.25rem; align-items: center; justify-content: center; }
         .pub-rate-btn { width: 32px; height: 32px; border: 1px solid var(--border); background: transparent; cursor: pointer; border-radius: 6px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; transition: all 0.12s; }
         .pub-rate-btn:hover { transform: translateY(-1px); }
         .pub-rate-btn.up:hover,
         .pub-rate-btn.up.active { background: rgba(16,185,129,0.15); border-color: #10b981; color: #34d399; }
-        .pub-rate-btn.down:hover,
-        .pub-rate-btn.down.active { background: rgba(239,68,68,0.15); border-color: #ef4444; color: #f87171; }
+
+        /* ========== LIKED STATE (persistenter gruener Rand auf der Karte) ========== */
+        .pub-row.is-liked { box-shadow: inset 3px 0 0 #10b981, 0 0 0 1px rgba(16,185,129,0.35); background: rgba(16,185,129,0.04); }
+        .pub-row.is-liked:hover { background: rgba(16,185,129,0.07); }
+        .pub-row.is-liked .pub-title { color: #34d399; }
+        .pub-detail.is-liked { box-shadow: inset 3px 0 0 #10b981; background: rgba(16,185,129,0.03); }
+        .rec-card.is-liked { border-color: #10b981; box-shadow: 0 0 0 1px rgba(16,185,129,0.35), 0 4px 16px rgba(16,185,129,0.08); background: linear-gradient(180deg, rgba(16,185,129,0.04), transparent 60%); }
+        .rec-card.is-liked::before { opacity: 1; background: linear-gradient(90deg, #10b981, #34d399); }
+
+        /* ========== REC-CARD Erweiterungen (mehr Infos + Relevant-Button) ========== */
+        .rec-meta { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-bottom: 0.75rem; }
+        .rec-chip { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.175rem 0.55rem; background: var(--bg); border: 1px solid var(--border); border-radius: 100px; font-size: 0.6875rem; color: var(--text-secondary); font-weight: 500; }
+        .rec-chip svg { width: 11px; height: 11px; color: var(--text-muted); }
+        .rec-chip.accent { background: var(--accent-light); color: var(--accent); border-color: transparent; }
+        .rec-actions { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center; }
+        .rec-rate-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.75rem; border: 1px solid var(--border); background: transparent; border-radius: 8px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+        .rec-rate-btn:hover { border-color: #10b981; color: #34d399; background: rgba(16,185,129,0.08); }
+        .rec-rate-btn.active { border-color: #10b981; color: #10b981; background: rgba(16,185,129,0.15); }
+        .rec-rate-btn .check-icon { display: none; }
+        .rec-rate-btn.active .check-icon { display: inline-flex; }
+        .rec-rate-btn.active .plus-icon { display: none; }
 
         /* ========== LOADING / EMPTY ========== */
         .loading-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
@@ -178,20 +197,17 @@
         .pagination button.active { background: var(--accent); color: white; border-color: var(--accent); }
         .pagination button:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        /* ========== BEWERTUNGEN TAB ========== */
+        /* ========== BEWERTUNGEN TAB (nur Likes) ========== */
         .bew-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; transition: border-color 0.2s; }
         .bew-card.rated-yes { border-left: 3px solid var(--success); }
-        .bew-card.rated-no { border-left: 3px solid #ef4444; }
         .bew-content { flex: 1; min-width: 0; }
         .bew-title { font-weight: 600; font-size: 0.9375rem; color: var(--text-primary); margin-bottom: 0.375rem; }
         .bew-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; }
         .bew-tag { padding: 0.15rem 0.5rem; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; font-size: 0.6875rem; color: var(--text-muted); }
         .bew-btns { display: flex; gap: 0.375rem; flex-shrink: 0; }
         .bew-btn { padding: 0.4rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid; transition: all 0.15s; font-family: inherit; display: flex; align-items: center; gap: 0.25rem; }
-        .bew-btn-yes { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.2); color: #34d399; }
-        .bew-btn-yes:hover, .bew-btn-yes.active { background: rgba(16,185,129,0.2); border-color: #10b981; color: #fff; }
-        .bew-btn-no { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); color: #f87171; }
-        .bew-btn-no:hover, .bew-btn-no.active { background: rgba(239,68,68,0.2); border-color: #ef4444; color: #fff; }
+        .bew-btn-remove { background: rgba(148,163,184,0.08); border-color: rgba(148,163,184,0.25); color: #cbd5f5; }
+        .bew-btn-remove:hover { background: rgba(239,68,68,0.18); border-color: #ef4444; color: #fff; }
 
         /* ========== EMPFEHLUNGEN TAB ========== */
         .rec-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 0.75rem; transition: all 0.2s; position: relative; overflow: hidden; }
@@ -466,13 +482,12 @@
         function renderBewertungen(items) {
             var html = '';
             items.forEach(function(item) {
-                var r = item.rating;
-                var cardClass = r === 1 ? 'rated-yes' : 'rated-no';
                 var canton = item.canton ? (KANTON_NAMES[item.canton] || item.canton) : '';
                 var subtype = item.project_subtype ? (SUBTYPE_LABELS[item.project_subtype] || item.project_subtype) : '';
                 var amount = item.award_amount ? 'CHF ' + Number(item.award_amount).toLocaleString('de-CH') : '';
+                var source = item.source || 'project';
 
-                html += '<div class="bew-card ' + cardClass + '" id="bew-' + item.tender_id + '">' +
+                html += '<div class="bew-card rated-yes" id="bew-' + item.tender_id + '">' +
                     '<div class="bew-content">' +
                         '<div class="bew-title">' + escapeHtml(item.title_de || 'Ohne Titel') + '</div>' +
                         '<div class="bew-meta">' +
@@ -482,11 +497,8 @@
                         '</div>' +
                     '</div>' +
                     '<div class="bew-btns">' +
-                        '<button class="bew-btn bew-btn-no' + (r === -1 ? ' active' : '') + '" onclick="updateRating(\'' + item.tender_id + '\', -1)">' +
-                            '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Nein' +
-                        '</button>' +
-                        '<button class="bew-btn bew-btn-yes' + (r === 1 ? ' active' : '') + '" onclick="updateRating(\'' + item.tender_id + '\', 1)">' +
-                            '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Ja' +
+                        '<button class="bew-btn bew-btn-remove" onclick="removeLike(\'' + item.tender_id + '\', \'' + source + '\')">' +
+                            '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Entfernen' +
                         '</button>' +
                     '</div>' +
                 '</div>';
@@ -494,15 +506,17 @@
             document.getElementById('bew-content').innerHTML = html;
         }
 
-        function updateRating(tenderId, newRating) {
-            fetch('/api/update-rating', {
+        function removeLike(tenderId, source) {
+            fetch('/api/remove-rating', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({tender_id: tenderId, rating: newRating})
+                body: JSON.stringify({tender_id: tenderId, source: source || 'project'})
             }).then(function(r) { return r.json(); }).then(function(res) {
                 if (res.success) {
                     bewLoaded = false;
-                    recLoaded = false;  // Empfehlungen müssen sich auch aktualisieren
+                    recLoaded = false;
+                    if (userRatings[tenderId]) delete userRatings[tenderId];
+                    updateRateButtons(tenderId, 0);
                     loadBewertungen();
                 }
             }).catch(function(e) { console.error(e); });
@@ -537,21 +551,34 @@
                 var canton = r.canton ? (KANTON_NAMES[r.canton] || r.canton) : '';
                 var subtype = r.project_subtype ? (SUBTYPE_LABELS[r.project_subtype] || r.project_subtype) : '';
                 var amount = r.award_amount ? 'CHF ' + Number(r.award_amount).toLocaleString('de-CH') : '';
+                var pid = r.id || '';
+                var isLiked = pid && userRatings[pid] === 1;
+                var likedCls = isLiked ? ' is-liked' : '';
+                var btnActive = isLiked ? ' active' : '';
+                var btnLabel = isLiked ? 'Relevant' : 'Als relevant markieren';
 
-                html += '<div class="rec-card">' +
+                var chips = '';
+                if (canton) chips += '<span class="rec-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escapeHtml(canton) + '</span>';
+                if (subtype) chips += '<span class="rec-chip">' + escapeHtml(subtype) + '</span>';
+                if (amount) chips += '<span class="rec-chip accent">' + amount + '</span>';
+
+                html += '<div class="rec-card' + likedCls + '" data-rec-pid="' + pid + '">' +
                     '<div class="rec-top">' +
                         '<span class="rec-score ' + scoreClass + '">' +
                             '<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> ' +
                             score + '% Match' +
                         '</span>' +
-                        (canton ? '<span class="bew-tag">' + canton + '</span>' : '') +
+                        '<div class="rec-actions">' +
+                            '<button class="rec-rate-btn' + btnActive + '" onclick="rateInFeed(\'' + pid + '\',1)" title="Als relevant bewerten" aria-pressed="' + (isLiked ? 'true' : 'false') + '">' +
+                                '<span class="plus-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></span>' +
+                                '<span class="check-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>' +
+                                '<span class="rec-rate-label">' + btnLabel + '</span>' +
+                            '</button>' +
+                        '</div>' +
                     '</div>' +
                     '<div class="rec-title">' + escapeHtml(r.title_de || 'Ohne Titel') + '</div>' +
+                    (chips ? '<div class="rec-meta">' + chips + '</div>' : '') +
                     '<div class="rec-desc">' + escapeHtml(desc) + '</div>' +
-                    '<div class="rec-bottom">' +
-                        '<span class="rec-subtype">' + subtype + '</span>' +
-                        (amount ? '<span class="rec-amount">' + amount + '</span>' : '') +
-                    '</div>' +
                 '</div>';
             });
             document.getElementById('rec-content').innerHTML = html;
@@ -678,9 +705,9 @@
 
                 var currentRating = userRatings[p.id] || 0;
                 var upActive = currentRating === 1 ? ' active' : '';
-                var downActive = currentRating === -1 ? ' active' : '';
+                var rowLiked = currentRating === 1 ? ' is-liked' : '';
 
-                html += '<div class="pub-row" id="' + rowId + '" onclick="toggleDetail(\'' + rowId + '\')">' +
+                html += '<div class="pub-row' + rowLiked + '" id="' + rowId + '" data-pub-pid="' + p.id + '" onclick="toggleDetail(\'' + rowId + '\')">' +
                     '<div class="pub-title-col"><div class="pub-title">' + escapeHtml(p.title) + '</div><div class="pub-location">' + loc + '</div><div class="pub-tags">' + tags + '</div></div>' +
                     '<div class="pub-office">' + escapeHtml(p.organization||'-') + '</div>' +
                     '<div class="pub-date-col"><div class="pub-time-ago ' + (isRecent?'':'old') + '">' + getTimeAgo(p.publication_date) + '</div><div class="pub-date-exact">' + formatDate(p.publication_date) + '</div></div>' +
@@ -688,13 +715,10 @@
                         '<button class="pub-rate-btn up' + upActive + '" data-rate-pid="' + p.id + '" data-rate-val="1" onclick="event.stopPropagation();rateInFeed(\'' + p.id + '\',1)" title="Relevant">' +
                             '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>' +
                         '</button>' +
-                        '<button class="pub-rate-btn down' + downActive + '" data-rate-pid="' + p.id + '" data-rate-val="-1" onclick="event.stopPropagation();rateInFeed(\'' + p.id + '\',-1)" title="Nicht relevant">' +
-                            '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" style="transform:rotate(180deg);"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>' +
-                        '</button>' +
                     '</div>' +
                     '<div class="pub-actions"><button class="pub-fav-btn ' + (isFav?'favorited':'') + '" onclick="event.stopPropagation();toggleFavorite(\'' + p.id + '\',this)" title="' + (isFav?'Entfernen':'Merken') + '">' + (isFav?starFilled:starEmpty) + '</button></div>' +
                 '</div>' +
-                '<div class="pub-detail" id="detail-' + rowId + '"><div class="pub-detail-inner"><div class="pub-detail-desc">' + escapeHtml(p.description||'') + '</div><div class="pub-detail-actions"><a href="' + escapeHtml(p.simap_url||'#') + '" target="_blank" class="btn-simap" onclick="event.stopPropagation()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Auf simap.ch ansehen</a><span class="pub-detail-meta">Projekt #' + (p.project_number||'-') + '</span></div></div></div>';
+                '<div class="pub-detail' + rowLiked + '" id="detail-' + rowId + '"><div class="pub-detail-inner"><div class="pub-detail-desc">' + escapeHtml(p.description||'') + '</div><div class="pub-detail-actions"><a href="' + escapeHtml(p.simap_url||'#') + '" target="_blank" rel="noopener noreferrer" class="btn-simap" onclick="event.stopPropagation()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Auf simap.ch ansehen</a><span class="pub-detail-meta">Projekt #' + (p.project_number||'-') + '</span></div></div></div>';
             });
             container.innerHTML = html;
         }
@@ -733,14 +757,14 @@
         function showLoading() { document.getElementById('pub-list').innerHTML = '<div class="loading-state"><div class="spinner"></div>Laden...</div>'; }
         function toggleUserMenu() { document.getElementById('user-dropdown').classList.toggle('show'); }
 
-        // Feed-Rate (Tab 1): idempotenter Toggle 1 / -1 / 0
+        // Feed-Rate (Tab 1): idempotenter Like-Toggle 1 / 0
         function rateInFeed(pid, value) {
             var prev = userRatings[pid] || 0;
-            // Toggle: gleicher Button erneut -> unrate (0)
-            var next = (prev === value) ? 0 : value;
+            // Nur Likes: erneuter Klick auf aktives "like" -> unrate (0), sonst -> 1
+            var next = (prev === 1) ? 0 : 1;
             userRatings[pid] = next;
             updateRateButtons(pid, next);
-            // Recommendation-Cache invalidieren
+            bewLoaded = false;
             recLoaded = false;
 
             fetch('/api/feed-rate', {
@@ -760,9 +784,33 @@
 
         function updateRateButtons(pid, rating) {
             document.querySelectorAll('.pub-rate-btn[data-rate-pid="' + pid + '"]').forEach(function(btn) {
-                var val = parseInt(btn.getAttribute('data-rate-val'), 10);
-                if (val === rating && rating !== 0) btn.classList.add('active');
+                if (rating === 1) btn.classList.add('active');
                 else btn.classList.remove('active');
+            });
+            // Gesamte Karte/Zeile visuell markieren (permanenter gruener Rand)
+            document.querySelectorAll('[data-pub-pid="' + pid + '"]').forEach(function(row) {
+                if (rating === 1) row.classList.add('is-liked');
+                else row.classList.remove('is-liked');
+                // Zugehoeriges Detail-Panel synchronisieren
+                if (row.id) {
+                    var detail = document.getElementById('detail-' + row.id);
+                    if (detail) {
+                        if (rating === 1) detail.classList.add('is-liked');
+                        else detail.classList.remove('is-liked');
+                    }
+                }
+            });
+            // Rec-Cards (Tab 3) per data-rec-pid markieren
+            document.querySelectorAll('[data-rec-pid="' + pid + '"]').forEach(function(card) {
+                if (rating === 1) card.classList.add('is-liked');
+                else card.classList.remove('is-liked');
+                var recBtn = card.querySelector('.rec-rate-btn');
+                if (recBtn) {
+                    if (rating === 1) recBtn.classList.add('active');
+                    else recBtn.classList.remove('active');
+                    var label = recBtn.querySelector('.rec-rate-label');
+                    if (label) label.textContent = rating === 1 ? 'Relevant' : 'Als relevant markieren';
+                }
             });
         }
 

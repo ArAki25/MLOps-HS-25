@@ -35,6 +35,7 @@ from supabase_client import (
     get_user_by_id,
     is_onboarding_complete,
     save_user_profile,
+    get_user_profile,
     save_user_simap_ids,
     save_user_ratings,
     get_random_archive_tenders,
@@ -44,7 +45,7 @@ from supabase_client import (
     get_user_recommendations,
     recommendation_diversity_metric,
     get_user_ratings_with_details,
-    update_single_rating,
+    remove_user_rating,
     upsert_feed_rating,
     get_feed_ratings_map,
     get_test_runs_overview,
@@ -189,6 +190,24 @@ def support():
     return render_template('support.html', content=content)
 
 
+@app.route('/impressum')
+def impressum():
+    """Impressum (Platzhalter bis zur vollständigen Fassung)"""
+    return render_template('legal_page.html', page_title='Impressum')
+
+
+@app.route('/datenschutz')
+def datenschutz():
+    """Datenschutzerklärung (Platzhalter)"""
+    return render_template('legal_page.html', page_title='Datenschutz')
+
+
+@app.route('/agb')
+def agb():
+    """AGB (Platzhalter)"""
+    return render_template('legal_page.html', page_title='Allgemeine Geschäftsbedingungen (AGB)')
+
+
 # ============================================
 # AUTHENTICATION PAGES
 # ============================================
@@ -307,6 +326,32 @@ def auth_login():
 def publications():
     """Ausschreibungen-Seite (geschützt)"""
     return render_template('publications.html')
+
+
+@app.route('/profile')
+@login_required
+def profile_page():
+    """Profil-Seite (geschützt) - Firmendaten und Präferenzen bearbeiten."""
+    user_id = session.get('user_id')
+    profile = get_user_profile(user_id) or {}
+    return render_template('profile.html', profile=profile)
+
+
+@app.route('/api/profile/update', methods=['POST'])
+def api_profile_update():
+    """API: Firmenprofil aktualisieren (inkl. preferred_cantons)."""
+    if not session.get('user_logged_in'):
+        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
+
+    data = request.get_json(silent=True) or {}
+    result = save_user_profile(session.get('user_id'), data)
+
+    # Company-Name auch in der Session aktualisieren, damit UI konsistent bleibt
+    if result.get('success') and data.get('company_name'):
+        session['user_company_name'] = data.get('company_name')
+
+    status = 200 if result.get('success') else 400
+    return jsonify(result), status
 
 
 # ============================================
@@ -452,24 +497,25 @@ def api_user_ratings():
     return jsonify({'ratings': ratings})
 
 
-@app.route('/api/update-rating', methods=['POST'])
-def api_update_rating():
-    """Einzelne Bewertung ändern"""
+@app.route('/api/remove-rating', methods=['POST'])
+def api_remove_rating():
+    """Einzelnes Like entfernen (Unlike)."""
     if not session.get('user_logged_in'):
         return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
-    data = request.get_json()
-    result = update_single_rating(
+    data = request.get_json() or {}
+    result = remove_user_rating(
         session.get('user_id'),
         data.get('tender_id'),
-        data.get('rating')
+        data.get('source', 'project'),
     )
     return jsonify(result)
 
 
 @app.route('/api/feed-rate', methods=['POST'])
 def api_feed_rate():
-    """Idempotentes Rating aus dem Live-Feed (Tab 'Ausschreibungen').
-    Body: {tender_id: uuid, rating: -1|0|1, source?: 'project'|'archive'}
+    """Idempotentes Like aus dem Live-Feed (Tab 'Ausschreibungen').
+    Body: {tender_id: uuid, rating: 0|1, source?: 'project'|'archive'}
+      rating=1 setzt das Like, rating=0 entfernt es (Toggle).
     """
     if not session.get('user_logged_in'):
         return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
@@ -502,7 +548,7 @@ def _test_runs_enabled() -> bool:
 def admin_test_runs():
     """Minimal-Dashboard zur Test-Auswertung (nur wenn ENABLE_TEST_DASHBOARD=true).
 
-    Zeigt pro Test-User (@recommender.dev): Likes/Dislikes, Taste-Vector-Status,
+    Zeigt pro Test-User (@recommender.dev): Likes, Taste-Vector-Status,
     Diversity-Score (baseline vs MMR) und Top-5 Empfehlungen.
     """
     if not _test_runs_enabled():
