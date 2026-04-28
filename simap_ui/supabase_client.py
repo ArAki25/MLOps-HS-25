@@ -1369,6 +1369,19 @@ def get_user_recommendations(user_id, count: int = 20):
         return []
 
 
+def get_user_like_count(user_id) -> int:
+    """Gibt die Anzahl Likes (n_likes) aus user_taste_vectors zurück.
+    0 = User hat noch nichts bewertet / kein Taste-Vektor vorhanden."""
+    if not user_id:
+        return 0
+    try:
+        r = ui('user_taste_vectors').select('n_likes').eq('user_id', user_id).execute()
+        rows = r.data or []
+        return int(rows[0]['n_likes']) if rows else 0
+    except Exception:
+        return 0
+
+
 def recommendation_diversity_metric(user_id, count: int = 10) -> Dict:
     """Misst die Diversitaet der Top-N Empfehlungen eines Users:
     durchschnittliche pairwise-Cosine-Aehnlichkeit.
