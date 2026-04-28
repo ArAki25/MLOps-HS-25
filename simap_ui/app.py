@@ -455,7 +455,7 @@ def api_onboarding_filter_options():
 def api_sample_projects():
     if not session.get('user_logged_in'):
         return jsonify({'projects': []}), 401
-    projects = get_filtered_sample_projects(session.get('user_id'),20)
+    projects = get_filtered_sample_projects(session.get('user_id'), 30)
     return jsonify({'projects': projects})
 
 
@@ -472,7 +472,12 @@ def api_submit_ratings():
 def api_recommendations():
     if not session.get('user_logged_in'):
         return jsonify({'recommendations': []}), 401
-    recs = get_user_recommendations(session.get('user_id'), 20)
+    try:
+        count = int(request.args.get('count', 20))
+        count = max(1, min(count, 100))
+    except (TypeError, ValueError):
+        count = 20
+    recs = get_user_recommendations(session.get('user_id'), count)
     return jsonify({'recommendations': recs})
 
 
@@ -753,16 +758,19 @@ def api_get_projects():
     per_page = request.args.get('per_page', 30, type=int)
     search = request.args.get('search', '').strip()
     canton = request.args.get('canton', '').strip()
+    cantons_str = request.args.get('cantons', '').strip()
+    cantons = [c.strip() for c in cantons_str.split(',') if c.strip()] if cantons_str else []
     order_type = request.args.get('order_type', '').strip()
     process_type = request.args.get('process_type', '').strip()
     pub_type = request.args.get('pub_type', '').strip()
     sort = request.args.get('sort', 'newest')
+    cpv = request.args.get('cpv', '').strip()
 
     result = get_projects_paginated(
         page=page, per_page=per_page, search=search,
-        canton=canton, order_type=order_type,
+        canton=canton, cantons=cantons, order_type=order_type,
         process_type=process_type, pub_type=pub_type,
-        sort=sort
+        sort=sort, cpv=cpv
     )
     return jsonify(result)
 
