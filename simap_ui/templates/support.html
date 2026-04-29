@@ -13,6 +13,13 @@
     .support-hero h1 { font-size: 2.5rem; margin-bottom: 0.75rem; color: #fff; }
     .support-hero p  { font-size: 1.1rem; color: rgba(255,255,255,0.65); max-width: 580px; margin: 0 auto; }
 
+    html[data-theme="light"] .support-hero {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+    }
+    html[data-theme="light"] .support-hero h1 { color: var(--text-primary); }
+    html[data-theme="light"] .support-hero p  { color: var(--text-secondary); }
+
     /* ── Support cards ── */
     .support-grid {
         display: grid;
