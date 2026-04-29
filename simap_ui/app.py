@@ -189,6 +189,11 @@ def support():
     return render_template('support.html', content=content)
 
 
+@app.route('/ueber-uns')
+def ueber_uns():
+    return render_template('ueber_uns.html')
+
+
 @app.route('/impressum')
 def impressum():
     """Impressum (Platzhalter bis zur vollständigen Fassung)"""

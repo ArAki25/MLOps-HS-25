@@ -123,6 +123,36 @@
         .theme-toggle .icon-moon { display: none; }
         html[data-theme="light"] .theme-toggle .icon-sun { display: none; }
         html[data-theme="light"] .theme-toggle .icon-moon { display: block; }
+
+        /* ─── Light-mode overrides for user-menu ─── */
+        html[data-theme="light"] .user-menu-btn {
+            color: #0f172a;
+            border-color: rgba(0,0,0,0.12);
+            background: rgba(0,0,0,0.04);
+        }
+        html[data-theme="light"] .user-menu-btn:hover {
+            background: rgba(0,0,0,0.08);
+            border-color: rgba(0,0,0,0.22);
+            color: #000;
+        }
+        html[data-theme="light"] .user-menu-dropdown {
+            background: rgba(255,255,255,0.97);
+            border-color: rgba(0,0,0,0.1);
+            box-shadow: 0 14px 32px rgba(0,0,0,0.15);
+        }
+        html[data-theme="light"] .user-menu-email {
+            color: #64748b;
+            border-bottom-color: rgba(0,0,0,0.07);
+        }
+        html[data-theme="light"] .user-menu-item {
+            color: #1e293b;
+        }
+        html[data-theme="light"] .user-menu-item:hover {
+            background: rgba(0,0,0,0.05);
+            color: #000;
+        }
+        html[data-theme="light"] .user-menu-item.danger { color: #dc2626; }
+        html[data-theme="light"] .user-menu-item.danger:hover { background: rgba(220,38,38,0.07); color: #b91c1c; }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -154,6 +184,7 @@
                     <a href="/" class="{% if request.path == '/' %}active{% endif %}">Home</a>
                     <a href="/how-it-works" class="{% if request.path == '/how-it-works' %}active{% endif %}">So funktioniert's</a>
                     <a href="/features" class="{% if request.path == '/features' %}active{% endif %}">Features</a>
+                    <a href="/ueber-uns" class="{% if request.path == '/ueber-uns' %}active{% endif %}">Über uns</a>
                     <a href="/support" class="{% if request.path == '/support' %}active{% endif %}">Support</a>
                 </nav>
             </div>

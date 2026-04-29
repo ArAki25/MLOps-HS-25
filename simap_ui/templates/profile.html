@@ -193,6 +193,64 @@
     }
     .pf-toast.success { border-color: rgba(16, 185, 129, 0.45); }
     .pf-toast.error   { border-color: rgba(248, 113, 113, 0.45); }
+
+    /* ─── Light-mode overrides ─── */
+    html[data-theme="light"] .pf-head h1 { color: #0f172a; }
+    html[data-theme="light"] .pf-head p  { color: #475569; }
+
+    html[data-theme="light"] .pf-card {
+        background: #ffffff;
+        border-color: #b8cad9;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9);
+    }
+    html[data-theme="light"] .pf-section-title {
+        border-bottom-color: #b8cad9;
+    }
+    html[data-theme="light"] .pf-label { color: #1e293b; }
+    html[data-theme="light"] .pf-hint  { color: #64748b; }
+
+    html[data-theme="light"] .pf-input,
+    html[data-theme="light"] .pf-select {
+        background: #f8fafc;
+        border-color: #a8bccf;
+        color: #0f172a;
+    }
+    html[data-theme="light"] .pf-input:focus,
+    html[data-theme="light"] .pf-select:focus {
+        background: #ffffff;
+        border-color: var(--accent, #06b6d4);
+        box-shadow: 0 0 0 3px rgba(6,182,212,0.15);
+    }
+    html[data-theme="light"] .pf-input[readonly] {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+    html[data-theme="light"] .pf-select option { background: #fff; color: #0f172a; }
+    html[data-theme="light"] .pf-range-dash { color: #94a3b8; }
+
+    html[data-theme="light"] .pf-btn-ghost {
+        background: rgba(0,0,0,0.03);
+        color: #334155;
+        border-color: #a8bccf;
+    }
+    html[data-theme="light"] .pf-btn-ghost:hover {
+        background: rgba(0,0,0,0.07);
+        border-color: #94a3b8;
+        color: #0f172a;
+    }
+
+    html[data-theme="light"] .pf-link-row {
+        background: #f8fafc;
+        border-color: #b8cad9;
+    }
+    html[data-theme="light"] .pf-link-label { color: #64748b; }
+
+    html[data-theme="light"] .pf-toast {
+        background: rgba(255,255,255,0.97);
+        border-color: #b8cad9;
+        color: #0f172a;
+        box-shadow: 0 14px 32px rgba(0,0,0,0.12);
+    }
 </style>
 {% endblock %}
 

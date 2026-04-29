@@ -353,6 +353,55 @@
         .cs-selection-bar { flex-wrap: wrap; }
         .cs-actions { width: 100%; justify-content: flex-end; }
     }
+
+    /* ─── Light-mode overrides ─── */
+    html[data-theme="light"] #canton-selector {
+        --cs-bg:         #f8fafc;
+        --cs-surface:    #ffffff;
+        --cs-surface-2:  #f1f5f9;
+        --cs-surface-h:  #ffffff;
+        --cs-border:     #b8cad9;
+        --cs-border-2:   #a8bccf;
+        --cs-border-3:   #7a9ab5;
+        --cs-text:       #0f172a;
+        --cs-text-muted: #475569;
+        --cs-text-dim:   #64748b;
+        --cs-shadow:     0 4px 16px rgba(0,0,0,0.08);
+    }
+    html[data-theme="light"] .cs-canton {
+        fill: #ffffff;
+        stroke: #7a9ab5;
+    }
+    html[data-theme="light"] .cs-canton:hover {
+        fill: #e0f2fe;
+        stroke: var(--cs-accent, #06b6d4);
+    }
+    html[data-theme="light"] .cs-canton.cs-selected {
+        fill: #bae6fd;
+        stroke: var(--cs-accent, #06b6d4);
+    }
+    html[data-theme="light"] .cs-label {
+        fill: #334155;
+    }
+    html[data-theme="light"] .cs-label.cs-selected {
+        fill: #0369a1;
+    }
+    html[data-theme="light"] .cs-border-outer {
+        stroke: #64748b;
+    }
+    html[data-theme="light"] .cs-region-btn:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+        border-color: #94a3b8;
+    }
+    html[data-theme="light"] .cs-btn:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+        border-color: #94a3b8;
+    }
+    html[data-theme="light"] .cs-tooltip {
+        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
 </style>
 
 <div class="cs-wrapper"
@@ -497,7 +546,8 @@
 
     window.selectRegion = function (key) {
         const cantons = REGIONS[key] || [];
-        cantons.forEach(a => selected.add(a));
+        const allSelected = cantons.length > 0 && cantons.every(a => selected.has(a));
+        cantons.forEach(a => allSelected ? selected.delete(a) : selected.add(a));
         refreshUI();
     };
 
