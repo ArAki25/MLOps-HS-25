@@ -325,7 +325,18 @@ def auth_login():
 @login_required
 def publications():
     """Ausschreibungen-Seite (geschützt)"""
-    return render_template('publications.html')
+    user_id = session.get('user_id')
+    profile = get_user_profile(user_id) or {}
+    return render_template('publications.html', profile=profile)
+
+
+@app.route('/api/profile/data', methods=['GET'])
+@login_required
+def api_profile_data():
+    """API: Aktuelles Firmenprofil lesen."""
+    user_id = session.get('user_id')
+    profile = get_user_profile(user_id) or {}
+    return jsonify(profile)
 
 
 @app.route('/profile')
