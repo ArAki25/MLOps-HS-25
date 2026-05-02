@@ -1,0 +1,63 @@
+name: Daily Embedding Sync
+
+on:
+  schedule:
+    # Läuft täglich um 02:00 UTC (03:00 MEZ / 04:00 MESZ)
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'Welche Source einlesen (project / archive / all)'
+        required: false
+        default: 'all'
+      force:
+        description: 'Alles neu encoden, auch unveränderte Rows (true/false)'
+        required: false
+        default: 'false'
+      limit:
+        description: 'Max Rows pro Source (leer = unbegrenzt)'
+        required: false
+        default: ''
+
+jobs:
+  sync-embeddings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run embedding sync
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          SOURCE="${{ github.event.inputs.source || 'all' }}"
+          FORCE="${{ github.event.inputs.force || 'false' }}"
+          LIMIT="${{ github.event.inputs.limit || '' }}"
+
+          ARGS="--source $SOURCE"
+          if [ "$FORCE" = "true" ]; then ARGS="$ARGS --force"; fi
+          if [ -n "$LIMIT" ]; then ARGS="$ARGS --limit $LIMIT"; fi
+
+          echo "Running: python -m embeddings.build_embeddings $ARGS"
+          python -m embeddings.build_embeddings $ARGS
+
+      - name: Upload log artifact on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: embedding-sync-failure-log
+          retention-days: 7
+          path: |
+            *.log

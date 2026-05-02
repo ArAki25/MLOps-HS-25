@@ -5,191 +5,206 @@
 {% block extra_css %}
 <style>
     .support-hero {
-        background: linear-gradient(135deg, var(--accent), var(--secondary));
-        color: white;
-        padding: 4rem 2rem;
+        background: #000;
+        padding: 3.5rem 2rem 3rem;
         text-align: center;
         margin: -2rem -2rem 2rem -2rem;
     }
+    .support-hero h1 { font-size: 2.5rem; margin-bottom: 0.75rem; color: #fff; }
+    .support-hero p  { font-size: 1.1rem; color: rgba(255,255,255,0.65); max-width: 580px; margin: 0 auto; }
 
-    .support-hero h1 {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
+    html[data-theme="light"] .support-hero {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
     }
+    html[data-theme="light"] .support-hero h1 { color: var(--text-primary); }
+    html[data-theme="light"] .support-hero p  { color: var(--text-secondary); }
 
-    .support-hero p {
-        font-size: 1.125rem;
-        opacity: 0.9;
-        max-width: 600px;
-        margin: 0 auto;
-    }
-
+    /* ── Support cards ── */
     .support-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
         margin-bottom: 3rem;
     }
 
     .support-card {
         background: var(--surface);
+        border: 1px solid var(--border);
         border-radius: 16px;
         padding: 2rem;
         box-shadow: var(--shadow);
         text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.1rem;
     }
 
     .support-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
+        width: 52px;
+        height: 52px;
+        background: linear-gradient(135deg, rgba(6,182,212,0.12), rgba(59,130,246,0.12));
+        border: 1px solid rgba(6,182,212,0.22);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.75rem;
+        color: var(--accent);
+        flex-shrink: 0;
     }
 
     .support-card h3 {
-        font-size: 1.25rem;
-        margin-bottom: 0.5rem;
-        color: var(--primary);
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        color: var(--text-primary);
     }
-
     .support-card p {
         color: var(--text-secondary);
-        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        margin-bottom: 0.9rem;
     }
-
     .support-link {
         color: var(--accent);
         text-decoration: none;
         font-weight: 600;
+        font-size: 0.9rem;
     }
+    .support-link:hover { text-decoration: underline; }
 
-    /* FAQ */
+    /* ── FAQ ── */
     .faq-section {
         background: var(--surface);
+        border: 1px solid var(--border);
         border-radius: 16px;
         padding: 2rem;
-        margin-bottom: 3rem;
+        margin-bottom: 2rem;
         box-shadow: var(--shadow);
     }
-
     .faq-section h2 {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
+        font-weight: 700;
         margin-bottom: 1.5rem;
-        color: var(--primary);
+        color: var(--text-primary);
     }
-
     .faq-item {
         border-bottom: 1px solid var(--border);
         padding: 1rem 0;
     }
-
+    .faq-item:last-child { border-bottom: none; }
     .faq-question {
         font-weight: 600;
         color: var(--text-primary);
         cursor: pointer;
         display: flex;
         justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        user-select: none;
     }
-
     .faq-question::after {
         content: '+';
-        font-size: 1.5rem;
+        font-size: 1.4rem;
+        line-height: 1;
         color: var(--accent);
+        flex-shrink: 0;
     }
-
-    .faq-item.open .faq-question::after {
-        content: '−';
-    }
-
+    .faq-item.open .faq-question::after { content: '−'; }
     .faq-answer {
         display: none;
-        padding-top: 1rem;
+        padding-top: 0.75rem;
         color: var(--text-secondary);
+        line-height: 1.65;
+        font-size: 0.925rem;
     }
+    .faq-item.open .faq-answer { display: block; }
 
-    .faq-item.open .faq-answer {
-        display: block;
-    }
-
-    /* Contact Form */
+    /* ── Contact form ── */
     .contact-section {
         background: var(--surface);
+        border: 1px solid var(--border);
         border-radius: 16px;
         padding: 2rem;
         box-shadow: var(--shadow);
+        margin-bottom: 3rem;
     }
-
     .contact-section h2 {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
+        font-weight: 700;
         margin-bottom: 1.5rem;
-        color: var(--primary);
+        color: var(--text-primary);
     }
-
     .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1rem;
     }
-
-    .form-group {
-        margin-bottom: 1rem;
-    }
-
+    .form-group { margin-bottom: 1rem; }
     .form-label {
         display: block;
-        font-size: 0.875rem;
-        font-weight: 500;
-        margin-bottom: 0.5rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        color: var(--text-primary);
     }
-
     .form-input,
     .form-textarea,
     .form-select {
         width: 100%;
-        padding: 0.875rem 1rem;
+        padding: 0.8rem 1rem;
         border: 1px solid var(--border);
-        border-radius: 8px;
-        font-size: 1rem;
+        border-radius: 9px;
+        font-size: 0.9rem;
+        font-family: inherit;
+        background: var(--surface-hover, var(--surface));
+        color: var(--text-primary);
+        transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
     }
-
+    .form-input::placeholder,
+    .form-textarea::placeholder { color: var(--text-muted); }
+    .form-select option { background: var(--surface); color: var(--text-primary); }
     .form-input:focus,
-    .form-textarea:focus {
+    .form-textarea:focus,
+    .form-select:focus {
         outline: none;
         border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(6,182,212,0.15);
+        background: var(--surface);
     }
-
-    .form-textarea {
-        min-height: 150px;
-        resize: vertical;
-        font-family: inherit;
-    }
+    .form-textarea { min-height: 140px; resize: vertical; }
 
     .btn-submit {
-        background: var(--accent);
-        color: white;
-        padding: 1rem 2rem;
+        background: linear-gradient(135deg, var(--accent), #3b82f6);
+        color: #fff;
+        padding: 0.875rem 2rem;
         border: none;
-        border-radius: 8px;
-        font-size: 1rem;
+        border-radius: 9px;
+        font-size: 0.9rem;
         font-weight: 600;
+        font-family: inherit;
         cursor: pointer;
+        transition: opacity 0.18s, transform 0.18s;
     }
-
-    .btn-submit:hover {
-        background: var(--primary);
-    }
+    .btn-submit:hover { opacity: 0.88; transform: translateY(-1px); }
 
     .success-message {
         display: none;
-        background: #dcfce7;
-        color: #166534;
-        padding: 1rem;
-        border-radius: 8px;
+        background: rgba(16,185,129,0.1);
+        color: #059669;
+        border: 1px solid rgba(16,185,129,0.3);
+        padding: 1rem 1.25rem;
+        border-radius: 9px;
         margin-top: 1rem;
+        font-weight: 500;
     }
+    html[data-theme="light"] .success-message { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
 
     @media (max-width: 600px) {
-        .form-row {
-            grid-template-columns: 1fr;
-        }
+        .form-row { grid-template-columns: 1fr; }
+        .support-hero { margin: -1rem -1rem 1.5rem; }
     }
 </style>
 {% endblock %}
@@ -203,21 +218,42 @@
 
     <div class="support-grid">
         <div class="support-card">
-            <div class="support-icon">📧</div>
+            <div class="support-icon">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <rect x="2" y="4" width="20" height="16" rx="3"/>
+                    <polyline points="2,4 12,13 22,4"/>
+                </svg>
+            </div>
             <h3>E-Mail Support</h3>
-            <p>Schreiben Sie uns - wir antworten innerhalb von 24 Stunden.</p>
+            <p>Schreiben Sie uns – wir antworten innerhalb von 24 Stunden.</p>
             <a href="mailto:support@sajf-strategies.ch" class="support-link">support@sajf-strategies.ch</a>
         </div>
 
         <div class="support-card">
-            <div class="support-icon">📖</div>
+            <div class="support-icon">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                    <line x1="9" y1="7" x2="15" y2="7"/>
+                    <line x1="9" y1="11" x2="15" y2="11"/>
+                </svg>
+            </div>
             <h3>Dokumentation</h3>
             <p>Finden Sie Anleitungen und Tipps zur Nutzung unserer Plattform.</p>
             <a href="#faq" class="support-link">FAQ lesen →</a>
         </div>
 
         <div class="support-card">
-            <div class="support-icon">💬</div>
+            <div class="support-icon">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    <line x1="9" y1="10" x2="15" y2="10"/>
+                    <line x1="9" y1="14" x2="13" y2="14"/>
+                </svg>
+            </div>
             <h3>Feedback</h3>
             <p>Ihre Meinung zählt! Helfen Sie uns, besser zu werden.</p>
             <a href="#contact" class="support-link">Feedback geben →</a>
@@ -226,13 +262,13 @@
 
     <section class="faq-section" id="faq">
         <h2>Häufig gestellte Fragen</h2>
-        
+
         <div class="faq-item">
             <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
                 Woher stammen die Ausschreibungen?
             </div>
             <div class="faq-answer">
-                Alle Ausschreibungen stammen von simap.ch, der offiziellen Plattform für öffentliche 
+                Alle Ausschreibungen stammen von simap.ch, der offiziellen Plattform für öffentliche
                 Beschaffungen in der Schweiz. Wir aktualisieren die Daten stündlich.
             </div>
         </div>
@@ -242,7 +278,7 @@
                 Ist die Nutzung kostenlos?
             </div>
             <div class="faq-answer">
-                Ja, die Basis-Version ist komplett kostenlos. Für erweiterte Funktionen 
+                Ja, die Basis-Version ist komplett kostenlos. Für erweiterte Funktionen
                 bieten wir bald SAJF Pro an.
             </div>
         </div>
@@ -261,7 +297,7 @@
                 Sind die Daten rechtlich verbindlich?
             </div>
             <div class="faq-answer">
-                Nein, dies ist keine amtliche Veröffentlichung. Massgebend sind ausschliesslich 
+                Nein, dies ist keine amtliche Veröffentlichung. Massgebend sind ausschliesslich
                 die auf www.simap.ch veröffentlichten Daten.
             </div>
         </div>
@@ -269,16 +305,16 @@
 
     <section class="contact-section" id="contact">
         <h2>Kontaktieren Sie uns</h2>
-        
+
         <form id="contact-form" onsubmit="submitContact(event)">
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Name *</label>
-                    <input type="text" class="form-input" name="name" required>
+                    <input type="text" class="form-input" name="name" required placeholder="Ihr Name">
                 </div>
                 <div class="form-group">
                     <label class="form-label">E-Mail *</label>
-                    <input type="email" class="form-input" name="email" required>
+                    <input type="email" class="form-input" name="email" required placeholder="ihre@email.ch">
                 </div>
             </div>
 
@@ -294,14 +330,15 @@
 
             <div class="form-group">
                 <label class="form-label">Nachricht *</label>
-                <textarea class="form-textarea" name="message" required placeholder="Wie können wir Ihnen helfen?"></textarea>
+                <textarea class="form-textarea" name="message" required
+                          placeholder="Wie können wir Ihnen helfen?"></textarea>
             </div>
 
             <button type="submit" class="btn-submit">Nachricht senden</button>
         </form>
 
         <div class="success-message" id="success-message">
-            ✓ Vielen Dank für Ihre Nachricht! Wir melden uns bald bei Ihnen.
+            Vielen Dank für Ihre Nachricht! Wir melden uns bald bei Ihnen.
         </div>
     </section>
 </div>

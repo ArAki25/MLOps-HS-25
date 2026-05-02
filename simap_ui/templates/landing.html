@@ -185,10 +185,16 @@
         animation: float 6s ease-in-out infinite;
         padding: 1rem 1.5rem;
         border-radius: 16px;
+        border: none !important;
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 0 18px 6px rgba(255,255,255,0.05), 0 8px 24px rgba(0,0,0,0.35);
+    }
+
+    html[data-theme="light"] .hero-float {
+        box-shadow: 0 0 0 1px rgba(100,150,190,0.18), 0 0 14px 6px rgba(140,180,210,0.22), 0 8px 20px rgba(0,0,0,0.07);
     }
 
     .hero-float.top-left {
-        top: -2rem;
+        top: -4rem;
         left: -2rem;
         animation-delay: -2s;
     }
@@ -522,6 +528,31 @@
         .steps-container::after { display: none; }
         .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 3rem; }
         .trust-inner { flex-direction: column; gap: 2rem; }
+    }
+
+    /* ─── Light-mode overrides ─── */
+    html[data-theme="light"] .hero-float-val {
+        text-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    }
+    html[data-theme="light"] .hero-card-header {
+        border-bottom-color: rgba(0,0,0,0.07);
+    }
+    html[data-theme="light"] .hero-tender {
+        background: rgba(0,0,0,0.03);
+        border-color: rgba(0,0,0,0.07);
+    }
+    html[data-theme="light"] .hero-tender:hover {
+        background: rgba(0,0,0,0.05);
+        border-color: rgba(6,182,212,0.4);
+    }
+    html[data-theme="light"] .trust-bar {
+        border-bottom-color: rgba(0,0,0,0.07);
+    }
+    html[data-theme="light"] .stats-section {
+        border-color: rgba(0,0,0,0.07);
+    }
+    html[data-theme="light"] .how-section {
+        border-top-color: rgba(0,0,0,0.05);
     }
 </style>
 {% endblock %}

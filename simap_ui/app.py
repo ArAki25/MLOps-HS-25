@@ -24,8 +24,6 @@ from supabase_client import (
     update_team_member,
     delete_team_member,
     get_admin_by_email,
-    get_pro_user,
-    get_user_favorites,
     add_favorite,
     remove_favorite,
     get_user_favorites_ids,
@@ -51,6 +49,7 @@ from supabase_client import (
     get_test_runs_overview,
     TEST_COMPANY_SEEDS,
     seed_test_companies,
+    get_user_like_count,
 )
 
 load_dotenv()
@@ -190,6 +189,11 @@ def support():
     return render_template('support.html', content=content)
 
 
+@app.route('/ueber-uns')
+def ueber_uns():
+    return render_template('ueber_uns.html')
+
+
 @app.route('/impressum')
 def impressum():
     """Impressum (Platzhalter bis zur vollständigen Fassung)"""
@@ -324,10 +328,10 @@ def auth_login():
 @app.route('/publications')
 @login_required
 def publications():
-    """Ausschreibungen-Seite (geschützt)"""
-    user_id = session.get('user_id')
-    profile = get_user_profile(user_id) or {}
-    return render_template('publications.html', profile=profile)
+    """Ausschreibungen-Seite (geschützt) — nur nach abgeschlossenem Onboarding."""
+    if not is_onboarding_complete(session.get('user_id')):
+        return redirect(url_for('onboarding_page'))
+    return render_template('publications.html')
 
 
 @app.route('/api/profile/data', methods=['GET'])
@@ -365,97 +369,6 @@ def api_profile_update():
     return jsonify(result), status
 
 
-# ============================================
-# OLD PRO USER LOGIN (kept for compatibility)
-# ============================================
-
-@app.route('/login-old', methods=['GET', 'POST'])
-def user_login():
-    """Old Pro User Login (für Kompatibilität)"""
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-
-        user = get_pro_user(username, password)
-        if user:
-            session['pro_logged_in'] = True
-            session['pro_user_id'] = user.get('id')
-            session['pro_company_name'] = user.get('company_name')
-            session['pro_table_name'] = user.get('ml_table_name')
-            return redirect(url_for('pro_dashboard'))
-        else:
-            return render_template('login.html', error='Falsche Anmeldedaten')
-
-    return render_template('login.html')
-
-
-def pro_user_required(f):
-    """Decorator für Pro-User Seiten"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('pro_logged_in'):
-            return redirect(url_for('user_login_page'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-
-@app.route('/pro/dashboard')
-@pro_user_required
-def pro_dashboard():
-    """Pro User Dashboard"""
-    stats = get_statistics()
-    company_name = session.get('pro_company_name', 'Unternehmen')
-
-    recommended_count = 0
-    match_rate = 0
-    table_name = session.get('pro_table_name')
-    if table_name:
-        try:
-            from supabase_client import get_recommended_projects
-            recommended = get_recommended_projects(table_name)
-            recommended_count = len(recommended)
-            match_rate = 85
-        except:
-            pass
-
-    return render_template('pro_dashboard.html',
-                           stats=stats,
-                           company_name=company_name,
-                           recommended_count=recommended_count,
-                           match_rate=match_rate)
-
-
-@app.route('/pro/tenders')
-@pro_user_required
-def pro_tenders():
-    """Pro User - Alle Tenders"""
-    return render_template('index.html')
-
-
-@app.route('/pro/recommended')
-@pro_user_required
-def pro_recommended():
-    """Pro User - Empfohlene Aufträge"""
-    table_name = session.get('pro_table_name')
-    company_name = session.get('pro_company_name', 'Unternehmen')
-
-    projects = []
-    avg_match = 0
-    if table_name:
-        try:
-            from supabase_client import get_recommended_projects
-            projects = get_recommended_projects(table_name)
-
-            if projects:
-                total_prob = sum(p.get('probability', 0) for p in projects)
-                avg_match = int((total_prob / len(projects)) * 100)
-        except Exception as e:
-            print(f"❌ Fehler beim Laden empfohlener Projekte: {e}")
-
-    return render_template('pro_recommended.html',
-                           projects=projects,
-                           company_name=company_name,
-                           avg_match=avg_match)
 
 @app.route('/api/onboarding/filter-options', methods=['GET'])
 def api_onboarding_filter_options():
@@ -466,7 +379,7 @@ def api_onboarding_filter_options():
 def api_sample_projects():
     if not session.get('user_logged_in'):
         return jsonify({'projects': []}), 401
-    projects = get_filtered_sample_projects(session.get('user_id'),20)
+    projects = get_filtered_sample_projects(session.get('user_id'), 30)
     return jsonify({'projects': projects})
 
 
@@ -483,8 +396,24 @@ def api_submit_ratings():
 def api_recommendations():
     if not session.get('user_logged_in'):
         return jsonify({'recommendations': []}), 401
-    recs = get_user_recommendations(session.get('user_id'), 20)
-    return jsonify({'recommendations': recs})
+    try:
+        count = int(request.args.get('count', 20))
+        count = max(1, min(count, 100))
+    except (TypeError, ValueError):
+        count = 20
+    user_id = session.get('user_id')
+    recs = get_user_recommendations(user_id, count)
+
+    hint = None
+    if not recs:
+        n_likes = get_user_like_count(user_id)
+        if n_likes == 0:
+            hint = 'no_ratings'
+        else:
+            profile = get_user_profile(user_id) or {}
+            hint = 'cpv_too_narrow' if profile.get('cpv_codes') else 'no_results'
+
+    return jsonify({'recommendations': recs, 'hint': hint})
 
 
 @app.route('/api/recommendations/diversity', methods=['GET'])
@@ -593,39 +522,23 @@ def api_admin_seed_test_companies():
 # FAVORITES / MERKLISTE ROUTES
 # ============================================
 
-@app.route('/pro/favorites')
-@pro_user_required
-def pro_favorites():
-    """Pro User - Merkliste"""
-    user_id = session.get('pro_user_id')
-    company_name = session.get('pro_company_name', 'Unternehmen')
-
-    favorites = get_user_favorites(user_id)
-
-    return render_template('pro_favorites.html',
-                           favorites=favorites,
-                           company_name=company_name)
-
-
 @app.route('/api/favorites', methods=['GET'])
 def api_get_favorites():
     """API: Hole Favoriten-IDs des Users"""
-    if not (session.get('user_logged_in') or session.get('pro_logged_in')):
+    if not session.get('user_logged_in'):
         return jsonify({'favorites': []})
 
-    user_id = session.get('user_id') or session.get('pro_user_id')
-    favorite_ids = get_user_favorites_ids(user_id)
-
+    favorite_ids = get_user_favorites_ids(session.get('user_id'))
     return jsonify({'favorites': favorite_ids})
 
 
 @app.route('/api/favorites/add', methods=['POST'])
 def api_add_favorite():
     """API: Füge Favorit hinzu"""
-    if not (session.get('user_logged_in') or session.get('pro_logged_in')):
+    if not session.get('user_logged_in'):
         return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
 
-    user_id = session.get('user_id') or session.get('pro_user_id')
+    user_id = session.get('user_id')
     data = request.get_json()
 
     project = {
@@ -644,10 +557,10 @@ def api_add_favorite():
 @app.route('/api/favorites/remove', methods=['POST'])
 def api_remove_favorite():
     """API: Entferne Favorit"""
-    if not (session.get('user_logged_in') or session.get('pro_logged_in')):
+    if not session.get('user_logged_in'):
         return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
 
-    user_id = session.get('user_id') or session.get('pro_user_id')
+    user_id = session.get('user_id')
     data = request.get_json()
     project_id = data.get('project_id')
 
@@ -764,16 +677,19 @@ def api_get_projects():
     per_page = request.args.get('per_page', 30, type=int)
     search = request.args.get('search', '').strip()
     canton = request.args.get('canton', '').strip()
+    cantons_str = request.args.get('cantons', '').strip()
+    cantons = [c.strip() for c in cantons_str.split(',') if c.strip()] if cantons_str else []
     order_type = request.args.get('order_type', '').strip()
     process_type = request.args.get('process_type', '').strip()
     pub_type = request.args.get('pub_type', '').strip()
     sort = request.args.get('sort', 'newest')
+    cpv = request.args.get('cpv', '').strip()
 
     result = get_projects_paginated(
         page=page, per_page=per_page, search=search,
-        canton=canton, order_type=order_type,
+        canton=canton, cantons=cantons, order_type=order_type,
         process_type=process_type, pub_type=pub_type,
-        sort=sort
+        sort=sort, cpv=cpv
     )
     return jsonify(result)
 
@@ -826,16 +742,6 @@ def api_cantons():
 def api_statistics():
     stats = get_statistics()
     return jsonify(stats)
-
-
-@app.route('/pro/bkp-calculator')
-@pro_user_required
-def pro_bkp_calculator():
-    """Pro User - BKP Rechner"""
-    company_name = session.get('pro_company_name', 'Unternehmen')
-
-    return render_template('pro_bkp_calculator.html',
-                           company_name=company_name)
 
 
 if __name__ == '__main__':

@@ -102,8 +102,8 @@ def get_all_projects(limit: int = 50) -> List[Dict]:
 
 
 def get_projects_paginated(page=1, per_page=30, search='', canton='',
-                           order_type='', process_type='', pub_type='',
-                           sort='newest') -> Dict:
+                           cantons=None, order_type='', process_type='',
+                           pub_type='', sort='newest', cpv='') -> Dict:
     try:
         count_q = ui('projects_ui').select('id', count='exact')
         data_q = ui('projects_ui').select('*')
@@ -118,9 +118,24 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
             count_q = count_q.or_(search_filter)
             data_q = data_q.or_(search_filter)
 
-        if canton:
-            count_q = count_q.ilike('canton', canton)
-            data_q = data_q.ilike('canton', canton)
+        cantons_list = cantons if cantons else ([canton] if canton else [])
+        if len(cantons_list) == 1:
+            count_q = count_q.ilike('canton', cantons_list[0])
+            data_q = data_q.ilike('canton', cantons_list[0])
+        elif len(cantons_list) > 1:
+            count_q = count_q.in_('canton', cantons_list)
+            data_q = data_q.in_('canton', cantons_list)
+
+        if cpv:
+            cpv_list = [c.strip() for c in cpv.split(',') if c.strip()]
+            if len(cpv_list) == 1:
+                count_q = count_q.like('cpv_code_main', cpv_list[0] + '%')
+                data_q = data_q.like('cpv_code_main', cpv_list[0] + '%')
+            elif len(cpv_list) > 1:
+                cpv_or = ','.join([f'cpv_code_main.like.{c}%' for c in cpv_list])
+                count_q = count_q.or_(cpv_or)
+                data_q = data_q.or_(cpv_or)
+
         if order_type:
             count_q = count_q.eq('order_type', order_type)
             data_q = data_q.eq('order_type', order_type)
@@ -1090,6 +1105,15 @@ def save_user_profile(user_id, data):
         if not canton and preferred_cantons_list:
             canton = preferred_cantons_list[0]
 
+        # cpv_codes normalisieren
+        cpv_codes = data.get('cpv_codes')
+        if isinstance(cpv_codes, str):
+            cpv_codes = [c.strip() for c in cpv_codes.replace(';', ',').split(',') if c.strip()]
+        elif isinstance(cpv_codes, (list, tuple)):
+            cpv_codes = [str(c).strip() for c in cpv_codes if str(c).strip()]
+        else:
+            cpv_codes = None
+
         profile = {
             'user_id': user_id,
             'company_name': data.get('company_name'),
@@ -1103,6 +1127,8 @@ def save_user_profile(user_id, data):
         }
         if preferred_cantons_list is not None:
             profile['preferred_cantons'] = preferred_cantons_list
+        if cpv_codes is not None:
+            profile['cpv_codes'] = cpv_codes
 
         existing = ui('user_profiles').select('user_id').eq('user_id', user_id).execute()
         if existing.data:
@@ -1126,7 +1152,7 @@ def save_user_profile(user_id, data):
 
 
 def save_user_simap_ids(user_id, ids):
-    """Speichere Simap Projekt-IDs"""
+    """Speichere Simap Projekt-IDs und konvertiere sie direkt zu positiven Ratings."""
     if not user_id:
         return {'success': False, 'error': 'Nicht eingeloggt'}
 
@@ -1135,9 +1161,30 @@ def save_user_simap_ids(user_id, ids):
         rows = [{'user_id': user_id, 'simap_project_id': str(pid)} for pid in ids]
         if rows:
             ui('user_simap_ids').insert(rows).execute()
+
+        # Simap-IDs → UUIDs aus projects_ui → als rating=1 in user_tender_ratings
+        # Damit feuert der Trigger und berechnet den Taste-Vector sofort.
+        matched_count = 0
+        if ids:
+            simap_str_ids = [str(pid) for pid in ids]
+            matched = ui('projects_ui') \
+                .select('id, simap_project_id') \
+                .in_('simap_project_id', simap_str_ids) \
+                .execute()
+            if matched.data:
+                rating_rows = [
+                    {'user_id': user_id, 'tender_id': str(p['id']), 'rating': 1, 'source': 'project'}
+                    for p in matched.data
+                ]
+                ui('user_tender_ratings').upsert(
+                    rating_rows, on_conflict='user_id,tender_id,source'
+                ).execute()
+                matched_count = len(rating_rows)
+                print(f"✅ {matched_count}/{len(ids)} Simap-IDs als Likes gespeichert → Taste-Vector wird berechnet")
+
         mark_onboarding_complete(user_id)
         print(f"✅ {len(ids)} Simap-IDs gespeichert für User: {user_id}")
-        return {'success': True, 'count': len(ids)}
+        return {'success': True, 'count': len(ids), 'matched': matched_count}
 
     except Exception as e:
         print(f"❌ Simap-IDs-Fehler: {e}")
@@ -1322,6 +1369,19 @@ def get_user_recommendations(user_id, count: int = 20):
         return []
 
 
+def get_user_like_count(user_id) -> int:
+    """Gibt die Anzahl Likes (n_likes) aus user_taste_vectors zurück.
+    0 = User hat noch nichts bewertet / kein Taste-Vektor vorhanden."""
+    if not user_id:
+        return 0
+    try:
+        r = ui('user_taste_vectors').select('n_likes').eq('user_id', user_id).execute()
+        rows = r.data or []
+        return int(rows[0]['n_likes']) if rows else 0
+    except Exception:
+        return 0
+
+
 def recommendation_diversity_metric(user_id, count: int = 10) -> Dict:
     """Misst die Diversitaet der Top-N Empfehlungen eines Users:
     durchschnittliche pairwise-Cosine-Aehnlichkeit.
@@ -1379,103 +1439,81 @@ def recommendation_diversity_metric(user_id, count: int = 10) -> Dict:
 def get_filtered_sample_projects(user_id, sample_size=20):
     """
     Ruft die RPC auf und gibt die Mischung aus project + archive zurück.
-    Die RPC liefert bereits source, winner_name, winner_city, award_decision_date.
+    Fallback filtert ebenfalls nach Subtype/Kanton aus dem Profil.
     """
     if not user_id:
         return []
+
+    # Profil vorab laden — brauchen wir für den Fallback-Filter
+    profile = get_user_profile(user_id) or {}
+    subtype = profile.get('project_subtype') or ''
+    preferred_cantons = profile.get('preferred_cantons') or []
+    if not preferred_cantons and profile.get('canton'):
+        preferred_cantons = [profile.get('canton')]
+    archive_order_type = {
+        'construction': 'WORKS', 'service': 'SERVICES', 'supply': 'SUPPLIES'
+    }.get(subtype)
+    reverse_map = {'WORKS': 'construction', 'SERVICES': 'service', 'SUPPLIES': 'supply'}
+
+    def _build_fallback(half):
+        proj_q = ui('projects_ui').select(
+            'id,title_de,description_de,canton,project_subtype,award_amount,publication_date'
+        ).order('publication_date', desc=True)
+        if subtype:
+            proj_q = proj_q.eq('project_subtype', subtype)
+        if preferred_cantons:
+            proj_q = proj_q.in_('canton', preferred_cantons)
+        proj_rows = [{**r, 'source': 'project'} for r in (proj_q.limit(half).execute().data or [])]
+
+        arch_rows = []
+        try:
+            arch_q = public('archive').select(
+                'id,title_de,description_de,canton,order_type,award_amount,winner_name,winner_city,award_decision_date'
+            ).order('award_decision_date', desc=True)
+            if archive_order_type:
+                arch_q = arch_q.eq('order_type', archive_order_type)
+            if preferred_cantons:
+                arch_q = arch_q.in_('canton', preferred_cantons)
+            for a in (arch_q.limit(sample_size - len(proj_rows)).execute().data or []):
+                a = dict(a)
+                a['project_subtype'] = reverse_map.get(a.get('order_type'), a.get('order_type'))
+                a['source'] = 'archive'
+                if a.get('award_decision_date'):
+                    a['award_decision_date'] = str(a['award_decision_date'])
+                arch_rows.append(a)
+        except Exception as ef:
+            print(f"⚠️ Fallback archive sample fehlgeschlagen: {ef}")
+
+        return (proj_rows + arch_rows)[:sample_size]
+
     try:
         result = ui_rpc('sample_projects_for_rating', {
             'p_user_id': user_id,
             'sample_size': sample_size
-        })
-        projects = result.data if hasattr(result, 'data') else result
+        }).execute()
+        projects = result.data or []
 
-        def _fallback() -> list:
-            # Default-Auswahl, damit Onboarding nicht blockiert.
-            half = max(1, int(sample_size // 2))
-
-            proj_res = ui('projects_ui') \
-                .select('id,title_de,description_de,canton,project_subtype,award_amount,publication_date') \
-                .order('publication_date', desc=True) \
-                .limit(half) \
-                .execute()
-            proj_rows = proj_res.data or []
-            proj_rows = [{**r, 'source': 'project'} for r in proj_rows]
-
-            arch_rows = []
-            try:
-                arch_res = public('archive') \
-                    .select('id,title_de,description_de,canton,order_type,award_amount,winner_name,winner_city,award_decision_date') \
-                    .order('award_decision_date', desc=True) \
-                    .limit(sample_size - len(proj_rows)) \
-                    .execute()
-                raw_arch = arch_res.data or []
-                reverse_map = {'WORKS': 'construction', 'SERVICES': 'service', 'SUPPLIES': 'supply'}
-                for a in raw_arch:
-                    a = dict(a)
-                    a['project_subtype'] = reverse_map.get(a.get('order_type'), a.get('order_type'))
-                    a['source'] = 'archive'
-                    if a.get('award_decision_date'):
-                        a['award_decision_date'] = str(a['award_decision_date'])
-                    arch_rows.append(a)
-            except Exception as e:
-                print(f"⚠️ Fallback archive sample fehlgeschlagen: {e}")
-
-            return (proj_rows + arch_rows)[:sample_size]
-
-        # Fallback: RPC liefert keine Ergebnisse
         if not projects:
-            projects = _fallback()
+            print(f"⚠️ RPC lieferte 0 Ergebnisse — Fallback mit Subtype-Filter")
+            projects = _build_fallback(max(1, sample_size // 2))
 
-        # description_de hat HTML-Tags drin – für die UI ok, Frontend stripped
-        for p in (projects or []):
-            # award_decision_date als String falls date-Objekt zurückkommt
+        for p in projects:
             if p.get('award_decision_date'):
                 p['award_decision_date'] = str(p['award_decision_date'])
 
-        print(f"✅ {len(projects or [])} Sample-Projekte geladen für User: {user_id}")
-        return projects or []
+        print(f"✅ {len(projects)} Sample-Projekte geladen für User: {user_id}")
+        return projects
     except Exception as e:
-        print(f"❌ get_filtered_sample_projects Fehler: {e}")
-        # Fallback auch bei RPC-Fehlern (z.B. Funktion fehlt/RLS/Timeout),
-        # damit das Onboarding trotzdem fortgesetzt werden kann.
+        print(f"❌ get_filtered_sample_projects Fehler: {e} — Fallback")
         try:
-            half = max(1, int(sample_size // 2))
-            proj_res = ui('projects_ui') \
-                .select('id,title_de,description_de,canton,project_subtype,award_amount,publication_date') \
-                .order('publication_date', desc=True) \
-                .limit(half) \
-                .execute()
-            proj_rows = proj_res.data or []
-            proj_rows = [{**r, 'source': 'project'} for r in proj_rows]
-
-            arch_rows = []
-            try:
-                arch_res = public('archive') \
-                    .select('id,title_de,description_de,canton,order_type,award_amount,winner_name,winner_city,award_decision_date') \
-                    .order('award_decision_date', desc=True) \
-                    .limit(sample_size - len(proj_rows)) \
-                    .execute()
-                raw_arch = arch_res.data or []
-                reverse_map = {'WORKS': 'construction', 'SERVICES': 'service', 'SUPPLIES': 'supply'}
-                for a in raw_arch:
-                    a = dict(a)
-                    a['project_subtype'] = reverse_map.get(a.get('order_type'), a.get('order_type'))
-                    a['source'] = 'archive'
-                    if a.get('award_decision_date'):
-                        a['award_decision_date'] = str(a['award_decision_date'])
-                    arch_rows.append(a)
-            except Exception as e2:
-                print(f"⚠️ Fallback archive sample fehlgeschlagen: {e2}")
-
-            out = (proj_rows + arch_rows)[:sample_size]
+            out = _build_fallback(max(1, sample_size // 2))
             for p in out:
                 if p.get('award_decision_date'):
                     p['award_decision_date'] = str(p['award_decision_date'])
             print(f"✅ Fallback Sample-Projekte: {len(out)}")
             return out
-        except Exception as e3:
-            print(f"❌ Fallback Sample-Projekte komplett fehlgeschlagen: {e3}")
+        except Exception as e2:
+            print(f"❌ Fallback komplett fehlgeschlagen: {e2}")
             return []
 
 

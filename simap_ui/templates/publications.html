@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ausschreibungen – SAJF Strategies</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script>(function(){var t=localStorage.getItem('sajf-theme')||'dark';document.documentElement.setAttribute('data-theme',t);if(localStorage.getItem('sajf-sidebar')==='hidden'){document.addEventListener('DOMContentLoaded',function(){document.body.classList.add('sidebar-hidden');});}})();</script>
     <style>
         :root {
             --accent: #06b6d4;
@@ -31,11 +32,55 @@
             --shadow: 0 4px 12px rgba(0,0,0,.5);
             --shadow-glow: 0 0 20px rgba(6,182,212,.15);
         }
+        /* ─── Light Mode ─── */
+        html[data-theme="light"] {
+            --accent: #0891b2;
+            --accent-hover: #0e7490;
+            --accent-light: rgba(8,145,178,.1);
+            --accent-bg: rgba(8,145,178,.08);
+            --accent-secondary: #2563eb;
+            --success: #059669;
+            --success-bg: rgba(5,150,105,.1);
+            --warning: #d97706;
+            --warning-bg: rgba(217,119,6,.1);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-hover: #f1f5f9;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --sidebar-bg: #f0f4f8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,.06);
+            --shadow: 0 4px 12px rgba(0,0,0,.1);
+            --shadow-glow: 0 0 20px rgba(8,145,178,.12);
+        }
+        html[data-theme="light"] .pub-row.is-liked { box-shadow: inset 3px 0 0 #059669, 0 0 0 1px rgba(5,150,105,.25); background: rgba(5,150,105,.04); }
+        html[data-theme="light"] .pub-row.is-liked .pub-title { color: #059669; }
+        html[data-theme="light"] .sidebar-nav a.active { background: rgba(8,145,178,.1); color: #0891b2; border-left-color: #0891b2; }
+        html[data-theme="light"] .top-header { background: rgba(248,250,252,.92); border-bottom-color: rgba(0,0,0,.08); }
+        html[data-theme="light"] .sidebar-profile-link:hover { background: #e8f0f8; }
+        html[data-theme="light"] .sidebar-collapse-btn:hover { background: #e8f0f8; }
+        html[data-theme="light"] .search-input { background: #ffffff; color: #0f172a; }
+        html[data-theme="light"] .search-input:focus { background: #ffffff; }
+        html[data-theme="light"] .sort-select { background: #ffffff; color: #475569; border-color: #e2e8f0; }
+        html[data-theme="light"] .lang-select { background: #ffffff; color: #475569; border-color: #e2e8f0; }
+        html[data-theme="light"] .onb-select option, html[data-theme="light"] select option { background: #ffffff; color: #0f172a; }
+
+        /* Theme Toggle */
+        .pub-theme-toggle { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; }
+        .pub-theme-toggle:hover { background: var(--surface-hover); color: var(--text-primary); }
+        .pub-theme-toggle .icon-sun { display: block; }
+        .pub-theme-toggle .icon-moon { display: none; }
+        html[data-theme="light"] .pub-theme-toggle .icon-sun { display: none; }
+        html[data-theme="light"] .pub-theme-toggle .icon-moon { display: block; }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
+        body { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text-primary); height: 100vh; overflow: hidden; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
 
         /* ========== TOP HEADER ========== */
-        .top-header { background: rgba(9,9,11,0.85); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 0 1.5rem; height: 60px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(20px); }
+        .top-header { background: rgba(9,9,11,0.85); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 0 1.5rem; height: 60px; min-height: 60px; display: flex; justify-content: space-between; align-items: center; z-index: 100; backdrop-filter: blur(20px); flex-shrink: 0; }
         .header-left { display: flex; align-items: center; gap: 0.625rem; }
         .logo-mark { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; text-decoration: none; }
         .logo-name { font-weight: 700; font-size: 1rem; color: var(--text-primary); text-decoration: none; }
@@ -53,21 +98,48 @@
         .user-dropdown a.danger { color: #dc2626; }
 
         /* ========== MAIN LAYOUT ========== */
-        .main-layout { display: flex; flex: 1; }
+        .main-layout { display: flex; flex: 1; min-height: 0; overflow: hidden; }
 
         /* ========== SIDEBAR ========== */
-        .sidebar { width: 240px; background: var(--sidebar-bg); border-right: 1px solid var(--border); padding: 1rem 0; min-height: calc(100vh - 56px); flex-shrink: 0; overflow-y: auto; }
-        .sidebar-section { margin-bottom: 0.5rem; }
-        .sidebar-section-title { padding: 0.5rem 1.25rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+        .sidebar { width: 240px; min-width: 240px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; flex-shrink: 0; overflow: hidden; transition: width 0.22s ease, min-width 0.22s ease, border 0.22s ease; }
+        body.sidebar-hidden .sidebar { width: 0; min-width: 0; border-right: none; }
+        .sidebar-inner { flex: 1; overflow-y: auto; padding: 0.5rem 0 1rem; }
+
+        /* Profile card */
+        .sidebar-profile { padding: 0.75rem 1rem 0.5rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .sidebar-profile-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.75rem; border-radius: var(--radius); text-decoration: none; transition: background 0.1s; }
+        .sidebar-profile-link:hover { background: var(--surface-hover); }
+        .sidebar-profile-avatar { width: 34px; height: 34px; min-width: 34px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8125rem; }
+        .sidebar-profile-info { flex: 1; min-width: 0; }
+        .sidebar-profile-name { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sidebar-profile-sub  { font-size: 0.71rem; color: var(--accent); margin-top: 0.1rem; }
+        html[data-theme="light"] .sidebar-profile-avatar { background: #0891b2; }
+
+        /* Sidebar collapse row */
+        .sidebar-collapse-row { display: flex; align-items: center; justify-content: space-between; padding: 0.375rem 1rem 0.375rem 1.25rem; }
+        .sidebar-collapse-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); white-space: nowrap; }
+        .sidebar-collapse-btn { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; flex-shrink: 0; }
+        .sidebar-collapse-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
+
+        .sidebar-section { margin-bottom: 0.25rem; }
+        .sidebar-section-title { padding: 0.5rem 1.25rem 0.25rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); white-space: nowrap; }
         .sidebar-nav { list-style: none; }
-        .sidebar-nav a { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1.25rem; color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.1s; border-left: 3px solid transparent; cursor: pointer; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1.25rem; color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.1s; border-left: 3px solid transparent; cursor: pointer; white-space: nowrap; }
         .sidebar-nav a:hover { background: var(--surface); color: var(--text-primary); }
         .sidebar-nav a.active { background: var(--accent-light); color: var(--accent); border-left-color: var(--accent); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent), 0 0 15px rgba(6,182,212,0.05); }
         .sidebar-icon { width: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .sidebar-badge { margin-left: auto; background: var(--accent); color: white; font-size: 0.6875rem; font-weight: 700; padding: 0.125rem 0.5rem; border-radius: 100px; font-family: 'Space Mono', monospace; }
 
+        /* Header toggle (zeigt Sidebar wieder wenn collapsed) */
+        .sidebar-toggle { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; flex-shrink: 0; }
+        .sidebar-toggle:hover { background: var(--surface-hover); color: var(--text-primary); }
+        .sidebar-toggle .icon-open  { display: none; }
+        .sidebar-toggle .icon-close { display: block; }
+        body.sidebar-hidden .sidebar-toggle .icon-open  { display: block; }
+        body.sidebar-hidden .sidebar-toggle .icon-close { display: none; }
+
         /* ========== MAIN CONTENT ========== */
-        .main-content { flex: 1; padding: 1.5rem 2rem; max-width: 1200px; min-width: 0; }
+        .main-content { flex: 1; padding: 1.5rem 2rem; min-width: 0; overflow-y: auto; height: 100%; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
         .page-title { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
         .page-subtitle { font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.125rem; }
@@ -196,6 +268,19 @@
         .pagination button:hover { border-color: var(--accent); color: var(--accent); }
         .pagination button.active { background: var(--accent); color: white; border-color: var(--accent); }
         .pagination button:disabled { opacity: 0.3; cursor: not-allowed; }
+        .pagination-compact { padding: 0.375rem 0 0.625rem; }
+
+        /* ========== REC CONTROLS ========== */
+        .rec-controls { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .rec-controls-label { font-size: 0.8125rem; color: var(--text-muted); font-weight: 500; }
+        .rec-count-input { width: 72px; padding: 0.375rem 0.625rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.8125rem; font-family: inherit; background: var(--surface); color: var(--text-primary); text-align: center; }
+        .rec-count-input:focus { outline: none; border-color: var(--accent); }
+        .rec-count-input::-webkit-inner-spin-button, .rec-count-input::-webkit-outer-spin-button { opacity: 0.4; }
+        .btn-rec-count { padding: 0.375rem 0.875rem; background: var(--accent); color: #000; border: none; border-radius: var(--radius); font-size: 0.8125rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.15s; }
+        .btn-rec-count:hover { background: var(--accent-hover); }
+        .btn-rec-all { padding: 0.375rem 0.875rem; background: transparent; color: var(--text-secondary); border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.8125rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+        .btn-rec-all:hover { border-color: var(--accent); color: var(--accent); }
+        .rec-loaded-info { font-size: 0.75rem; color: var(--text-muted); margin-left: auto; font-family: 'Space Mono', monospace; }
 
         /* ========== BEWERTUNGEN TAB (nur Likes) ========== */
         .bew-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; transition: border-color 0.2s; }
@@ -362,6 +447,14 @@
             <a href="/publications" class="logo-name">SAJF <span>Strategies</span></a>
         </div>
         <div class="header-right">
+            <button class="sidebar-toggle" onclick="toggleSidebar()" title="Menüband ein-/ausblenden">
+                <svg class="icon-close" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="18" rx="1"/><line x1="14" y1="9" x2="21" y2="9"/><line x1="14" y1="15" x2="21" y2="15"/><line x1="14" y1="3" x2="21" y2="3"/><line x1="14" y1="21" x2="21" y2="21"/></svg>
+                <svg class="icon-open"  width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="3" y1="3" x2="21" y2="3"/><line x1="3" y1="21" x2="21" y2="21"/></svg>
+            </button>
+            <button class="pub-theme-toggle" onclick="toggleTheme()" title="Light/Dark Mode">
+                <svg class="icon-sun" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="icon-moon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
             <div style="position:relative;">
                 <div class="user-avatar" onclick="toggleUserMenu()" id="user-icon">
                     {{ session.get('user_email', 'U')[0]|upper }}{{ session.get('user_email', 'U')[1]|upper if session.get('user_email', 'U')|length > 1 else '' }}
@@ -380,36 +473,60 @@
     <div class="main-layout">
         <!-- Sidebar -->
         <nav class="sidebar">
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">Übersicht</div>
-                <ul class="sidebar-nav">
-                    <li><a onclick="switchTab('ausschreibungen')" id="nav-ausschreibungen" class="active">
-                        <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
-                        Ausschreibungen <span class="sidebar-badge" id="sidebar-count">–</span>
-                    </a></li>
-                    <li><a onclick="switchTab('bewertungen')" id="nav-bewertungen">
-                        <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></span>
-                        Meine Bewertungen
-                    </a></li>
-                    <li><a onclick="switchTab('empfehlungen')" id="nav-empfehlungen">
-                        <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></span>
-                        Empfehlungen
-                    </a></li>
-                    <li><a onclick="switchTab('profil')" id="nav-profil">
-                        <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-                        Profil
-                    </a></li>
-                    <li><a href="/pro/favorites">
-                        <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
-                        Merkliste
-                    </a></li>
-                </ul>
+            <!-- Profil-Karte ganz oben -->
+            <div class="sidebar-profile">
+                <a href="/profile" class="sidebar-profile-link">
+                    <div class="sidebar-profile-avatar">{{ session.get('user_company_name', 'U')[0]|upper }}{{ session.get('user_company_name', 'U')[1]|upper if session.get('user_company_name', 'U')|length > 1 else '' }}</div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name">{{ session.get('user_company_name', 'Unternehmen') }}</div>
+                        <div class="sidebar-profile-sub">Profileinstellungen →</div>
+                    </div>
+                </a>
             </div>
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">Hilfe</div>
-                <ul class="sidebar-nav">
-                    <li><a href="/support"><span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>Support</a></li>
-                </ul>
+
+            <!-- Scrollbarer Inhalt -->
+            <div class="sidebar-inner">
+                <div class="sidebar-section">
+                    <div class="sidebar-collapse-row">
+                        <span class="sidebar-collapse-label">Übersicht</span>
+                        <button class="sidebar-collapse-btn" onclick="toggleSidebar()" title="Menüband ausblenden">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                    </div>
+                    <ul class="sidebar-nav">
+                        <li><a onclick="switchTab('ausschreibungen')" id="nav-ausschreibungen" class="active">
+                            <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+                            Ausschreibungen <span class="sidebar-badge" id="sidebar-count">–</span>
+                        </a></li>
+                        <li><a onclick="switchTab('bewertungen')" id="nav-bewertungen">
+                            <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></span>
+                            Meine Bewertungen
+                        </a></li>
+                        <li><a onclick="switchTab('empfehlungen')" id="nav-empfehlungen">
+                            <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></span>
+                            Empfehlungen
+                        </a></li>
+                    </ul>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Konto</div>
+                    <ul class="sidebar-nav">
+                        <li><a href="/profile">
+                            <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+                            Mein Profil
+                        </a></li>
+                        <li><a href="/logout">
+                            <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+                            Abmelden
+                        </a></li>
+                    </ul>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Hilfe</div>
+                    <ul class="sidebar-nav">
+                        <li><a href="/support"><span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>Support</a></li>
+                    </ul>
+                </div>
             </div>
         </nav>
 
@@ -463,6 +580,7 @@
                         <button class="filter-chip" data-filter="order_type" onclick="toggleFilter('order_type')"><span>Auftragsart</span><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
                         <button class="filter-chip" data-filter="process_type" onclick="toggleFilter('process_type')"><span>Verfahrensart</span><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
                         <button class="filter-chip" data-filter="pub_type" onclick="toggleFilter('pub_type')"><span>Publikationsart</span><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+                        <button class="filter-chip" data-filter="cpv" onclick="toggleCpvFilter()"><span>CPV-Code</span><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
                         <button class="filter-clear" id="filter-clear-btn" style="display:none;" onclick="clearAllFilters()">
                             <svg width='14' height='14' fill='none' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg> Filter zurücksetzen
                         </button>
@@ -470,6 +588,7 @@
                         <div class="filter-dropdown" id="dropdown-order_type"></div>
                         <div class="filter-dropdown" id="dropdown-process_type"></div>
                         <div class="filter-dropdown" id="dropdown-pub_type"></div>
+                        <div class="filter-dropdown" id="dropdown-cpv" style="min-width:280px;"></div>
                     </div>
                     <div class="active-filters" id="active-filters"></div>
                 </div>
@@ -482,6 +601,8 @@
                         <option value="alpha">A–Z</option>
                     </select>
                 </div>
+
+                <div class="pagination pagination-compact" id="pagination-top"></div>
 
                 <div class="pub-table">
                     <div class="pub-table-head">
@@ -501,6 +622,13 @@
 
             <!-- ==================== TAB 3: EMPFEHLUNGEN ==================== -->
             <div class="tab-panel" id="panel-empfehlungen">
+                <div class="rec-controls">
+                    <span class="rec-controls-label">Empfehlungen anzeigen:</span>
+                    <input type="number" id="rec-count-input" class="rec-count-input" value="20" min="1" max="100" onkeydown="if(event.key==='Enter')applyRecCount()">
+                    <button onclick="applyRecCount()" class="btn-rec-count">Laden</button>
+                    <button onclick="showAllRecs()" class="btn-rec-all">Alle anzeigen</button>
+                    <span class="rec-loaded-info" id="rec-loaded-info"></span>
+                </div>
                 <div id="rec-content">
                     <div class="loading-state"><div class="spinner"></div>Empfehlungen werden berechnet...</div>
                 </div>
@@ -611,9 +739,9 @@
         var currentPage = 1, perPage = 30, totalResults = 0, totalPages = 0;
         var searchQuery = '', sortBy = 'newest', openFilter = null;
         var favoriteIds = new Set();
-        var activeFilters = { canton: [], order_type: [], process_type: [], pub_type: [] };
+        var activeFilters = { canton: [], order_type: [], process_type: [], pub_type: [], cpv: [] };
         var filterOptions = { canton: [], order_type: [], process_type: [], pub_type: [] };
-        var bewLoaded = false, recLoaded = false, profLoaded = false;
+        var bewLoaded = false, recLoaded = false, recDisplayCount = 20;
         var userRatings = {};  // tender_id -> rating
 
         var SUBTYPE_LABELS = { 'construction':'Bauleistung', 'supply':'Lieferung', 'service':'Dienstleistung' };
@@ -741,21 +869,51 @@
         // ==========================================
         // EMPFEHLUNGEN TAB
         // ==========================================
-        function loadEmpfehlungen() {
+        function loadEmpfehlungen(count) {
             recLoaded = true;
-            fetch('/api/recommendations')
+            count = count || recDisplayCount;
+            document.getElementById('rec-content').innerHTML = '<div class="loading-state"><div class="spinner"></div>Empfehlungen werden berechnet...</div>';
+            document.getElementById('rec-loaded-info').textContent = '';
+            fetch('/api/recommendations?count=' + count)
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     var recs = data.recommendations || [];
                     if (recs.length === 0) {
-                        document.getElementById('rec-content').innerHTML = '<div class="empty-state"><p>Noch keine Empfehlungen verfügbar.</p><p style="margin-top:0.5rem;color:var(--text-muted);">Bewerten Sie mindestens 3 Ausschreibungen als "Relevant", damit wir passende Vorschläge berechnen können.</p></div>';
+                        var hint = data.hint || 'no_results';
+                        var msg = '';
+                        if (hint === 'no_ratings') {
+                            msg = '<p style="font-weight:600;">Noch keine Empfehlungen</p><p style="margin-top:0.5rem;color:var(--text-muted);">Bewerten Sie im Tab <strong>Ausschreibungen</strong> mindestens eine Ausschreibung mit &ldquo;Relevant&rdquo;, damit der Algorithmus Ihr Interessenprofil aufbauen kann.</p>';
+                        } else if (hint === 'cpv_too_narrow') {
+                            msg = '<p style="font-weight:600;">Profil zu eng gefiltert</p><p style="margin-top:0.5rem;color:var(--text-muted);">Ihre CPV-Codes schränken die Treffer stark ein. Entfernen Sie einzelne CPV-Filter in Ihrem <a href="/profile" style="color:var(--accent);">Profil</a> oder fügen Sie weitere Bewertungen hinzu, um breitere Ergebnisse zu erhalten.</p>';
+                        } else {
+                            msg = '<p style="font-weight:600;">Keine passenden Ausschreibungen gefunden</p><p style="margin-top:0.5rem;color:var(--text-muted);">Aktuell sind keine neuen Projekte vorhanden, die Ihrem Profil entsprechen. Schauen Sie später wieder vorbei oder bewerten Sie weitere Ausschreibungen, um das Profil zu verfeinern.</p>';
+                        }
+                        document.getElementById('rec-content').innerHTML = '<div class="empty-state">' + msg + '</div>';
+                        document.getElementById('rec-loaded-info').textContent = '';
                         return;
                     }
+                    document.getElementById('rec-loaded-info').textContent = recs.length + ' geladen';
                     renderEmpfehlungen(recs);
                 })
                 .catch(function() {
                     document.getElementById('rec-content').innerHTML = '<div class="empty-state">Fehler beim Laden der Empfehlungen.</div>';
                 });
+        }
+
+        function applyRecCount() {
+            var v = parseInt(document.getElementById('rec-count-input').value, 10);
+            if (isNaN(v) || v < 1) v = 20;
+            recDisplayCount = Math.min(v, 100);
+            document.getElementById('rec-count-input').value = recDisplayCount;
+            recLoaded = false;
+            loadEmpfehlungen(recDisplayCount);
+        }
+
+        function showAllRecs() {
+            recDisplayCount = 100;
+            document.getElementById('rec-count-input').value = 100;
+            recLoaded = false;
+            loadEmpfehlungen(100);
         }
 
         function renderEmpfehlungen(recs) {
@@ -806,10 +964,11 @@
         function buildApiUrl(page) {
             var params = ['page=' + page, 'per_page=' + perPage, 'sort=' + sortBy];
             if (searchQuery) params.push('search=' + encodeURIComponent(searchQuery));
-            if (activeFilters.canton.length) params.push('canton=' + encodeURIComponent(activeFilters.canton[0]));
+            if (activeFilters.canton.length) params.push('cantons=' + encodeURIComponent(activeFilters.canton.join(',')));
             if (activeFilters.order_type.length) params.push('order_type=' + encodeURIComponent(activeFilters.order_type[0]));
             if (activeFilters.process_type.length) params.push('process_type=' + encodeURIComponent(activeFilters.process_type[0]));
             if (activeFilters.pub_type.length) params.push('pub_type=' + encodeURIComponent(activeFilters.pub_type[0]));
+            if (activeFilters.cpv.length) params.push('cpv=' + encodeURIComponent(activeFilters.cpv.join(',')));
             return '/api/projects?' + params.join('&');
         }
 
@@ -881,6 +1040,7 @@
         function selectFilter(name, value) {
             var idx = activeFilters[name].indexOf(value);
             if (idx > -1) activeFilters[name].splice(idx, 1);
+            else if (name === 'canton') activeFilters[name].push(value);
             else activeFilters[name] = [value];
             var chip = document.querySelector('[data-filter="' + name + '"]');
             if (activeFilters[name].length > 0) { chip.classList.add('active'); chip.querySelector('span').textContent = getFilterLabel(name) + ' (' + activeFilters[name].length + ')'; }
@@ -889,21 +1049,34 @@
             renderActiveFilters(); loadPage(1);
         }
 
-        function getFilterLabel(name) { return {canton:'Kanton',order_type:'Auftragsart',process_type:'Verfahrensart',pub_type:'Publikationsart'}[name] || name; }
+        function getFilterLabel(name) { return {canton:'Kanton',order_type:'Auftragsart',process_type:'Verfahrensart',pub_type:'Publikationsart',cpv:'CPV-Code'}[name] || name; }
 
         function clearAllFilters() {
-            Object.keys(activeFilters).forEach(function(k) { activeFilters[k] = []; var c = document.querySelector('[data-filter="'+k+'"]'); if(c){c.classList.remove('active'); c.querySelector('span').textContent = getFilterLabel(k);} });
+            Object.keys(activeFilters).forEach(function(k) {
+                activeFilters[k] = [];
+                var c = document.querySelector('[data-filter="'+k+'"]');
+                if (c) { c.classList.remove('active'); c.querySelector('span').textContent = getFilterLabel(k); }
+            });
             renderActiveFilters(); loadPage(1);
         }
 
-        function removeFilter(name, value) { selectFilter(name, value); }
+        function removeFilter(name, value) {
+            if (name === 'cpv') { removeCpvFilter(value); return; }
+            selectFilter(name, value);
+        }
 
         function renderActiveFilters() {
             var container = document.getElementById('active-filters'), btn = document.getElementById('filter-clear-btn');
-            var all = []; Object.keys(activeFilters).forEach(function(k) { activeFilters[k].forEach(function(v) { all.push({key:k,value:v}); }); });
+            var all = [];
+            Object.keys(activeFilters).forEach(function(k) {
+                activeFilters[k].forEach(function(v) { all.push({key: k, value: v}); });
+            });
             if (!all.length) { container.innerHTML = ''; btn.style.display = 'none'; return; }
             btn.style.display = 'inline-flex';
-            container.innerHTML = all.map(function(i) { return '<span class="active-filter-tag">' + i.value + ' <button onclick="removeFilter(\'' + i.key + '\',\'' + i.value.replace(/'/g,'') + '\')">&times;</button></span>'; }).join('');
+            container.innerHTML = all.map(function(i) {
+                var label = i.key === 'cpv' ? 'CPV: ' + i.value : i.value;
+                return '<span class="active-filter-tag">' + label + ' <button onclick="removeFilter(\'' + i.key + '\',\'' + i.value.replace(/'/g,'') + '\')">&times;</button></span>';
+            }).join('');
         }
 
         // Render projects
@@ -949,7 +1122,11 @@
         }
 
         function renderPagination() {
-            if (totalPages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+            if (totalPages <= 1) {
+                document.getElementById('pagination').innerHTML = '';
+                document.getElementById('pagination-top').innerHTML = '';
+                return;
+            }
             var html = '<button ' + (currentPage===1?'disabled':'') + ' onclick="goToPage(' + (currentPage-1) + ')">&#8249;</button>';
             for (var i = 1; i <= totalPages; i++) {
                 if (i===1||i===totalPages||(i>=currentPage-2&&i<=currentPage+2)) html += '<button class="' + (i===currentPage?'active':'') + '" onclick="goToPage(' + i + ')">' + i + '</button>';
@@ -957,6 +1134,7 @@
             }
             html += '<button ' + (currentPage===totalPages?'disabled':'') + ' onclick="goToPage(' + (currentPage+1) + ')">&#8250;</button>';
             document.getElementById('pagination').innerHTML = html;
+            document.getElementById('pagination-top').innerHTML = html;
         }
 
         function goToPage(page) { loadPage(page); window.scrollTo({top:0,behavior:'smooth'}); }
@@ -972,6 +1150,16 @@
         function stripHtml(t) { return t ? t.replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').trim() : ''; }
         function showLoading() { document.getElementById('pub-list').innerHTML = '<div class="loading-state"><div class="spinner"></div>Laden...</div>'; }
         function toggleUserMenu() { document.getElementById('user-dropdown').classList.toggle('show'); }
+        function toggleTheme() {
+            var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('sajf-theme', next);
+        }
+
+        function toggleSidebar() {
+            document.body.classList.toggle('sidebar-hidden');
+            localStorage.setItem('sajf-sidebar', document.body.classList.contains('sidebar-hidden') ? 'hidden' : 'visible');
+        }
 
         // Feed-Rate (Tab 1): idempotenter Like-Toggle 1 / 0
         function rateInFeed(pid, value) {
@@ -1028,6 +1216,64 @@
                     if (label) label.textContent = rating === 1 ? 'Relevant' : 'Als relevant markieren';
                 }
             });
+        }
+
+        // CPV Filter
+        function toggleCpvFilter() {
+            if (openFilter === 'cpv') { closeAllDropdowns(); return; }
+            closeAllDropdowns();
+            openFilter = 'cpv';
+            var chip = document.querySelector('[data-filter="cpv"]');
+            chip.classList.add('open');
+            var dropdown = document.getElementById('dropdown-cpv');
+            var activeHtml = activeFilters.cpv.length
+                ? '<div style="display:flex;flex-wrap:wrap;gap:0.25rem;margin-top:0.5rem;">' +
+                  activeFilters.cpv.map(function(c) {
+                      return '<span style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.15rem 0.5rem;background:var(--accent-light);color:var(--accent);border-radius:4px;font-size:0.75rem;font-weight:600;">' +
+                          c + '<button onclick="removeCpvFilter(\'' + c + '\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:1rem;line-height:1;padding:0;margin-left:2px;">×</button></span>';
+                  }).join('') + '</div>'
+                : '';
+            dropdown.innerHTML =
+                '<div style="padding:0.625rem;">' +
+                '<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem;">CPV-Präfix eingeben (z.B. 4526, 45233)</div>' +
+                '<div style="display:flex;gap:0.375rem;">' +
+                '<input type="text" id="cpv-input" class="filter-dropdown-search" placeholder="z.B. 45262100" style="flex:1;margin-bottom:0;" onkeypress="if(event.key===\'Enter\')applyCpvFilter()">' +
+                '<button onclick="applyCpvFilter()" style="padding:0.4rem 0.75rem;background:var(--accent);color:#000;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap;">Hinzufügen</button>' +
+                '</div>' + activeHtml + '</div>';
+            var chipRect = chip.getBoundingClientRect();
+            var filtersRect = document.getElementById('filters-row').getBoundingClientRect();
+            dropdown.style.left = (chipRect.left - filtersRect.left) + 'px';
+            dropdown.classList.add('show');
+            setTimeout(function() { var el = document.getElementById('cpv-input'); if (el) el.focus(); }, 50);
+        }
+
+        function applyCpvFilter() {
+            var input = document.getElementById('cpv-input');
+            if (!input) return;
+            var val = input.value.trim().replace(/\s/g, '');
+            if (!val) return;
+            if (!activeFilters.cpv.includes(val)) activeFilters.cpv.push(val);
+            var chip = document.querySelector('[data-filter="cpv"]');
+            chip.classList.add('active');
+            chip.querySelector('span').textContent = 'CPV (' + activeFilters.cpv.length + ')';
+            closeAllDropdowns();
+            renderActiveFilters();
+            loadPage(1);
+        }
+
+        function removeCpvFilter(val) {
+            var idx = activeFilters.cpv.indexOf(val);
+            if (idx > -1) activeFilters.cpv.splice(idx, 1);
+            var chip = document.querySelector('[data-filter="cpv"]');
+            if (activeFilters.cpv.length) {
+                chip.querySelector('span').textContent = 'CPV (' + activeFilters.cpv.length + ')';
+            } else {
+                chip.classList.remove('active');
+                chip.querySelector('span').textContent = 'CPV-Code';
+            }
+            closeAllDropdowns();
+            renderActiveFilters();
+            loadPage(1);
         }
 
         // Favorites

@@ -218,6 +218,11 @@
                     </select>
                 </div>
                 <div class="onb-form-group">
+                    <label class="onb-label">CPV-Codes <span style="font-weight:400;color:#71717a;">(optional)</span></label>
+                    <input type="text" class="onb-input" id="cpv-codes" placeholder="z.B. 45, 452, 45233 — kommagetrennt">
+                    <div style="font-size:0.8rem;color:#71717a;margin-top:0.4rem;">CPV-Präfixe für feinere Filterung. Leer lassen = alle Codes des gewählten Projekttyps.</div>
+                </div>
+                <div class="onb-form-group">
                     <label class="onb-label">Auftragsvolumen<span class="required">*</span></label>
                     <div class="onb-volume-grid">
                         <div class="onb-volume-option" data-volume="low" onclick="selectVolume('low')"><div class="onb-volume-label">Bis 100'000</div><div class="onb-volume-sub">CHF</div></div>
@@ -437,6 +442,10 @@
     function submitProfile() {
         var vol = VOLUME_MAP[selectedVolume];
         var cantons = getSelectedCantons();
+        var cpvRaw = document.getElementById('cpv-codes').value.trim();
+        var cpvCodes = cpvRaw
+            ? cpvRaw.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; })
+            : [];
         var payload = {
             company_name: document.getElementById('company-name').value.trim(),
             employee_count: parseInt(document.getElementById('employee-count').value) || null,
@@ -444,7 +453,8 @@
             preferred_cantons: cantons,
             project_subtype: document.getElementById('project-subtype').value,
             award_amount_min: vol.min,
-            award_amount_max: vol.max
+            award_amount_max: vol.max,
+            cpv_codes: cpvCodes.length > 0 ? cpvCodes : null
         };
         fetch('/api/onboarding/profile', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
