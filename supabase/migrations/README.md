@@ -1,25 +1,36 @@
 # Supabase Migrationen
 
-Alle DB-Objekte, die fuer das Recommender-System noetig sind, liegen
-versioniert in diesem Ordner. Die Dateien sind chronologisch nummeriert
-und koennen in dieser Reihenfolge auf eine leere DB angewendet werden:
+Die Dateinamen folgen dem Supabase-CLI-Format `<timestamp>_<name>.sql` und
+entsprechen den Eintraegen in `supabase_migrations.schema_migrations` auf dem
+verlinkten Projekt. Damit funktionieren `supabase migration list` und
+`supabase db push` ohne Versionskonflikt.
 
+## Neu aus Remote synchronisieren
+
+Falls Historie und Repo wieder auseinanderlaufen (z. B. Migrationen nur im
+Dashboard angewendet):
+
+```bash
+python3 supabase/scripts/sync_migrations_from_remote.py
 ```
-supabase db reset                                # lokal (falls verwendet)
-# oder per Supabase-MCP apply_migration einzeln anwenden
-```
 
-## Reihenfolge
+Das Skript liest `schema_migrations` per `supabase db query --linked` und
+schreibt die SQL-Dateien neu (Projekt muss verlinkt sein).
 
-1. `20260420_01_user_taste_vectors.sql`
-   - Tabelle `ui.user_taste_vectors` (materialisierte Rocchio-Vektoren).
-2. `20260420_02_refresh_user_taste.sql`
-   - Funktion `ui.refresh_user_taste(uuid)`.
-   - Beruecksichtigt Likes/Dislikes von **projects und archives**.
-3. `20260420_03_refresh_user_taste_trigger.sql`
-   - Trigger `trg_user_tender_ratings_refresh_taste`.
-4. `20260420_04_recommend_projects_v2.sql`
-   - RPC `ui.recommend_projects_for_user_v2` (HNSW-kNN + Hard-Filter).
+## Chronologie (Auszug)
+
+| Timestamp | Inhalt (Kurz) |
+|-----------|----------------|
+| `20260322101618` | `archive_embeddings` (spaeter umbenannt, siehe unten) |
+| `20260322101926` | RPC `get_similar_projects_all` |
+| `20260414150037` | Tabelle `public.archive` |
+| `20260415064419` | Pending-Indizes auf `archive` |
+| `20260418122707` … `20260418125120` | Trigger-Fixes, Embeddings-Umbenennung |
+| `20260420121807` … `20260420192357` | `ui.user_taste_vectors`, `refresh_user_taste`, Trigger, Recommend-RPC |
+| `20260421091130` | Likes-only (`rating` nur noch `NULL`/`1`) |
+| `20260423` | RLS/Indizes/`search_path`-Haertung (`01_db_optimizations`) |
+
+Details stehen in den jeweiligen `.sql`-Dateien (Kopfkommentare aus dem Export).
 
 ## Vorbedingungen (nicht in diesem Ordner)
 

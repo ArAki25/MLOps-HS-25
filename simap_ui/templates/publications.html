@@ -322,6 +322,108 @@
             .pub-tabs { overflow-x: auto; }
             .bew-card { flex-direction: column; }
         }
+
+        /* ========== PROFIL PANEL ========== */
+        .pf-card {
+            background: rgba(18,18,20,0.7);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 2rem 2rem 1.75rem;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+            margin-bottom: 1.5rem;
+        }
+        .pf-section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--accent);
+            margin: 0 0 1.1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.25rem; }
+        .pf-grid-full { grid-column: 1 / -1; }
+        @media (max-width: 640px) { .pf-grid { grid-template-columns: 1fr; } }
+        .pf-field { display: flex; flex-direction: column; gap: 0.4rem; }
+        .pf-label { font-size: 0.8125rem; font-weight: 600; color: #e4e4e7; }
+        .pf-hint { font-size: 0.75rem; color: #71717a; }
+        .pf-input, .pf-select {
+            width: 100%;
+            padding: 0.75rem 0.9rem;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            background: rgba(0,0,0,0.25);
+            color: #fff;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+        }
+        .pf-input:focus, .pf-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(0,0,0,0.4);
+            box-shadow: 0 0 0 3px rgba(6,182,212,0.15);
+        }
+        .pf-input[readonly] { opacity: 0.7; cursor: not-allowed; background: rgba(0,0,0,0.15); }
+        .pf-select option { background: #18181b; color: #fff; }
+        .pf-range-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.6rem; align-items: center; }
+        .pf-range-dash { color: #71717a; font-weight: 600; padding-top: 0.2rem; }
+        .pf-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 2rem; }
+        .pf-btn {
+            padding: 0.8rem 1.6rem;
+            border-radius: 11px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.18s, color 0.18s, border-color 0.18s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .pf-btn-primary { background: linear-gradient(135deg, var(--accent), #3b82f6); color: #fff; box-shadow: 0 8px 18px rgba(6,182,212,0.25); }
+        .pf-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(6,182,212,0.35); }
+        .pf-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+        .pf-btn-ghost { background: rgba(255,255,255,0.03); color: #e4e4e7; border: 1px solid rgba(255,255,255,0.1); }
+        .pf-btn-ghost:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); color: #fff; }
+        .pf-link-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            margin-top: 0.75rem;
+        }
+        .pf-link-row a { color: var(--accent); font-weight: 600; font-size: 0.875rem; text-decoration: none; }
+        .pf-link-row a:hover { text-decoration: underline; }
+        .pf-link-label { color: #a1a1aa; font-size: 0.875rem; }
+        .pf-toast {
+            position: fixed;
+            bottom: 1.75rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(30px);
+            padding: 0.8rem 1.3rem;
+            background: rgba(18,18,20,0.95);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.9rem;
+            box-shadow: 0 14px 32px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.22s ease, transform 0.22s ease;
+            pointer-events: none;
+            z-index: 999;
+            backdrop-filter: blur(12px);
+        }
+        .pf-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .pf-toast.success { border-color: rgba(16,185,129,0.45); }
+        .pf-toast.error   { border-color: rgba(248,113,113,0.45); }
+        #panel-profil { max-width: 860px; }
     </style>
 </head>
 <body>
@@ -452,6 +554,10 @@
                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                     Empfehlungen
                 </button>
+                <button class="pub-tab" onclick="switchTab('profil')" id="tab-profil">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Profil
+                </button>
             </div>
 
             <!-- ==================== TAB 1: AUSSCHREIBUNGEN ==================== -->
@@ -528,7 +634,102 @@
                 </div>
             </div>
 
+            <!-- ==================== TAB 4: PROFIL ==================== -->
+            <div class="tab-panel" id="panel-profil">
+                <form id="pf-form" novalidate>
+
+                    <!-- FIRMENDATEN -->
+                    <section class="pf-card">
+                        <h2 class="pf-section-title">Firmendaten</h2>
+                        <div class="pf-grid">
+                            <div class="pf-field pf-grid-full">
+                                <label class="pf-label" for="pf-company">Firmenname</label>
+                                <input type="text" id="pf-company" class="pf-input"
+                                       placeholder="z.B. Muster Bau AG"
+                                       value="{{ profile.company_name or '' }}">
+                            </div>
+                            <div class="pf-field">
+                                <label class="pf-label" for="pf-employees">Mitarbeiteranzahl</label>
+                                <select id="pf-employees" class="pf-select">
+                                    <option value="">Bitte wählen</option>
+                                    <option value="5"   {% if profile.employee_count == 5 %}selected{% endif %}>1–10</option>
+                                    <option value="25"  {% if profile.employee_count == 25 %}selected{% endif %}>11–50</option>
+                                    <option value="100" {% if profile.employee_count == 100 %}selected{% endif %}>51–250</option>
+                                    <option value="500" {% if profile.employee_count == 500 %}selected{% endif %}>über 250</option>
+                                </select>
+                            </div>
+                            <div class="pf-field">
+                                <label class="pf-label" for="pf-hq">Hauptsitz</label>
+                                <input type="text" id="pf-hq" class="pf-input"
+                                       placeholder="z.B. Olten, SO"
+                                       value="{{ profile.headquarters or '' }}">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- BEVORZUGTE KANTONE -->
+                    <section class="pf-card">
+                        <h2 class="pf-section-title">Bevorzugte Kantone</h2>
+                        {% set initial_cantons = profile.preferred_cantons or ([profile.canton] if profile.canton else []) %}
+                        {% include '_canton_map.html' %}
+                    </section>
+
+                    <!-- AUFTRAGSPRÄFERENZEN -->
+                    <section class="pf-card">
+                        <h2 class="pf-section-title">Auftragspräferenzen</h2>
+                        <div class="pf-grid">
+                            <div class="pf-field pf-grid-full">
+                                <label class="pf-label" for="pf-subtype">Projekttyp</label>
+                                <select id="pf-subtype" class="pf-select" data-current="{{ profile.project_subtype or '' }}">
+                                    <option value="">Bitte wählen</option>
+                                </select>
+                                <span class="pf-hint">Bestimmt, welche Art von Ausschreibungen primär empfohlen werden.</span>
+                            </div>
+                            <div class="pf-field pf-grid-full">
+                                <label class="pf-label">Auftragsvolumen (CHF)</label>
+                                <div class="pf-range-row">
+                                    <input type="number" id="pf-amount-min" class="pf-input"
+                                           placeholder="Min" min="0" step="1000"
+                                           value="{{ profile.award_amount_min if profile.award_amount_min is not none else '' }}">
+                                    <span class="pf-range-dash">–</span>
+                                    <input type="number" id="pf-amount-max" class="pf-input"
+                                           placeholder="Max (leer = offen)" min="0" step="1000"
+                                           value="{{ profile.award_amount_max if profile.award_amount_max is not none else '' }}">
+                                </div>
+                                <span class="pf-hint">Leer lassen für keine Obergrenze.</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- KONTO -->
+                    <section class="pf-card">
+                        <h2 class="pf-section-title">Konto</h2>
+                        <div class="pf-grid">
+                            <div class="pf-field pf-grid-full">
+                                <label class="pf-label" for="pf-email">E-Mail</label>
+                                <input type="email" id="pf-email" class="pf-input" readonly
+                                       value="{{ session.get('user_email', '') }}">
+                                <span class="pf-hint">Die E-Mail kann aktuell nicht selbst geändert werden.</span>
+                            </div>
+                        </div>
+                        <div class="pf-link-row">
+                            <span class="pf-link-label">Passwort ändern</span>
+                            <a href="/change-password">Passwort aktualisieren →</a>
+                        </div>
+                    </section>
+
+                    <div class="pf-actions">
+                        <button type="button" class="pf-btn pf-btn-ghost" onclick="switchTab('ausschreibungen')">Abbrechen</button>
+                        <button type="submit" id="pf-save" class="pf-btn pf-btn-primary">
+                            Änderungen speichern
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
         </main>
+        <div class="pf-toast" id="pf-toast" role="status" aria-live="polite"></div>
     </div>
 
     <script>
@@ -571,9 +772,19 @@
         // TAB SWITCHING
         // ==========================================
         function switchTab(name) {
-            var tabs = ['ausschreibungen', 'bewertungen', 'empfehlungen'];
-            var titles = { ausschreibungen: 'Ausschreibungen', bewertungen: 'Meine Bewertungen', empfehlungen: 'Empfehlungen' };
-            var subtitles = { ausschreibungen: 'Öffentliche Aufträge der Schweiz durchsuchen', bewertungen: 'Ihre bewerteten Ausschreibungen verwalten', empfehlungen: 'Basierend auf Ihren Bewertungen' };
+            var tabs = ['ausschreibungen', 'bewertungen', 'empfehlungen', 'profil'];
+            var titles = {
+                ausschreibungen: 'Ausschreibungen',
+                bewertungen:     'Meine Bewertungen',
+                empfehlungen:    'Empfehlungen',
+                profil:          'Mein Profil'
+            };
+            var subtitles = {
+                ausschreibungen: 'Öffentliche Aufträge der Schweiz durchsuchen',
+                bewertungen:     'Ihre bewerteten Ausschreibungen verwalten',
+                empfehlungen:    'Basierend auf Ihren Bewertungen',
+                profil:          'Firmendaten und Präferenzen bearbeiten'
+            };
 
             tabs.forEach(function(t) {
                 document.getElementById('panel-' + t).classList.toggle('active', t === name);
@@ -587,6 +798,7 @@
 
             if (name === 'bewertungen' && !bewLoaded) loadBewertungen();
             if (name === 'empfehlungen' && !recLoaded) loadEmpfehlungen();
+            if (name === 'profil' && !profLoaded) initProfil();
         }
 
         // ==========================================
@@ -1071,6 +1283,119 @@
                 .then(function() { if(isFav){favoriteIds.delete(pid);btn.classList.remove('favorited');btn.innerHTML=starEmpty;} else{favoriteIds.add(pid);btn.classList.add('favorited');btn.innerHTML=starFilled;} })
                 .catch(function(e){console.error(e);});
         }
+
+        // ==========================================
+        // PROFIL TAB
+        // ==========================================
+        (function () {
+            var SUBTYPE_LABELS_PF = {
+                'construction': 'Bauleistung',
+                'supply':       'Lieferung',
+                'service':      'Dienstleistung'
+            };
+
+            function showPfToast(msg, type) {
+                var toast = document.getElementById('pf-toast');
+                if (!toast) return;
+                toast.textContent = msg;
+                toast.classList.remove('success', 'error');
+                if (type) toast.classList.add(type);
+                toast.classList.add('show');
+                clearTimeout(showPfToast._t);
+                showPfToast._t = setTimeout(function () { toast.classList.remove('show'); }, 2800);
+            }
+
+            function loadSubtypes() {
+                var sel = document.getElementById('pf-subtype');
+                if (!sel) return;
+                var current = sel.dataset.current || '';
+                fetch('/api/onboarding/filter-options')
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        var allowed = ['construction', 'supply', 'service'];
+                        var opts = (data.subtypes || []).filter(function (s) { return allowed.indexOf(s) !== -1; });
+                        if (opts.length === 0) opts = allowed;
+                        sel.innerHTML = '<option value="">Bitte wählen</option>';
+                        opts.forEach(function (s) {
+                            var o = document.createElement('option');
+                            o.value = s;
+                            o.textContent = SUBTYPE_LABELS_PF[s] || s;
+                            if (s === current) o.selected = true;
+                            sel.appendChild(o);
+                        });
+                    })
+                    .catch(function () {
+                        if (sel) sel.innerHTML = '<option value="">Fehler beim Laden</option>';
+                    });
+            }
+
+            function readCantons() {
+                var hidden = document.getElementById('cs-hidden');
+                if (!hidden) return [];
+                var raw = (hidden.value || '').trim();
+                if (!raw) return [];
+                return raw.split(',').map(function (s) { return s.trim().toUpperCase(); })
+                          .filter(function (s) { return s.length > 0; });
+            }
+
+            function toIntOrNull(v) {
+                if (v === '' || v === null || v === undefined) return null;
+                var n = parseInt(v, 10);
+                return isNaN(n) ? null : n;
+            }
+
+            window.initProfil = function () {
+                profLoaded = true;
+                loadSubtypes();
+            };
+
+            var form = document.getElementById('pf-form');
+            if (form) {
+                form.addEventListener('submit', function (ev) {
+                    ev.preventDefault();
+                    var saveBtn = document.getElementById('pf-save');
+                    var min = toIntOrNull(document.getElementById('pf-amount-min').value);
+                    var max = toIntOrNull(document.getElementById('pf-amount-max').value);
+
+                    if (min !== null && max !== null && max < min) {
+                        showPfToast('Der Höchstbetrag darf nicht kleiner als der Mindestbetrag sein.', 'error');
+                        return;
+                    }
+
+                    var payload = {
+                        company_name:      (document.getElementById('pf-company').value || '').trim() || null,
+                        employee_count:    toIntOrNull(document.getElementById('pf-employees').value),
+                        headquarters:      (document.getElementById('pf-hq').value || '').trim() || null,
+                        project_subtype:   (document.getElementById('pf-subtype').value) || null,
+                        award_amount_min:  min,
+                        award_amount_max:  max,
+                        preferred_cantons: readCantons()
+                    };
+
+                    if (saveBtn) saveBtn.disabled = true;
+                    fetch('/api/profile/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (res) {
+                        if (saveBtn) saveBtn.disabled = false;
+                        if (res.success) {
+                            showPfToast('Profil gespeichert.', 'success');
+                            // Empfehlungen neu laden wenn Kantone/Typ geändert
+                            recLoaded = false;
+                        } else {
+                            showPfToast(res.error || 'Fehler beim Speichern.', 'error');
+                        }
+                    })
+                    .catch(function () {
+                        if (saveBtn) saveBtn.disabled = false;
+                        showPfToast('Netzwerkfehler. Bitte erneut versuchen.', 'error');
+                    });
+                });
+            }
+        })();
     </script>
 </body>
 </html>
