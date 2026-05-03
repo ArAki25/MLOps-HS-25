@@ -310,10 +310,33 @@
         .rec-subtype { font-size: 0.75rem; color: var(--text-muted); }
         .rec-amount { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); font-family: 'Space Mono', monospace; }
 
+        /* ========== PROFILE COMPLETENESS ========== */
+        .sidebar-completeness { padding: 0.35rem 1rem 0.6rem; }
+        .sidebar-comp-label { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.35rem; display: flex; justify-content: space-between; }
+        .sidebar-comp-bar { height: 4px; background: var(--border); border-radius: 100px; overflow: hidden; }
+        .sidebar-comp-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--accent), #3b82f6); transition: width 0.4s ease; }
+
+        /* ========== SKELETON LOADER ========== */
+        @keyframes sk-shimmer { 0% { background-position: -600px 0; } 100% { background-position: 600px 0; } }
+        .skeleton-row { display: grid; grid-template-columns: 1fr 200px 110px 60px 32px; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); align-items: center; }
+        .sk { border-radius: 6px; background: linear-gradient(90deg, var(--surface-hover) 25%, var(--border) 50%, var(--surface-hover) 75%); background-size: 600px 100%; animation: sk-shimmer 1.4s infinite; }
+        .sk-title  { height: 14px; width: 70%; }
+        .sk-office { height: 12px; width: 80%; }
+        .sk-date   { height: 12px; width: 60%; }
+        .sk-btn    { height: 26px; width: 100%; border-radius: 8px; }
+
+        /* ========== MOBILE SIDEBAR OVERLAY ========== */
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; }
+        .sidebar-overlay.show { display: block; }
+        .mobile-sidebar-btn { display: none; position: fixed; bottom: 1.5rem; left: 1.5rem; width: 46px; height: 46px; border-radius: 14px; background: var(--accent); color: #000; border: none; box-shadow: 0 4px 16px rgba(6,182,212,0.4); cursor: pointer; z-index: 190; align-items: center; justify-content: center; }
+
         /* ========== RESPONSIVE ========== */
         @media (max-width: 1024px) { .sidebar { width: 200px; } .pub-table-head, .pub-row { grid-template-columns: 1fr 160px 130px 40px; } }
         @media (max-width: 768px) {
-            .sidebar { display: none; }
+            .sidebar { position: fixed; left: 0; top: 0; bottom: 0; z-index: 210; transform: translateX(-100%); transition: transform 0.25s ease; width: 260px !important; min-width: 260px !important; border-right: 1px solid var(--border) !important; }
+            body.sidebar-mobile-open .sidebar { transform: translateX(0); }
+            body.sidebar-hidden .sidebar { transform: translateX(-100%); }
+            .mobile-sidebar-btn { display: flex; }
             .main-content { padding: 1rem; }
             .search-row { flex-direction: column; }
             .pub-table-head { display: none; }
@@ -424,6 +447,92 @@
         .pf-toast.success { border-color: rgba(16,185,129,0.45); }
         .pf-toast.error   { border-color: rgba(248,113,113,0.45); }
         #panel-profil { max-width: 860px; }
+
+        /* ── Light-mode Profil-Panel ── */
+        html[data-theme="light"] .pf-card {
+            background: #ffffff;
+            border-color: #c8d9e8;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        html[data-theme="light"] .pf-section-title {
+            color: var(--accent);
+            border-bottom-color: #dce8f0;
+        }
+        html[data-theme="light"] .pf-label { color: #1e293b; }
+        html[data-theme="light"] .pf-hint  { color: #64748b; }
+        html[data-theme="light"] .pf-range-dash { color: #64748b; }
+        html[data-theme="light"] .pf-input,
+        html[data-theme="light"] .pf-select {
+            background: #f8fafc;
+            border-color: #c8d9e8;
+            color: #0f172a;
+        }
+        html[data-theme="light"] .pf-input:focus,
+        html[data-theme="light"] .pf-select:focus {
+            background: #ffffff;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(8,145,178,0.12);
+        }
+        html[data-theme="light"] .pf-input[readonly] {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        html[data-theme="light"] .pf-input::placeholder { color: #94a3b8; }
+        html[data-theme="light"] .pf-select option { background: #ffffff; color: #0f172a; }
+        html[data-theme="light"] .pf-link-row {
+            background: #f1f5f9;
+            border-color: #c8d9e8;
+        }
+        html[data-theme="light"] .pf-link-label { color: #475569; }
+        html[data-theme="light"] .pf-btn-ghost {
+            background: #f1f5f9;
+            color: #475569;
+            border-color: #c8d9e8;
+        }
+        html[data-theme="light"] .pf-btn-ghost:hover {
+            background: #e2eaf2;
+            color: #0f172a;
+            border-color: #a8bccf;
+        }
+        html[data-theme="light"] .pf-toast {
+            background: rgba(255,255,255,0.97);
+            border-color: #c8d9e8;
+            color: #0f172a;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        /* ========== MARKTÜBERSICHT (Analytics) ========== */
+        .mkt-section { margin-bottom: 2rem; }
+        .mkt-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 1rem; }
+        /* Canton heatmap grid */
+        .canton-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 0.5rem; }
+        .canton-tile { border-radius: 10px; padding: 0.625rem 0.5rem 0.5rem; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; border: 1px solid var(--border); transition: transform 0.15s; cursor: default; }
+        .canton-tile:hover { transform: translateY(-2px); }
+        .canton-tile-abbr { font-size: 0.8125rem; font-weight: 700; color: var(--text-primary); font-family: 'Space Mono', monospace; }
+        .canton-tile-count { font-size: 0.6875rem; font-weight: 600; color: var(--text-muted); font-family: 'Space Mono', monospace; }
+        /* Heat levels */
+        .heat-0 { background: var(--surface); }
+        .heat-1 { background: rgba(6,182,212,.07); border-color: rgba(6,182,212,.2); }
+        .heat-2 { background: rgba(6,182,212,.14); border-color: rgba(6,182,212,.35); }
+        .heat-2 .canton-tile-count { color: var(--accent); }
+        .heat-3 { background: rgba(6,182,212,.24); border-color: rgba(6,182,212,.55); }
+        .heat-3 .canton-tile-abbr, .heat-3 .canton-tile-count { color: var(--accent); }
+        .heat-4 { background: rgba(6,182,212,.38); border-color: var(--accent); }
+        .heat-4 .canton-tile-abbr, .heat-4 .canton-tile-count { color: var(--accent); font-weight: 800; }
+        html[data-theme="light"] .heat-1 { background: rgba(8,145,178,.06); }
+        html[data-theme="light"] .heat-2 { background: rgba(8,145,178,.13); }
+        html[data-theme="light"] .heat-3 { background: rgba(8,145,178,.22); }
+        html[data-theme="light"] .heat-4 { background: rgba(8,145,178,.35); }
+        /* Subtype / order_type bars */
+        .bar-list { display: flex; flex-direction: column; gap: 0.6rem; }
+        .bar-item { display: flex; align-items: center; gap: 0.75rem; }
+        .bar-label { font-size: 0.8125rem; color: var(--text-secondary); min-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 100px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--accent), var(--accent-secondary)); transition: width 0.4s ease; }
+        .bar-count { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); min-width: 44px; text-align: right; font-family: 'Space Mono', monospace; }
+        .mkt-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+        .mkt-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; }
+        @media (max-width: 768px) { .mkt-cards { grid-template-columns: 1fr; } .canton-grid { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); } }
     </style>
 </head>
 <body>
@@ -470,6 +579,13 @@
         </div>
     </div>
 
+    <!-- Mobile sidebar overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+    <!-- Mobile open button -->
+    <button class="mobile-sidebar-btn" onclick="openMobileSidebar()" title="Menü öffnen">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+
     <div class="main-layout">
         <!-- Sidebar -->
         <nav class="sidebar">
@@ -482,6 +598,13 @@
                         <div class="sidebar-profile-sub">Profileinstellungen →</div>
                     </div>
                 </a>
+            </div>
+            <div class="sidebar-completeness">
+                <div class="sidebar-comp-label">
+                    <span>Profil</span>
+                    <span id="comp-pct">–</span>
+                </div>
+                <div class="sidebar-comp-bar"><div class="sidebar-comp-fill" id="comp-fill" style="width:0%"></div></div>
             </div>
 
             <!-- Scrollbarer Inhalt -->
@@ -506,11 +629,19 @@
                             <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></span>
                             Empfehlungen
                         </a></li>
+                        <li><a onclick="switchTab('markt')" id="nav-markt">
+                            <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="12" width="4" height="10"/><rect x="9" y="8" width="4" height="14"/><rect x="16" y="4" width="4" height="18"/></svg></span>
+                            Marktübersicht
+                        </a></li>
                     </ul>
                 </div>
                 <div class="sidebar-section">
                     <div class="sidebar-section-title">Konto</div>
                     <ul class="sidebar-nav">
+                        <li><a href="/team">
+                            <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+                            Team
+                        </a></li>
                         <li><a href="/profile">
                             <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
                             Mein Profil
@@ -553,6 +684,10 @@
                 <button class="pub-tab" onclick="switchTab('empfehlungen')" id="tab-empfehlungen">
                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                     Empfehlungen
+                </button>
+                <button class="pub-tab" onclick="switchTab('markt')" id="tab-markt">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="12" width="4" height="10"/><rect x="9" y="8" width="4" height="14"/><rect x="16" y="4" width="4" height="18"/></svg>
+                    Marktübersicht
                 </button>
                 <button class="pub-tab" onclick="switchTab('profil')" id="tab-profil">
                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -608,7 +743,17 @@
                     <div class="pub-table-head">
                         <span>Titel</span><span>Vergabestelle</span><span style="text-align:right;">Veröffentlicht</span><span style="text-align:center;">Bewerten</span><span></span>
                     </div>
-                    <div id="pub-list"><div class="loading-state"><div class="spinner"></div>Ausschreibungen werden geladen...</div></div>
+                    <div id="pub-list">
+                        {% for _ in range(8) %}
+                        <div class="skeleton-row">
+                            <div class="sk sk-title"></div>
+                            <div class="sk sk-office"></div>
+                            <div class="sk sk-date"></div>
+                            <div class="sk sk-btn"></div>
+                            <div></div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
                 <div class="pagination" id="pagination"></div>
             </div>
@@ -634,7 +779,14 @@
                 </div>
             </div>
 
-            <!-- ==================== TAB 4: PROFIL ==================== -->
+            <!-- ==================== TAB 4: MARKTÜBERSICHT ==================== -->
+            <div class="tab-panel" id="panel-markt">
+                <div id="markt-content">
+                    <div class="loading-state"><div class="spinner"></div>Marktdaten werden geladen...</div>
+                </div>
+            </div>
+
+            <!-- ==================== TAB 5: PROFIL ==================== -->
             <div class="tab-panel" id="panel-profil">
                 <form id="pf-form" novalidate>
 
@@ -741,7 +893,7 @@
         var favoriteIds = new Set();
         var activeFilters = { canton: [], order_type: [], process_type: [], pub_type: [], cpv: [] };
         var filterOptions = { canton: [], order_type: [], process_type: [], pub_type: [] };
-        var bewLoaded = false, recLoaded = false, recDisplayCount = 20;
+        var bewLoaded = false, recLoaded = false, profLoaded = false, marktLoaded = false, recDisplayCount = 20;
         var userRatings = {};  // tender_id -> rating
 
         var SUBTYPE_LABELS = { 'construction':'Bauleistung', 'supply':'Lieferung', 'service':'Dienstleistung' };
@@ -758,7 +910,23 @@
             loadFeedRatings();
             loadPage(1);
             setupEventListeners();
+            loadProfileCompleteness();
         });
+
+        function loadProfileCompleteness() {
+            fetch('/api/profile/data').then(function(r) { return r.json(); }).then(function(p) {
+                var score = 0;
+                if (p.company_name)      score++;
+                if (p.project_subtype)   score++;
+                if (p.preferred_cantons && p.preferred_cantons.length > 0) score++;
+                if (p.award_amount_min != null || p.award_amount_max != null) score++;
+                var pct = Math.round((score / 4) * 100);
+                var fill = document.getElementById('comp-fill');
+                var lbl  = document.getElementById('comp-pct');
+                if (fill) fill.style.width = pct + '%';
+                if (lbl)  lbl.textContent = pct + '%';
+            }).catch(function() {});
+        }
 
         function setupEventListeners() {
             document.getElementById('search-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') performSearch(); });
@@ -772,17 +940,19 @@
         // TAB SWITCHING
         // ==========================================
         function switchTab(name) {
-            var tabs = ['ausschreibungen', 'bewertungen', 'empfehlungen', 'profil'];
+            var tabs = ['ausschreibungen', 'bewertungen', 'empfehlungen', 'markt', 'profil'];
             var titles = {
                 ausschreibungen: 'Ausschreibungen',
                 bewertungen:     'Meine Bewertungen',
                 empfehlungen:    'Empfehlungen',
+                markt:           'Marktübersicht',
                 profil:          'Mein Profil'
             };
             var subtitles = {
                 ausschreibungen: 'Öffentliche Aufträge der Schweiz durchsuchen',
                 bewertungen:     'Ihre bewerteten Ausschreibungen verwalten',
                 empfehlungen:    'Basierend auf Ihren Bewertungen',
+                markt:           'Aktuelle Ausschreibungen nach Kanton und Branche',
                 profil:          'Firmendaten und Präferenzen bearbeiten'
             };
 
@@ -798,6 +968,7 @@
 
             if (name === 'bewertungen' && !bewLoaded) loadBewertungen();
             if (name === 'empfehlungen' && !recLoaded) loadEmpfehlungen();
+            if (name === 'markt' && !marktLoaded) loadMarkt();
             if (name === 'profil' && !profLoaded) initProfil();
         }
 
@@ -811,7 +982,12 @@
                 .then(function(data) {
                     var items = data.ratings || [];
                     if (items.length === 0) {
-                        document.getElementById('bew-content').innerHTML = '<div class="empty-state"><p>Sie haben noch keine Ausschreibungen bewertet.</p><p style="margin-top:0.5rem;"><a href="/onboarding" style="color:var(--accent);">Jetzt Onboarding starten</a></p></div>';
+                        document.getElementById('bew-content').innerHTML = '<div class="empty-state" style="padding:3rem 1rem;text-align:center;">'
+                            + '<svg width="48" height="48" fill="none" stroke="var(--text-muted)" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 1rem;display:block;opacity:0.4"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>'
+                            + '<p style="font-weight:600;font-size:1rem;margin-bottom:0.5rem;">Noch keine Bewertungen</p>'
+                            + '<p style="color:var(--text-muted);font-size:0.875rem;max-width:320px;margin:0 auto 1.25rem;">Öffnen Sie den Tab <strong>Ausschreibungen</strong> und markieren Sie relevante Einträge — sie erscheinen dann hier.</p>'
+                            + '<a onclick="switchTab(\'ausschreibungen\')" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.6rem 1.25rem;background:var(--accent);color:#000;font-weight:600;font-size:0.875rem;border-radius:9px;cursor:pointer;text-decoration:none;">Zu den Ausschreibungen</a>'
+                            + '</div>';
                         return;
                     }
                     document.getElementById('bew-count').textContent = items.length;
@@ -883,8 +1059,8 @@
                         var msg = '';
                         if (hint === 'no_ratings') {
                             msg = '<p style="font-weight:600;">Noch keine Empfehlungen</p><p style="margin-top:0.5rem;color:var(--text-muted);">Bewerten Sie im Tab <strong>Ausschreibungen</strong> mindestens eine Ausschreibung mit &ldquo;Relevant&rdquo;, damit der Algorithmus Ihr Interessenprofil aufbauen kann.</p>';
-                        } else if (hint === 'cpv_too_narrow') {
-                            msg = '<p style="font-weight:600;">Profil zu eng gefiltert</p><p style="margin-top:0.5rem;color:var(--text-muted);">Ihre CPV-Codes schränken die Treffer stark ein. Entfernen Sie einzelne CPV-Filter in Ihrem <a href="/profile" style="color:var(--accent);">Profil</a> oder fügen Sie weitere Bewertungen hinzu, um breitere Ergebnisse zu erhalten.</p>';
+                        } else if (hint === 'profile_too_narrow' || hint === 'cpv_too_narrow') {
+                            msg = '<p style="font-weight:600;">Profil zu eng gefiltert</p><p style="margin-top:0.5rem;color:var(--text-muted);">Projekttyp oder Auftragsvolumen schränken die Treffer stark ein. Passen Sie Ihre Einstellungen in <a href="/profile" style="color:var(--accent);">Mein Profil</a> an oder fügen Sie weitere Bewertungen hinzu.</p>';
                         } else {
                             msg = '<p style="font-weight:600;">Keine passenden Ausschreibungen gefunden</p><p style="margin-top:0.5rem;color:var(--text-muted);">Aktuell sind keine neuen Projekte vorhanden, die Ihrem Profil entsprechen. Schauen Sie später wieder vorbei oder bewerten Sie weitere Ausschreibungen, um das Profil zu verfeinern.</p>';
                         }
@@ -956,6 +1132,105 @@
                 '</div>';
             });
             document.getElementById('rec-content').innerHTML = html;
+        }
+
+        // ==========================================
+        // MARKTÜBERSICHT TAB
+        // ==========================================
+        var CANTON_NAMES_FULL = {'AG':'Aargau','AI':'Appenzell IR','AR':'Appenzell AR','BE':'Bern','BL':'Basel-Land','BS':'Basel-Stadt','FR':'Freiburg','GE':'Genf','GL':'Glarus','GR':'Graubünden','JU':'Jura','LU':'Luzern','NE':'Neuenburg','NW':'Nidwalden','OW':'Obwalden','SG':'St. Gallen','SH':'Schaffhausen','SO':'Solothurn','SZ':'Schwyz','TG':'Thurgau','TI':'Tessin','UR':'Uri','VD':'Waadt','VS':'Wallis','ZG':'Zug','ZH':'Zürich'};
+        var SUBTYPE_LABELS_FULL = {'construction':'Bauleistung','supply':'Lieferung','service':'Dienstleistung','other':'Sonstige'};
+        var ORDER_TYPE_LABELS = {'WORKS':'Bauleistung','SERVICES':'Dienstleistungen','SUPPLIES':'Lieferungen','OTHER':'Sonstige'};
+
+        function loadMarkt() {
+            marktLoaded = true;
+            fetch('/api/analytics')
+                .then(function(r) { return r.json(); })
+                .then(function(data) { renderMarkt(data); })
+                .catch(function() {
+                    document.getElementById('markt-content').innerHTML = '<div class="empty-state">Fehler beim Laden der Marktdaten.</div>';
+                });
+        }
+
+        function renderMarkt(data) {
+            var cantonCounts = data.canton_counts || {};
+            var subtypeCounts = data.subtype_counts || {};
+            var orderTypeCounts = data.order_type_counts || {};
+
+            // Canton heatmap
+            var cantonEntries = Object.keys(cantonCounts).map(function(k) { return {abbr: k, count: cantonCounts[k]}; });
+            cantonEntries.sort(function(a, b) { return b.count - a.count; });
+            var maxCount = cantonEntries.length ? cantonEntries[0].count : 1;
+
+            // All 26 cantons in a fixed order
+            var ALL_CANTONS = ['ZH','BE','LU','UR','SZ','OW','NW','GL','ZG','FR','SO','BS','BL','SH','AR','AI','SG','GR','AG','TG','TI','VD','VS','NE','GE','JU'];
+            var cantonHtml = ALL_CANTONS.map(function(abbr) {
+                var count = cantonCounts[abbr] || 0;
+                var ratio = maxCount > 0 ? count / maxCount : 0;
+                var heat = ratio === 0 ? 0 : ratio < 0.15 ? 1 : ratio < 0.4 ? 2 : ratio < 0.7 ? 3 : 4;
+                return '<div class="canton-tile heat-' + heat + '" title="' + (CANTON_NAMES_FULL[abbr] || abbr) + ': ' + count + ' Ausschreibungen">' +
+                    '<span class="canton-tile-abbr">' + abbr + '</span>' +
+                    '<span class="canton-tile-count">' + count + '</span>' +
+                '</div>';
+            }).join('');
+
+            // Subtype bars
+            var subtypeEntries = Object.keys(subtypeCounts).map(function(k) { return {key: k, count: subtypeCounts[k]}; });
+            subtypeEntries.sort(function(a, b) { return b.count - a.count; });
+            var maxSub = subtypeEntries.length ? subtypeEntries[0].count : 1;
+            var subtypeHtml = subtypeEntries.map(function(e) {
+                var pct = Math.round((e.count / maxSub) * 100);
+                var label = SUBTYPE_LABELS_FULL[e.key] || e.key;
+                return '<div class="bar-item">' +
+                    '<span class="bar-label">' + label + '</span>' +
+                    '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+                    '<span class="bar-count">' + e.count + '</span>' +
+                '</div>';
+            }).join('') || '<p style="color:var(--text-muted);font-size:0.875rem;">Keine Daten</p>';
+
+            // Order type bars
+            var orderEntries = Object.keys(orderTypeCounts).map(function(k) { return {key: k, count: orderTypeCounts[k]}; });
+            orderEntries.sort(function(a, b) { return b.count - a.count; });
+            var maxOrder = orderEntries.length ? orderEntries[0].count : 1;
+            var orderHtml = orderEntries.map(function(e) {
+                var pct = Math.round((e.count / maxOrder) * 100);
+                var label = ORDER_TYPE_LABELS[e.key] || e.key;
+                return '<div class="bar-item">' +
+                    '<span class="bar-label">' + label + '</span>' +
+                    '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;background:linear-gradient(90deg,#10b981,#3b82f6)"></div></div>' +
+                    '<span class="bar-count">' + e.count + '</span>' +
+                '</div>';
+            }).join('') || '<p style="color:var(--text-muted);font-size:0.875rem;">Keine Daten</p>';
+
+            // Top 5 cantons list
+            var top5Html = cantonEntries.slice(0, 5).map(function(e, i) {
+                var pct = Math.round((e.count / maxCount) * 100);
+                return '<div class="bar-item">' +
+                    '<span class="bar-label" style="min-width:100px;"><strong>' + e.abbr + '</strong> <span style="color:var(--text-muted);font-size:0.75rem;">' + (CANTON_NAMES_FULL[e.abbr] || '') + '</span></span>' +
+                    '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+                    '<span class="bar-count">' + e.count + '</span>' +
+                '</div>';
+            }).join('');
+
+            var html = '<div class="mkt-section">' +
+                '<div class="mkt-section-title">Ausschreibungen nach Kanton</div>' +
+                '<div class="canton-grid">' + cantonHtml + '</div>' +
+            '</div>' +
+            '<div class="mkt-cards">' +
+                '<div class="mkt-card">' +
+                    '<div class="mkt-section-title">Top 5 Kantone</div>' +
+                    '<div class="bar-list">' + top5Html + '</div>' +
+                '</div>' +
+                '<div class="mkt-card">' +
+                    '<div class="mkt-section-title">Nach Auftragsart</div>' +
+                    '<div class="bar-list">' + orderHtml + '</div>' +
+                '</div>' +
+                '<div class="mkt-card">' +
+                    '<div class="mkt-section-title">Nach Projekttyp</div>' +
+                    '<div class="bar-list">' + subtypeHtml + '</div>' +
+                '</div>' +
+            '</div>';
+
+            document.getElementById('markt-content').innerHTML = html;
         }
 
         // ==========================================
@@ -1096,8 +1371,11 @@
                 var upActive = currentRating === 1 ? ' active' : '';
                 var rowLiked = currentRating === 1 ? ' is-liked' : '';
 
+                var titleHtml = p.simap_id
+                    ? '<a href="/tender/' + encodeURIComponent(p.simap_id) + '" class="pub-title" onclick="event.stopPropagation()" style="text-decoration:none;">' + escapeHtml(p.title) + '</a>'
+                    : '<div class="pub-title">' + escapeHtml(p.title) + '</div>';
                 html += '<div class="pub-row' + rowLiked + '" id="' + rowId + '" data-pub-pid="' + p.id + '" onclick="toggleDetail(\'' + rowId + '\')">' +
-                    '<div class="pub-title-col"><div class="pub-title">' + escapeHtml(p.title) + '</div><div class="pub-location">' + loc + '</div><div class="pub-tags">' + tags + '</div></div>' +
+                    '<div class="pub-title-col">' + titleHtml + '<div class="pub-location">' + loc + '</div><div class="pub-tags">' + tags + '</div></div>' +
                     '<div class="pub-office">' + escapeHtml(p.organization||'-') + '</div>' +
                     '<div class="pub-date-col"><div class="pub-time-ago ' + (isRecent?'':'old') + '">' + getTimeAgo(p.publication_date) + '</div><div class="pub-date-exact">' + formatDate(p.publication_date) + '</div></div>' +
                     '<div class="pub-rate">' +
@@ -1107,7 +1385,10 @@
                     '</div>' +
                     '<div class="pub-actions"><button class="pub-fav-btn ' + (isFav?'favorited':'') + '" onclick="event.stopPropagation();toggleFavorite(\'' + p.id + '\',this)" title="' + (isFav?'Entfernen':'Merken') + '">' + (isFav?starFilled:starEmpty) + '</button></div>' +
                 '</div>' +
-                '<div class="pub-detail' + rowLiked + '" id="detail-' + rowId + '"><div class="pub-detail-inner"><div class="pub-detail-desc">' + escapeHtml(p.description||'') + '</div><div class="pub-detail-actions"><a href="' + escapeHtml(p.simap_url||'#') + '" target="_blank" rel="noopener noreferrer" class="btn-simap" onclick="event.stopPropagation()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Auf simap.ch ansehen</a><span class="pub-detail-meta">Projekt #' + (p.project_number||'-') + '</span></div></div></div>';
+                '<div class="pub-detail' + rowLiked + '" id="detail-' + rowId + '"><div class="pub-detail-inner"><div class="pub-detail-desc">' + escapeHtml(p.description||'') + '</div><div class="pub-detail-actions">' +
+                    (p.simap_id ? '<a href="/tender/' + encodeURIComponent(p.simap_id) + '" class="btn-simap" style="background:var(--surface-hover);color:var(--text-primary);border:1px solid var(--border);" onclick="event.stopPropagation()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Details &amp; Notiz</a>' : '') +
+                    '<a href="' + escapeHtml(p.simap_url||'#') + '" target="_blank" rel="noopener noreferrer" class="btn-simap" onclick="event.stopPropagation()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Auf simap.ch</a>' +
+                    '<span class="pub-detail-meta">Projekt #' + (p.project_number||'-') + '</span></div></div></div>';
             });
             container.innerHTML = html;
         }
@@ -1154,6 +1435,15 @@
             var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('sajf-theme', next);
+        }
+
+        function openMobileSidebar() {
+            document.body.classList.add('sidebar-mobile-open');
+            document.getElementById('sidebar-overlay').classList.add('show');
+        }
+        function closeMobileSidebar() {
+            document.body.classList.remove('sidebar-mobile-open');
+            document.getElementById('sidebar-overlay').classList.remove('show');
         }
 
         function toggleSidebar() {

@@ -524,6 +524,8 @@
     @media (max-width: 768px) {
         .hero { padding: 4rem 1.5rem 3rem; min-height: auto; }
         .hero h1 { font-size: 2.5rem; }
+        .hero-actions { flex-wrap: nowrap; justify-content: center; gap: 0.75rem; }
+        .hero-actions .btn { font-size: 0.875rem; padding: 0.7rem 1.1rem; white-space: nowrap; }
         .features-grid, .steps-container { grid-template-columns: 1fr; }
         .steps-container::after { display: none; }
         .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 3rem; }
@@ -698,6 +700,27 @@
     </div>
 </section>
 
+<section class="stats-section">
+    <div class="stats-grid">
+        <div>
+            <div class="stat-value gradient-text" id="stat-total">–</div>
+            <div class="stat-label">Ausschreibungen</div>
+        </div>
+        <div>
+            <div class="stat-value gradient-text">26</div>
+            <div class="stat-label">Kantone</div>
+        </div>
+        <div>
+            <div class="stat-value gradient-text" id="stat-today">–</div>
+            <div class="stat-label">Neue heute</div>
+        </div>
+        <div>
+            <div class="stat-value gradient-text">100%</div>
+            <div class="stat-label">Transparenz</div>
+        </div>
+    </div>
+</section>
+
 <section class="how-section">
     <div class="section-header">
         <div class="section-label">So funktioniert's</div>
@@ -724,27 +747,6 @@
             </div>
             <h3>3. Direkt bewerben</h3>
             <p>Mit einem Klick zur offiziellen Ausschreibung auf simap.ch — Unterlagen herunterladen und Offerte einreichen.</p>
-        </div>
-    </div>
-</section>
-
-<section class="stats-section">
-    <div class="stats-grid">
-        <div>
-            <div class="stat-value gradient-text" id="stat-total">–</div>
-            <div class="stat-label">Ausschreibungen</div>
-        </div>
-        <div>
-            <div class="stat-value gradient-text">26</div>
-            <div class="stat-label">Kantone</div>
-        </div>
-        <div>
-            <div class="stat-value gradient-text" id="stat-today">–</div>
-            <div class="stat-label">Neue heute</div>
-        </div>
-        <div>
-            <div class="stat-value gradient-text">100%</div>
-            <div class="stat-label">Transparenz</div>
         </div>
     </div>
 </section>

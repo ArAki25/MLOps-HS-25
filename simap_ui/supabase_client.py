@@ -1581,6 +1581,291 @@ def get_random_archive_tenders(count=20):
     return []
 
 
+# ============================================
+# ANALYTICS
+# ============================================
+
+def get_analytics_data() -> Dict:
+    """Kantone + Subtyp-Zählungen für das Marktübersicht-Dashboard."""
+    try:
+        all_rows = []
+        batch_size = 1000
+        offset = 0
+        while True:
+            r = ui('projects_ui') \
+                .select('canton,project_subtype,order_type') \
+                .range(offset, offset + batch_size - 1) \
+                .execute()
+            if not r.data:
+                break
+            all_rows.extend(r.data)
+            if len(r.data) < batch_size:
+                break
+            offset += batch_size
+
+        canton_counts: Dict[str, int] = {}
+        subtype_counts: Dict[str, int] = {}
+        order_type_counts: Dict[str, int] = {}
+
+        for row in all_rows:
+            c = (row.get('canton') or '').strip().upper()
+            if c:
+                canton_counts[c] = canton_counts.get(c, 0) + 1
+            s = (row.get('project_subtype') or '').strip()
+            if s:
+                subtype_counts[s] = subtype_counts.get(s, 0) + 1
+            o = (row.get('order_type') or '').strip()
+            if o:
+                order_type_counts[o] = order_type_counts.get(o, 0) + 1
+
+        return {
+            'canton_counts': canton_counts,
+            'subtype_counts': subtype_counts,
+            'order_type_counts': order_type_counts,
+        }
+    except Exception as e:
+        print(f"❌ get_analytics_data Fehler: {e}")
+        return {'canton_counts': {}, 'subtype_counts': {}, 'order_type_counts': {}}
+
+
+# ============================================
+# TENDER NOTES
+# ============================================
+
+def get_tender_note(user_id: str, simap_id: str) -> str:
+    if not user_id or not simap_id:
+        return ''
+    try:
+        r = ui('user_tender_notes') \
+            .select('note') \
+            .eq('user_id', user_id) \
+            .eq('simap_id', str(simap_id)) \
+            .execute()
+        return (r.data[0].get('note') or '') if r.data else ''
+    except Exception as e:
+        print(f"❌ get_tender_note Fehler: {e}")
+        return ''
+
+
+def save_tender_note(user_id: str, simap_id: str, note: str) -> Dict:
+    if not user_id or not simap_id:
+        return {'success': False, 'error': 'Ungültige Parameter'}
+    try:
+        ui('user_tender_notes').upsert(
+            {
+                'user_id': user_id,
+                'simap_id': str(simap_id),
+                'note': note,
+                'updated_at': datetime.utcnow().isoformat(),
+            },
+            on_conflict='user_id,simap_id',
+        ).execute()
+        return {'success': True}
+    except Exception as e:
+        print(f"❌ save_tender_note Fehler: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+def get_project_by_simap_id(simap_id: str) -> Optional[Dict]:
+    try:
+        r = ui('projects_ui').select('*').eq('simap_project_id', str(simap_id)).limit(1).execute()
+        if r.data:
+            return transform_project(r.data[0], include_details=True)
+        return None
+    except Exception as e:
+        print(f"❌ get_project_by_simap_id Fehler: {e}")
+        return None
+
+
+# ============================================
+# TEAM ACCOUNTS
+# ============================================
+
+import secrets
+import string
+
+def _generate_invite_code(length=8) -> str:
+    alphabet = string.ascii_uppercase + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
+
+
+def create_team(owner_id: str, team_name: str) -> Dict:
+    if not owner_id or not team_name:
+        return {'success': False, 'error': 'Name und User erforderlich'}
+    try:
+        existing = ui('org_teams').select('id').eq('owner_id', owner_id).execute()
+        if existing.data:
+            return {'success': False, 'error': 'Sie sind bereits Inhaber eines Teams'}
+
+        invite_code = _generate_invite_code()
+        r = ui('org_teams').insert({
+            'name': team_name.strip(),
+            'owner_id': owner_id,
+            'invite_code': invite_code,
+        }).execute()
+        team_id = r.data[0]['id'] if r.data else None
+        if not team_id:
+            return {'success': False, 'error': 'Team konnte nicht erstellt werden'}
+
+        ui('org_team_members').upsert(
+            {'team_id': team_id, 'user_id': owner_id, 'role': 'owner'},
+            on_conflict='team_id,user_id',
+        ).execute()
+
+        return {'success': True, 'team_id': team_id, 'invite_code': invite_code, 'name': team_name}
+    except Exception as e:
+        print(f"❌ create_team Fehler: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+def join_team(user_id: str, invite_code: str) -> Dict:
+    if not user_id or not invite_code:
+        return {'success': False, 'error': 'Einladungscode erforderlich'}
+    try:
+        team_r = ui('org_teams').select('id,name').eq('invite_code', invite_code.strip().upper()).execute()
+        if not team_r.data:
+            return {'success': False, 'error': 'Ungültiger Einladungscode'}
+        team = team_r.data[0]
+        team_id = team['id']
+
+        ui('org_team_members').upsert(
+            {'team_id': team_id, 'user_id': user_id, 'role': 'member'},
+            on_conflict='team_id,user_id',
+        ).execute()
+
+        return {'success': True, 'team_id': team_id, 'name': team['name']}
+    except Exception as e:
+        print(f"❌ join_team Fehler: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+def leave_team(user_id: str, team_id: str) -> Dict:
+    if not user_id or not team_id:
+        return {'success': False, 'error': 'Ungültige Parameter'}
+    try:
+        member_r = ui('org_team_members').select('role').eq('team_id', team_id).eq('user_id', user_id).execute()
+        if not member_r.data:
+            return {'success': False, 'error': 'Nicht Mitglied dieses Teams'}
+        if member_r.data[0].get('role') == 'owner':
+            return {'success': False, 'error': 'Als Inhaber können Sie das Team nicht verlassen. Löschen Sie das Team oder übertragen Sie die Inhaberschaft.'}
+
+        ui('org_team_members').delete().eq('team_id', team_id).eq('user_id', user_id).execute()
+        return {'success': True}
+    except Exception as e:
+        print(f"❌ leave_team Fehler: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+def delete_team(owner_id: str, team_id: str) -> Dict:
+    if not owner_id or not team_id:
+        return {'success': False, 'error': 'Ungültige Parameter'}
+    try:
+        team_r = ui('org_teams').select('id').eq('id', team_id).eq('owner_id', owner_id).execute()
+        if not team_r.data:
+            return {'success': False, 'error': 'Nur der Inhaber kann das Team löschen'}
+        ui('org_team_members').delete().eq('team_id', team_id).execute()
+        ui('org_teams').delete().eq('id', team_id).execute()
+        return {'success': True}
+    except Exception as e:
+        print(f"❌ delete_team Fehler: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+def get_user_team(user_id: str) -> Optional[Dict]:
+    if not user_id:
+        return None
+    try:
+        member_r = ui('org_team_members').select('team_id,role').eq('user_id', user_id).execute()
+        if not member_r.data:
+            return None
+        team_id = member_r.data[0]['team_id']
+        role = member_r.data[0]['role']
+
+        team_r = ui('org_teams').select('*').eq('id', team_id).execute()
+        if not team_r.data:
+            return None
+        team = dict(team_r.data[0])
+        team['my_role'] = role
+        return team
+    except Exception as e:
+        print(f"❌ get_user_team Fehler: {e}")
+        return None
+
+
+def get_team_members_data(team_id: str) -> List[Dict]:
+    if not team_id:
+        return []
+    try:
+        members_r = ui('org_team_members').select('user_id,role,joined_at').eq('team_id', team_id).execute()
+        if not members_r.data:
+            return []
+        user_ids = [m['user_id'] for m in members_r.data]
+        users_r = ui('users').select('id,email,company_name').in_('id', user_ids).execute()
+        user_map = {u['id']: u for u in (users_r.data or [])}
+        result = []
+        for m in members_r.data:
+            u = user_map.get(m['user_id'], {})
+            result.append({
+                'user_id': m['user_id'],
+                'role': m['role'],
+                'joined_at': m.get('joined_at'),
+                'email': u.get('email', ''),
+                'company_name': u.get('company_name', ''),
+            })
+        return result
+    except Exception as e:
+        print(f"❌ get_team_members_data Fehler: {e}")
+        return []
+
+
+def get_team_favorites(team_id: str) -> List[Dict]:
+    """Alle Favoriten aller Team-Mitglieder (dedupliziert nach project_id)."""
+    if not team_id:
+        return []
+    try:
+        members_r = ui('org_team_members').select('user_id').eq('team_id', team_id).execute()
+        if not members_r.data:
+            return []
+        user_ids = [m['user_id'] for m in members_r.data]
+
+        fav_r = ui('favorites').select('*').in_('user_id', user_ids).order('created_at', desc=True).execute()
+        seen = set()
+        result = []
+        for f in (fav_r.data or []):
+            pid = str(f.get('project_id', ''))
+            if pid not in seen:
+                seen.add(pid)
+                result.append(f)
+        return result
+    except Exception as e:
+        print(f"❌ get_team_favorites Fehler: {e}")
+        return []
+
+
+def get_team_ratings(team_id: str) -> List[Dict]:
+    """Alle Likes aller Team-Mitglieder (dedupliziert nach tender_id)."""
+    if not team_id:
+        return []
+    try:
+        members_r = ui('org_team_members').select('user_id').eq('team_id', team_id).execute()
+        if not members_r.data:
+            return []
+        user_ids = [m['user_id'] for m in members_r.data]
+
+        rat_r = ui('user_tender_ratings').select('tender_id,source,user_id').in_('user_id', user_ids).eq('rating', 1).execute()
+        seen = set()
+        result = []
+        for r in (rat_r.data or []):
+            key = (str(r.get('tender_id', '')), r.get('source', 'project'))
+            if key not in seen:
+                seen.add(key)
+                result.append(r)
+        return result
+    except Exception as e:
+        print(f"❌ get_team_ratings Fehler: {e}")
+        return []
+
+
 def mark_onboarding_complete(user_id):
     """Markiere Onboarding als abgeschlossen - KORRIGIERT auf 'onboarding_completed'"""
     try:

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team – SAJF Strategies</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script>(function(){var t=localStorage.getItem('sajf-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+    <style>
+        :root {
+            --accent: #06b6d4; --accent-hover: #0891b2; --accent-light: rgba(6,182,212,.1);
+            --success: #10b981; --danger: #ef4444;
+            --text-primary: #f4f4f5; --text-secondary: #a1a1aa; --text-muted: #71717a;
+            --bg: #09090b; --surface: #121214; --surface-hover: #1f1f23;
+            --border: #27272a; --border-light: #1f1f23;
+            --radius: 10px; --radius-lg: 16px;
+        }
+        html[data-theme="light"] {
+            --accent: #0891b2; --accent-hover: #0e7490; --accent-light: rgba(8,145,178,.1);
+            --success: #059669; --danger: #dc2626;
+            --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #94a3b8;
+            --bg: #f8fafc; --surface: #ffffff; --surface-hover: #f1f5f9;
+            --border: #e2e8f0; --border-light: #f1f5f9;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', -apple-system, sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+        /* Top bar */
+        .top-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.5rem; height: 56px; display: flex; align-items: center; gap: 1rem; position: sticky; top: 0; z-index: 50; }
+        .back-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.875rem; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--text-secondary); font-size: 0.8125rem; font-weight: 500; cursor: pointer; text-decoration: none; font-family: inherit; transition: all 0.15s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .top-bar-title { font-size: 0.9375rem; font-weight: 700; }
+        .theme-toggle { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: auto; flex-shrink: 0; }
+        .theme-toggle:hover { background: var(--surface-hover); }
+        .icon-sun { display: block; } .icon-moon { display: none; }
+        html[data-theme="light"] .icon-sun { display: none; } html[data-theme="light"] .icon-moon { display: block; }
+
+        .page-wrap { max-width: 760px; margin: 2rem auto; padding: 0 1.5rem 4rem; }
+        .page-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.375rem; }
+        .page-subtitle { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 2rem; }
+
+        /* Cards */
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.25rem; }
+        .card-title { font-size: 0.875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 1.25rem; padding-bottom: 0.625rem; border-bottom: 1px solid var(--border); }
+
+        /* Team info */
+        .team-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .team-meta { font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1.25rem; }
+        .invite-box { background: var(--surface-hover); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.875rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1.25rem; }
+        .invite-code { font-family: 'Space Mono', monospace; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.15em; color: var(--accent); }
+        .invite-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.25rem; }
+        .btn-copy { padding: 0.45rem 0.875rem; border: 1px solid var(--border); border-radius: 7px; background: transparent; color: var(--text-secondary); font-size: 0.8125rem; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+        .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-copy.copied { border-color: var(--success); color: var(--success); }
+
+        /* Members table */
+        .member-row { display: flex; align-items: center; gap: 0.875rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light); }
+        .member-row:last-child { border-bottom: none; }
+        .member-avatar { width: 34px; height: 34px; min-width: 34px; border-radius: 50%; background: var(--accent); color: #000; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8125rem; }
+        .member-info { flex: 1; min-width: 0; }
+        .member-name { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .member-email { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .member-role { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; padding: 0.15rem 0.5rem; border-radius: 5px; }
+        .role-owner { background: rgba(6,182,212,.12); color: var(--accent); }
+        .role-member { background: var(--surface-hover); color: var(--text-muted); border: 1px solid var(--border); }
+
+        /* Forms */
+        .form-group { margin-bottom: 1rem; }
+        .form-label { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem; display: block; }
+        .form-input { width: 100%; padding: 0.75rem 0.9rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-hover); color: var(--text-primary); font-size: 0.9rem; font-family: inherit; transition: border-color 0.15s; }
+        .form-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(6,182,212,.12); }
+        .form-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.375rem; }
+        .form-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; }
+        .btn-primary { padding: 0.65rem 1.5rem; background: var(--accent); color: #000; border: none; border-radius: var(--radius); font-size: 0.875rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: filter 0.15s; }
+        .btn-primary:hover { filter: brightness(1.1); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; filter: none; }
+        .btn-ghost { padding: 0.65rem 1.25rem; background: transparent; color: var(--text-secondary); border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.875rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-danger { padding: 0.65rem 1.25rem; background: transparent; color: var(--danger); border: 1px solid rgba(239,68,68,.35); border-radius: var(--radius); font-size: 0.875rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+        .btn-danger:hover { background: rgba(239,68,68,.08); border-color: var(--danger); }
+
+        /* Alert */
+        .alert { padding: 0.875rem 1rem; border-radius: var(--radius); font-size: 0.875rem; margin-bottom: 1rem; }
+        .alert-error { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); color: #f87171; }
+        .alert-success { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.3); color: #34d399; }
+
+        /* Divider */
+        .divider { text-align: center; color: var(--text-muted); font-size: 0.8125rem; margin: 1.5rem 0; display: flex; align-items: center; gap: 0.75rem; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* Shared data info */
+        .shared-info { display: flex; gap: 1rem; margin-top: 0.75rem; flex-wrap: wrap; }
+        .shared-stat { background: var(--surface-hover); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem 1rem; flex: 1; min-width: 120px; }
+        .shared-stat-num { font-size: 1.5rem; font-weight: 700; font-family: 'Space Mono', monospace; color: var(--accent); }
+        .shared-stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.125rem; }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="/publications" class="back-btn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            Zurück
+        </a>
+        <span class="top-bar-title">Team</span>
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <svg class="icon-sun" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg class="icon-moon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+    </div>
+
+    <div class="page-wrap">
+        <h1 class="page-title">Team-Konten</h1>
+        <p class="page-subtitle">Mehrere Nutzer einer Firma sehen dieselben Bewertungen und Favoriten.</p>
+
+        <div id="alert-box"></div>
+
+        {% if team %}
+        <!-- ── EXISTING TEAM ── -->
+        <div class="card">
+            <div class="card-title">Ihr Team</div>
+            <div class="team-name">{{ team.name }}</div>
+            <div class="team-meta">{{ members | length }} Mitglied{% if members | length != 1 %}er{% endif %} · Erstellt {{ team.created_at[:10] if team.created_at else '–' }}</div>
+
+            {% if team.my_role == 'owner' %}
+            <div class="invite-label">Einladungscode für neue Mitglieder</div>
+            <div class="invite-box">
+                <div class="invite-code" id="invite-code">{{ team.invite_code }}</div>
+                <button class="btn-copy" id="copy-btn" onclick="copyCode()">Kopieren</button>
+            </div>
+            {% endif %}
+
+            <!-- Shared data stats -->
+            <div id="shared-stats">
+                <div class="shared-info">
+                    <div class="shared-stat"><div class="shared-stat-num" id="stat-favs">–</div><div class="shared-stat-label">Geteilte Favoriten</div></div>
+                    <div class="shared-stat"><div class="shared-stat-num" id="stat-ratings">–</div><div class="shared-stat-label">Geteilte Bewertungen</div></div>
+                    <div class="shared-stat"><div class="shared-stat-num">{{ members | length }}</div><div class="shared-stat-label">Teammitglieder</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Members list -->
+        <div class="card">
+            <div class="card-title">Mitglieder</div>
+            {% for m in members %}
+            <div class="member-row">
+                <div class="member-avatar">{{ (m.company_name or m.email or 'U')[0] | upper }}</div>
+                <div class="member-info">
+                    <div class="member-name">{{ m.company_name or m.email or 'Unbekannt' }}</div>
+                    <div class="member-email">{{ m.email }}</div>
+                </div>
+                <span class="member-role role-{{ m.role }}">{{ 'Inhaber' if m.role == 'owner' else 'Mitglied' }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Danger zone -->
+        <div class="card" style="border-color: rgba(239,68,68,.2);">
+            <div class="card-title" style="color: var(--danger);">Team verlassen{% if team.my_role == 'owner' %} / löschen{% endif %}</div>
+            {% if team.my_role == 'owner' %}
+            <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1rem;">Als Inhaber löschen Sie das Team für alle Mitglieder. Diese Aktion kann nicht rückgängig gemacht werden.</p>
+            <button class="btn-danger" onclick="deleteTeam()">Team endgültig löschen</button>
+            {% else %}
+            <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1rem;">Sie verlassen das Team. Ihre eigenen Daten bleiben erhalten.</p>
+            <button class="btn-danger" onclick="leaveTeam()">Team verlassen</button>
+            {% endif %}
+        </div>
+
+        {% else %}
+        <!-- ── NO TEAM ── -->
+        <div class="card">
+            <div class="card-title">Neues Team erstellen</div>
+            <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1.25rem;">Erstellen Sie ein Team und laden Sie Kollegen per Einladungscode ein. Alle Mitglieder sehen dieselben Bewertungen und Favoriten.</p>
+            <div class="form-group">
+                <label class="form-label" for="team-name-input">Teamname (z.B. Firmenname)</label>
+                <input type="text" id="team-name-input" class="form-input" placeholder="Muster Bau AG" maxlength="80">
+                <p class="form-hint">Dieser Name wird allen Mitgliedern angezeigt.</p>
+            </div>
+            <div class="form-actions">
+                <button class="btn-primary" id="create-btn" onclick="createTeam()">Team erstellen</button>
+            </div>
+        </div>
+
+        <div class="divider">oder</div>
+
+        <div class="card">
+            <div class="card-title">Team beitreten</div>
+            <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1.25rem;">Sie haben einen Einladungscode erhalten? Geben Sie ihn hier ein.</p>
+            <div class="form-group">
+                <label class="form-label" for="invite-input">Einladungscode</label>
+                <input type="text" id="invite-input" class="form-input" placeholder="z.B. ABC12345" maxlength="8"
+                       style="letter-spacing:0.12em;font-family:'Space Mono',monospace;text-transform:uppercase;"
+                       oninput="this.value=this.value.toUpperCase()">
+            </div>
+            <div class="form-actions">
+                <button class="btn-primary" id="join-btn" onclick="joinTeam()">Beitreten</button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleTheme() {
+            var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('sajf-theme', next);
+        }
+
+        function showAlert(msg, ok) {
+            var box = document.getElementById('alert-box');
+            box.innerHTML = '<div class="alert alert-' + (ok ? 'success' : 'error') + '">' + msg + '</div>';
+            setTimeout(function() { box.innerHTML = ''; }, 4000);
+        }
+
+        {% if team %}
+        // Load shared stats
+        (function() {
+            fetch('/api/team/favorites').then(function(r){return r.json();}).then(function(d){
+                var el = document.getElementById('stat-favs');
+                if (el) el.textContent = (d.favorites || []).length;
+            }).catch(function(){});
+            fetch('/api/team/ratings').then(function(r){return r.json();}).then(function(d){
+                var el = document.getElementById('stat-ratings');
+                if (el) el.textContent = (d.ratings || []).length;
+            }).catch(function(){});
+        })();
+
+        function copyCode() {
+            var code = document.getElementById('invite-code').textContent;
+            navigator.clipboard.writeText(code).then(function() {
+                var btn = document.getElementById('copy-btn');
+                btn.textContent = 'Kopiert!';
+                btn.classList.add('copied');
+                setTimeout(function() { btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 2000);
+            }).catch(function() {
+                showAlert('Kopieren fehlgeschlagen – Code manuell kopieren: ' + code, false);
+            });
+        }
+
+        function leaveTeam() {
+            if (!confirm('Team wirklich verlassen?')) return;
+            fetch('/api/team/leave', {method:'POST', headers:{'Content-Type':'application/json'}})
+                .then(function(r){return r.json();})
+                .then(function(res) {
+                    if (res.success) { window.location.reload(); }
+                    else { showAlert(res.error || 'Fehler', false); }
+                }).catch(function(){showAlert('Netzwerkfehler', false);});
+        }
+
+        function deleteTeam() {
+            if (!confirm('Team endgültig löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
+            fetch('/api/team/delete', {method:'POST', headers:{'Content-Type':'application/json'}})
+                .then(function(r){return r.json();})
+                .then(function(res) {
+                    if (res.success) { window.location.reload(); }
+                    else { showAlert(res.error || 'Fehler', false); }
+                }).catch(function(){showAlert('Netzwerkfehler', false);});
+        }
+
+        {% else %}
+        function createTeam() {
+            var name = document.getElementById('team-name-input').value.trim();
+            if (!name) { showAlert('Bitte einen Teamnamen eingeben.', false); return; }
+            var btn = document.getElementById('create-btn');
+            btn.disabled = true; btn.textContent = 'Erstellen…';
+            fetch('/api/team/create', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name: name})
+            }).then(function(r){return r.json();})
+            .then(function(res) {
+                btn.disabled = false; btn.textContent = 'Team erstellen';
+                if (res.success) { window.location.reload(); }
+                else { showAlert(res.error || 'Fehler beim Erstellen', false); }
+            }).catch(function(){ btn.disabled = false; btn.textContent = 'Team erstellen'; showAlert('Netzwerkfehler', false); });
+        }
+
+        function joinTeam() {
+            var code = document.getElementById('invite-input').value.trim().toUpperCase();
+            if (!code) { showAlert('Bitte einen Einladungscode eingeben.', false); return; }
+            var btn = document.getElementById('join-btn');
+            btn.disabled = true; btn.textContent = 'Beitreten…';
+            fetch('/api/team/join', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({invite_code: code})
+            }).then(function(r){return r.json();})
+            .then(function(res) {
+                btn.disabled = false; btn.textContent = 'Beitreten';
+                if (res.success) { showAlert('Erfolgreich beigetreten: ' + res.name, true); setTimeout(function(){window.location.reload();}, 1200); }
+                else { showAlert(res.error || 'Ungültiger Code', false); }
+            }).catch(function(){ btn.disabled = false; btn.textContent = 'Beitreten'; showAlert('Netzwerkfehler', false); });
+        }
+        {% endif %}
+    </script>
+</body>
+</html>

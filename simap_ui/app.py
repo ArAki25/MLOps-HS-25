@@ -50,6 +50,18 @@ from supabase_client import (
     TEST_COMPANY_SEEDS,
     seed_test_companies,
     get_user_like_count,
+    get_analytics_data,
+    get_tender_note,
+    save_tender_note,
+    get_project_by_simap_id,
+    create_team,
+    join_team,
+    leave_team,
+    delete_team,
+    get_user_team,
+    get_team_members_data,
+    get_team_favorites,
+    get_team_ratings,
 )
 
 load_dotenv()
@@ -411,7 +423,12 @@ def api_recommendations():
             hint = 'no_ratings'
         else:
             profile = get_user_profile(user_id) or {}
-            hint = 'cpv_too_narrow' if profile.get('cpv_codes') else 'no_results'
+            has_narrow = bool(
+                profile.get('project_subtype') or
+                profile.get('award_amount_min') is not None or
+                profile.get('award_amount_max') is not None
+            )
+            hint = 'profile_too_narrow' if has_narrow else 'no_results'
 
     return jsonify({'recommendations': recs, 'hint': hint})
 
@@ -742,6 +759,126 @@ def api_cantons():
 def api_statistics():
     stats = get_statistics()
     return jsonify(stats)
+
+
+# ============================================
+# ANALYTICS DASHBOARD
+# ============================================
+
+@app.route('/api/analytics', methods=['GET'])
+def api_analytics():
+    if not session.get('user_logged_in'):
+        return jsonify({'error': 'Nicht eingeloggt'}), 401
+    return jsonify(get_analytics_data())
+
+
+# ============================================
+# TENDER DETAIL PAGE
+# ============================================
+
+@app.route('/tender/<simap_id>')
+@login_required
+def tender_detail(simap_id):
+    project = get_project_by_simap_id(simap_id)
+    if not project:
+        return render_template('tender_detail.html', project=None, simap_id=simap_id, note='')
+    uid = session.get('user_id') or ''
+    note = get_tender_note(uid, simap_id)
+    return render_template('tender_detail.html', project=project, simap_id=simap_id, note=note)
+
+
+@app.route('/api/tender/<simap_id>/note', methods=['GET'])
+@login_required
+def api_tender_note_get(simap_id):
+    note = get_tender_note(session.get('user_id') or '', simap_id)
+    return jsonify({'note': note})
+
+
+@app.route('/api/tender/<simap_id>/note', methods=['POST'])
+@login_required
+def api_tender_note_save(simap_id):
+    data = request.get_json(silent=True) or {}
+    result = save_tender_note(session.get('user_id') or '', simap_id, data.get('note', ''))
+    return jsonify(result)
+
+
+# ============================================
+# TEAM ACCOUNTS
+# ============================================
+
+@app.route('/team')
+@login_required
+def team_page():
+    uid = session.get('user_id') or ''
+    team = get_user_team(uid)
+    members = get_team_members_data(team['id']) if team else []
+    return render_template('team.html', team=team, members=members)
+
+
+@app.route('/api/team/create', methods=['POST'])
+@login_required
+def api_team_create():
+    data = request.get_json(silent=True) or {}
+    result = create_team(session.get('user_id') or '', data.get('name', ''))
+    return jsonify(result), (200 if result.get('success') else 400)
+
+
+@app.route('/api/team/join', methods=['POST'])
+@login_required
+def api_team_join():
+    data = request.get_json(silent=True) or {}
+    result = join_team(session.get('user_id') or '', data.get('invite_code', ''))
+    return jsonify(result), (200 if result.get('success') else 400)
+
+
+@app.route('/api/team/leave', methods=['POST'])
+@login_required
+def api_team_leave():
+    uid = session.get('user_id') or ''
+    team = get_user_team(uid)
+    if not team:
+        return jsonify({'success': False, 'error': 'Kein Team'}), 400
+    result = leave_team(uid, team['id'])
+    return jsonify(result), (200 if result.get('success') else 400)
+
+
+@app.route('/api/team/delete', methods=['POST'])
+@login_required
+def api_team_delete():
+    uid = session.get('user_id') or ''
+    team = get_user_team(uid)
+    if not team:
+        return jsonify({'success': False, 'error': 'Kein Team'}), 400
+    result = delete_team(uid, team['id'])
+    return jsonify(result), (200 if result.get('success') else 400)
+
+
+@app.route('/api/team/info', methods=['GET'])
+@login_required
+def api_team_info():
+    team = get_user_team(session.get('user_id') or '')
+    if not team:
+        return jsonify({'team': None})
+    members = get_team_members_data(team['id'])
+    return jsonify({'team': team, 'members': members})
+
+
+@app.route('/api/team/favorites', methods=['GET'])
+@login_required
+def api_team_favorites():
+    team = get_user_team(session.get('user_id') or '')
+    if not team:
+        return jsonify({'favorites': []})
+    return jsonify({'favorites': get_team_favorites(team['id'])})
+
+
+@app.route('/api/team/ratings', methods=['GET'])
+@login_required
+def api_team_ratings():
+    team = get_user_team(session.get('user_id') or '')
+    if not team:
+        return jsonify({'ratings': []})
+    return jsonify({'ratings': get_team_ratings(team['id'])})
 
 
 if __name__ == '__main__':
