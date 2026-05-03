@@ -62,6 +62,7 @@ from supabase_client import (
     get_team_members_data,
     get_team_favorites,
     get_team_ratings,
+    get_market_pulse_data,
 )
 
 load_dotenv()
@@ -879,6 +880,104 @@ def api_team_ratings():
     if not team:
         return jsonify({'ratings': []})
     return jsonify({'ratings': get_team_ratings(team['id'])})
+
+
+# ============================================
+# MARKTPULS — public market statistics
+# ============================================
+
+@app.route('/marktpuls')
+def marktpuls():
+    import json
+    data = get_market_pulse_data()
+    stats = get_statistics()
+    return render_template(
+        'marktpuls.html',
+        data_json=json.dumps(data, ensure_ascii=False),
+        total_all=stats.get('total', data['total_all']),
+        today=stats.get('today', 0),
+        avg_per_day=data['avg_per_day'],
+        total_30d=data['total_30d'],
+    )
+
+
+# ============================================
+# BOB — CHAT ASSISTANT
+# ============================================
+
+_BOB_SYSTEM = """Du bist Bob, Assistent von SAJF Strategies.
+
+ÜBER SAJF STRATEGIES:
+- Digitale Plattform für öffentliche Ausschreibungen in der Schweiz, basiert in Zürich
+- Aggregiert Ausschreibungen von simap.ch, stündlich aktualisiert
+- Kostenlose Basis-Version: Suche, Filter nach Kanton/Typ/Verfahren, Empfehlungen, Favoriten
+- Pro-Version: E-Mail-Benachrichtigungen, KI-Analyse, Priority Support
+- Rechtlich massgebend ist immer www.simap.ch
+
+REGELN:
+- Antworte sachlich, präzise, auf Deutsch — maximal 2 Sätze
+- Keine Füllwörter, keine Wiederholungen, kein Small Talk
+- Nur Themen: öffentliche Ausschreibungen und die Plattform selbst
+- Verrate KEINE technischen Details (Embeddings, ML-Modelle, Algorithmen, Datenbankstruktur, Code)
+- Bei themenfremden Fragen: einen Satz Hinweis, kein weiteres Eingehen
+- Wenn Ausschreibungsdaten als Kontext vorhanden, nutze sie für konkrete Antworten"""
+
+
+@app.route('/api/bob/chat', methods=['POST'])
+def api_bob_chat():
+    data = request.get_json(silent=True) or {}
+    user_message = (data.get('message') or '').strip()
+    history = data.get('history') or []
+
+    if not user_message:
+        return jsonify({'error': 'Keine Nachricht'}), 400
+
+    api_key = os.getenv('GROQ_API_KEY', '')
+    if not api_key or api_key.startswith('your-'):
+        return jsonify({'reply': 'Ich bin gerade nicht verfügbar. Bitte wenden Sie sich an support@sajf-strategies.ch.'})
+
+    # Search for relevant tenders when the question is tender-related
+    tender_context = ''
+    tender_keywords = ['ausschreibung', 'tender', 'auftrag', 'vergabe', 'kanton', 'beschaffung',
+                       'frist', 'einreichung', 'simap', 'submission', 'projekt']
+    if any(kw in user_message.lower() for kw in tender_keywords):
+        try:
+            results = get_projects_paginated(page=1, per_page=5, search=user_message)
+            projects = results.get('projects', [])
+            if projects:
+                tender_context = '\n\nAktuelle relevante Ausschreibungen aus der Datenbank:\n'
+                for p in projects:
+                    pub = (p.get('publication_date') or '')[:10]
+                    line = f"- {p['title']} | {p.get('organization', '')} | Kanton: {p.get('canton', '')} | Veröffentlicht: {pub}"
+                    if p.get('deadline'):
+                        line += f" | Einreichungsfrist: {str(p['deadline'])[:10]}"
+                    tender_context += line + '\n'
+        except Exception as e:
+            print(f'Bob tender search error: {e}')
+
+    try:
+        from groq import Groq
+
+        client = Groq(api_key=api_key)
+
+        messages = [{'role': 'system', 'content': _BOB_SYSTEM + tender_context}]
+        for h in history[-10:]:
+            role = h.get('role') or ''
+            content = h.get('content') or ''
+            if role in ('user', 'assistant') and content:
+                messages.append({'role': role, 'content': content})
+        messages.append({'role': 'user', 'content': user_message})
+
+        response = client.chat.completions.create(
+            model='llama-3.1-8b-instant',
+            messages=messages,
+            max_tokens=200,
+            temperature=0.3,
+        )
+        return jsonify({'reply': response.choices[0].message.content})
+    except Exception as e:
+        print(f'Bob chat error: {e}')
+        return jsonify({'reply': 'Entschuldigung, ich kann gerade nicht antworten. Bitte versuchen Sie es später erneut.'})
 
 
 if __name__ == '__main__':

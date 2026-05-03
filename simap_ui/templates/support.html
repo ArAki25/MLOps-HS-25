@@ -202,9 +202,47 @@
     }
     html[data-theme="light"] .success-message { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
 
+    /* ── Bottom CTA strip ── */
+    .support-cta {
+        border: 1px solid rgba(6,182,212,0.2);
+        border-radius: 16px;
+        padding: 2rem 2.5rem;
+        margin-bottom: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        background: linear-gradient(135deg, rgba(6,182,212,0.05), rgba(59,130,246,0.05));
+    }
+    .support-cta-text h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.3rem;
+    }
+    .support-cta-text p {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+    .support-cta-btn {
+        background: linear-gradient(135deg, var(--accent), #3b82f6);
+        color: #fff;
+        padding: 0.75rem 1.75rem;
+        border-radius: 9px;
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 600;
+        white-space: nowrap;
+        transition: opacity 0.18s, transform 0.18s;
+        flex-shrink: 0;
+    }
+    .support-cta-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
     @media (max-width: 600px) {
         .form-row { grid-template-columns: 1fr; }
         .support-hero { margin: -1rem -1rem 1.5rem; }
+        .support-cta { flex-direction: column; text-align: center; }
     }
 </style>
 {% endblock %}
@@ -341,6 +379,16 @@
             Vielen Dank für Ihre Nachricht! Wir melden uns bald bei Ihnen.
         </div>
     </section>
+
+    {% if not session.get('user_logged_in') %}
+    <div class="support-cta">
+        <div class="support-cta-text">
+            <h3>Noch kein Konto?</h3>
+            <p>Kostenlos registrieren und alle Schweizer Ausschreibungen auf einen Blick.</p>
+        </div>
+        <a href="/register" class="support-cta-btn">Kostenlos starten</a>
+    </div>
+    {% endif %}
 </div>
 
 <script>

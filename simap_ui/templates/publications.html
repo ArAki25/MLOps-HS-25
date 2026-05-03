@@ -228,6 +228,26 @@
         .pub-fav-btn:hover { background: var(--warning-bg); color: var(--warning); }
         .pub-fav-btn.favorited { color: var(--warning); }
 
+        .pub-deadline-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-top: 0.3rem;
+            padding: 0.2rem 0.55rem;
+            background: rgba(245,158,11,0.08);
+            border: 1px solid rgba(245,158,11,0.25);
+            border-radius: 5px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #f59e0b;
+            white-space: nowrap;
+        }
+        html[data-theme="light"] .pub-deadline-badge {
+            background: rgba(217,119,6,0.07);
+            border-color: rgba(217,119,6,0.22);
+            color: #b45309;
+        }
+
         /* ========== FEED RATE (Tab 1 Like-Toggle) ========== */
         .pub-rate { display: flex; gap: 0.25rem; align-items: center; justify-content: center; }
         .pub-rate-btn { width: 32px; height: 32px; border: 1px solid var(--border); background: transparent; cursor: pointer; border-radius: 6px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; transition: all 0.12s; }
@@ -1374,8 +1394,14 @@
                 var titleHtml = p.simap_id
                     ? '<a href="/tender/' + encodeURIComponent(p.simap_id) + '" class="pub-title" onclick="event.stopPropagation()" style="text-decoration:none;">' + escapeHtml(p.title) + '</a>'
                     : '<div class="pub-title">' + escapeHtml(p.title) + '</div>';
+                var deadlineBadge = '';
+                if (isFav && p.deadline && !isAwardType(p.pub_type)) {
+                    deadlineBadge = '<div class="pub-deadline-badge">'
+                        + '<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+                        + 'Einreichungsfrist: ' + formatDate(p.deadline) + '</div>';
+                }
                 html += '<div class="pub-row' + rowLiked + '" id="' + rowId + '" data-pub-pid="' + p.id + '" onclick="toggleDetail(\'' + rowId + '\')">' +
-                    '<div class="pub-title-col">' + titleHtml + '<div class="pub-location">' + loc + '</div><div class="pub-tags">' + tags + '</div></div>' +
+                    '<div class="pub-title-col">' + titleHtml + '<div class="pub-location">' + loc + '</div><div class="pub-tags">' + tags + '</div>' + deadlineBadge + '</div>' +
                     '<div class="pub-office">' + escapeHtml(p.organization||'-') + '</div>' +
                     '<div class="pub-date-col"><div class="pub-time-ago ' + (isRecent?'':'old') + '">' + getTimeAgo(p.publication_date) + '</div><div class="pub-date-exact">' + formatDate(p.publication_date) + '</div></div>' +
                     '<div class="pub-rate">' +
@@ -1425,6 +1451,7 @@
         function getTimeAgo(d) { if(!d)return'-'; var ms=new Date()-new Date(d),m=Math.floor(ms/60000),h=Math.floor(ms/3600000),dy=Math.floor(ms/86400000); if(m<1)return'Gerade eben'; if(m<60)return'vor '+m+' Min.'; if(h<24)return'vor '+h+' Std.'; if(dy===1)return'Gestern'; if(dy<7)return'vor '+dy+' Tagen'; if(dy<30)return'vor '+Math.floor(dy/7)+' Wo.'; return formatDate(d); }
         function isWithin48h(d) { return d && (new Date()-new Date(d))<172800000; }
         function getPubTypeClass(t) { if(!t)return''; var l=t.toLowerCase(); if(l.indexOf('tender')>=0||l.indexOf('ausschreibung')>=0)return'type-tender'; if(l.indexOf('award')>=0||l.indexOf('zuschlag')>=0)return'type-award'; return''; }
+        function isAwardType(t) { if(!t)return false; var l=t.toLowerCase(); return l.indexOf('zuschlag')>=0||l.indexOf('award')>=0||l.indexOf('widerruf')>=0; }
         function formatDate(d) { if(!d)return'-'; try{return new Date(d).toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(e){return d;} }
         function capitalize(s) { return s ? s.charAt(0).toUpperCase()+s.slice(1) : ''; }
         function escapeHtml(t) { if(!t)return''; var d=document.createElement('div'); d.textContent=t; return d.innerHTML; }

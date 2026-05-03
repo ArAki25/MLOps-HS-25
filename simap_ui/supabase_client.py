@@ -9,7 +9,7 @@ from typing import List, Dict, Optional, Tuple, Any
 import os
 import json
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import numpy as np
 
@@ -1626,6 +1626,111 @@ def get_analytics_data() -> Dict:
     except Exception as e:
         print(f"❌ get_analytics_data Fehler: {e}")
         return {'canton_counts': {}, 'subtype_counts': {}, 'order_type_counts': {}}
+
+
+# ============================================
+# MARKTPULS — public market statistics
+# ============================================
+
+def get_market_pulse_data() -> Dict:
+    """All data needed for the public Marktpuls page."""
+    try:
+        batch_size = 1000
+
+        # ── Canton + order_type across all tenders ──
+        all_meta: list = []
+        offset = 0
+        while True:
+            r = ui('projects_ui').select('canton,order_type').range(offset, offset + batch_size - 1).execute()
+            if not r.data:
+                break
+            all_meta.extend(r.data)
+            if len(r.data) < batch_size:
+                break
+            offset += batch_size
+
+        canton_counts: Dict[str, int] = {}
+        order_type_counts: Dict[str, int] = {}
+        for row in all_meta:
+            c = (row.get('canton') or '').strip().upper()
+            if c:
+                canton_counts[c] = canton_counts.get(c, 0) + 1
+            o = (row.get('order_type') or '').strip()
+            if o:
+                order_type_counts[o] = order_type_counts.get(o, 0) + 1
+
+        # ── Last-30-days: top organisations (all + by category) ──
+        since = (datetime.now(timezone.utc) - timedelta(days=30)).strftime('%Y-%m-%d')
+        recent: list = []
+        offset = 0
+        while True:
+            r = (ui('projects_ui')
+                 .select('publication_date,proc_office_name_de,order_type')
+                 .gte('publication_date', since)
+                 .range(offset, offset + batch_size - 1)
+                 .execute())
+            if not r.data:
+                break
+            recent.extend(r.data)
+            if len(r.data) < batch_size:
+                break
+            offset += batch_size
+
+        def _classify(order_type: str) -> str:
+            t = (order_type or '').lower()
+            if any(k in t for k in ('bau', 'construction', 'tiefbau', 'hochbau')):
+                return 'construction'
+            if any(k in t for k in ('liefer', 'supply', 'lieferung', 'material', 'produkt')):
+                return 'supply'
+            if any(k in t for k in ('dienst', 'service', 'beratung', 'it-', 'informatik')):
+                return 'service'
+            return 'other'
+
+        org_all:          Dict[str, int] = {}
+        org_construction: Dict[str, int] = {}
+        org_service:      Dict[str, int] = {}
+        org_supply:       Dict[str, int] = {}
+        pub_count = 0
+
+        for row in recent:
+            pub_count += 1
+            org = (row.get('proc_office_name_de') or '').strip()
+            ot  = row.get('order_type') or ''
+            if org:
+                org_all[org] = org_all.get(org, 0) + 1
+                cat = _classify(ot)
+                if cat == 'construction':
+                    org_construction[org] = org_construction.get(org, 0) + 1
+                elif cat == 'service':
+                    org_service[org] = org_service.get(org, 0) + 1
+                elif cat == 'supply':
+                    org_supply[org] = org_supply.get(org, 0) + 1
+
+        def _top(d: Dict[str, int], n: int = 10):
+            return [{'name': k, 'count': v}
+                    for k, v in sorted(d.items(), key=lambda x: x[1], reverse=True)[:n]]
+
+        avg_per_day = round(pub_count / 30, 1)
+
+        return {
+            'canton_counts': canton_counts,
+            'order_type_counts': order_type_counts,
+            'top_orgs': {
+                'all':          _top(org_all),
+                'construction': _top(org_construction),
+                'service':      _top(org_service),
+                'supply':       _top(org_supply),
+            },
+            'total_all': len(all_meta),
+            'total_30d': pub_count,
+            'avg_per_day': avg_per_day,
+        }
+    except Exception as e:
+        print(f"❌ get_market_pulse_data Fehler: {e}")
+        return {
+            'canton_counts': {}, 'order_type_counts': {}, 'trend_30d': {},
+            'top_orgs': [], 'total_all': 0, 'total_30d': 0, 'avg_per_day': 0,
+        }
 
 
 # ============================================
