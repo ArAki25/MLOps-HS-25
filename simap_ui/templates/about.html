@@ -1,254 +1,259 @@
 {% extends "base.html" %}
-
 {% block title %}Über uns - SAJF Strategies{% endblock %}
 
 {% block extra_css %}
 <style>
-    .page-hero {
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        color: white;
-        padding: 4rem 2rem;
+    .abt-hero {
         text-align: center;
-        margin: -2rem -2rem 2rem -2rem;
+        padding: var(--space-3xl) var(--space-lg) var(--space-2xl);
     }
-
-    .page-hero h1 {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .page-hero p {
-        font-size: 1.125rem;
-        opacity: 0.9;
-        max-width: 600px;
-        margin: 0 auto;
-    }
-
-    .about-section {
-        background: var(--surface);
-        border-radius: 16px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--shadow);
-    }
-
-    .about-section h2 {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-        color: var(--primary);
-    }
-
-    .about-text {
-        color: var(--text-secondary);
-        line-height: 1.8;
-        font-size: 1rem;
-    }
-
-    .about-text p {
-        margin-bottom: 1rem;
-    }
-
-    .about-mission {
-        white-space: pre-wrap;
-    }
-
-    /* Team Section */
-    .team-section {
-        margin-top: 3rem;
-    }
-
-    .team-section h2 {
-        font-size: 1.75rem;
-        text-align: center;
-        margin-bottom: 2rem;
-        color: var(--primary);
-    }
-
-    .team-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 2rem;
-    }
-
-    .team-card {
-        background: var(--surface);
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: var(--shadow);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .team-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-lg);
-    }
-
-    .team-photo {
-        width: 100%;
-        height: 280px;
-        object-fit: cover;
-        background: var(--border);
-    }
-
-    .team-photo-placeholder {
-        width: 100%;
-        height: 280px;
-        background: linear-gradient(135deg, var(--border), var(--background));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 4rem;
-        color: var(--text-secondary);
-    }
-
-    .team-info {
-        padding: 1.5rem;
-    }
-
-    .team-name {
-        font-size: 1.25rem;
-        font-weight: 600;
+    .abt-hero h1 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 2rem;
+        font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: 0.25rem;
+        margin-bottom: var(--space-sm);
+        letter-spacing: -0.02em;
     }
-
-    .team-role {
-        font-size: 0.875rem;
-        color: var(--accent);
-        font-weight: 500;
-        margin-bottom: 0.75rem;
-    }
-
-    .team-bio {
-        font-size: 0.875rem;
+    .abt-hero p {
+        font-size: 0.95rem;
         color: var(--text-secondary);
+        max-width: 520px;
+        margin: 0 auto;
         line-height: 1.6;
     }
 
-    /* Values Section */
-    .values-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-top: 2rem;
+    .abt-wrapper {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 0 var(--space-lg);
     }
 
-    .value-card {
+    /* ── Section ── */
+    .abt-section {
         background: var(--surface);
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: var(--shadow);
-        text-align: center;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-xl);
     }
-
-    .value-icon {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
+    .abt-section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: var(--space-md);
     }
-
-    .value-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--primary);
-        margin-bottom: 0.5rem;
-    }
-
-    .value-text {
-        font-size: 0.875rem;
+    .abt-text {
+        font-size: 0.88rem;
         color: var(--text-secondary);
+        line-height: 1.75;
+    }
+    .abt-text p { margin-bottom: var(--space-sm); }
+    .abt-text p:last-child { margin-bottom: 0; }
+    .abt-mission { white-space: pre-wrap; }
+
+    /* ── Values ── */
+    .abt-values-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-md);
+    }
+    .abt-value {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-sm);
+    }
+    .abt-value-icon {
+        width: 32px; height: 32px;
+        background: var(--accent-light);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .abt-value-icon svg {
+        width: 16px; height: 16px;
+        stroke: var(--accent);
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .abt-value h3 {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 2px;
+    }
+    .abt-value p {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+    }
+
+    /* ── Team ── */
+    .abt-team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: var(--space-md);
+        margin-bottom: var(--space-3xl);
+    }
+    .abt-team-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        transition: border-color 150ms ease;
+    }
+    .abt-team-card:hover { border-color: var(--text-muted); }
+    .abt-team-photo {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        background: var(--surface-hover);
+    }
+    .abt-team-placeholder {
+        width: 100%;
+        height: 220px;
+        background: var(--surface-hover);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .abt-team-placeholder svg {
+        width: 48px; height: 48px;
+        stroke: var(--text-muted);
+        fill: none;
+        stroke-width: 1.5;
+    }
+    .abt-team-info {
+        padding: var(--space-md);
+    }
+    .abt-team-name {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 2px;
+    }
+    .abt-team-role {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 6px;
+    }
+    .abt-team-bio {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        line-height: 1.55;
+    }
+
+    @media (max-width: 640px) {
+        .abt-values-grid { grid-template-columns: 1fr; }
+        .abt-team-grid { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Hero -->
-    <div class="page-hero">
-        <h1>Über uns</h1>
-        <p>{{ content.subtitle or 'Wir machen öffentliche Ausschreibungen für Ihr Unternehmen zugänglich und übersichtlich.' }}</p>
+
+<div class="abt-hero">
+    <div class="section-label">Über uns</div>
+    <h1>Über SAJF Strategies</h1>
+    <p>{{ content.subtitle or 'Wir machen öffentliche Ausschreibungen für Ihr Unternehmen zugänglich und übersichtlich.' }}</p>
+</div>
+
+<div class="abt-wrapper">
+    <div class="abt-section">
+        <div class="abt-section-title">Unsere Mission</div>
+        <div class="abt-text">
+            {% if content.mission %}
+                <div class="abt-mission">{{ content.mission | e }}</div>
+            {% else %}
+                <p>SAJF Strategies wurde mit dem Ziel gegründet, Unternehmen in der Schweiz dabei zu helfen, öffentliche Ausschreibungen einfacher zu finden und zu gewinnen.</p>
+                <p>Wir aggregieren täglich Tausende von Ausschreibungen von simap.ch und bereiten sie übersichtlich auf, damit Sie keine relevante Geschäftsmöglichkeit mehr verpassen.</p>
+                <p>Mit unserer Pro-Version bieten wir zusätzlich personalisierte Benachrichtigungen, KI-gestützte Matching-Algorithmen und tiefgehende Analysen.</p>
+            {% endif %}
+        </div>
     </div>
 
-    <!-- About Text -->
-    <section class="about-section">
-        <h2>Unsere Mission</h2>
-        <div class="about-text">
-            {% if content.mission %}
-                <div class="about-mission">{{ content.mission | e }}</div>
-            {% else %}
-                <p>
-                    SAJF Strategies wurde mit dem Ziel gegründet, Unternehmen in der Schweiz dabei zu helfen, 
-                    öffentliche Ausschreibungen einfacher zu finden und zu gewinnen.
-                </p>
-                <p>
-                    Wir aggregieren täglich Tausende von Ausschreibungen von simap.ch und bereiten sie 
-                    übersichtlich auf, damit Sie keine relevante Geschäftsmöglichkeit mehr verpassen.
-                </p>
-                <p>
-                    Mit unserer Pro-Version bieten wir zusätzlich personalisierte Benachrichtigungen, 
-                    KI-gestützte Matching-Algorithmen und tiefgehende Analysen.
-                </p>
-            {% endif %}
-        </div>
-    </section>
-
-    <!-- Values -->
-    <section class="about-section">
-        <h2>Unsere Werte</h2>
-        <div class="values-grid">
-            <div class="value-card">
-                <div class="value-icon">🎯</div>
-                <div class="value-title">Präzision</div>
-                <div class="value-text">Wir liefern akkurate und aktuelle Daten, auf die Sie sich verlassen können.</div>
-            </div>
-            <div class="value-card">
-                <div class="value-icon">⚡</div>
-                <div class="value-title">Geschwindigkeit</div>
-                <div class="value-text">Neue Ausschreibungen werden stündlich aktualisiert - Sie sind immer auf dem neuesten Stand.</div>
-            </div>
-            <div class="value-card">
-                <div class="value-icon">🤝</div>
-                <div class="value-title">Partnerschaft</div>
-                <div class="value-text">Wir verstehen uns als Partner Ihres Geschäftserfolgs.</div>
-            </div>
-            <div class="value-card">
-                <div class="value-icon">🔒</div>
-                <div class="value-title">Vertrauen</div>
-                <div class="value-text">Datenschutz und Sicherheit haben bei uns höchste Priorität.</div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Team -->
-    <section class="team-section">
-        <h2>Unser Team</h2>
-        <div class="team-grid">
-            {% if team and team|length > 0 %}
-                {% for member in team %}
-                <div class="team-card">
-                    {% if member.photo_url %}
-                        <img src="{{ member.photo_url }}" alt="{{ member.name }}" class="team-photo">
-                    {% else %}
-                        <div class="team-photo-placeholder">👤</div>
-                    {% endif %}
-                    <div class="team-info">
-                        <div class="team-name">{{ member.name }}</div>
-                        <div class="team-role">{{ member.role }}</div>
-                        <div class="team-bio">{{ member.bio }}</div>
-                    </div>
+    <div class="abt-section">
+        <div class="abt-section-title">Unsere Werte</div>
+        <div class="abt-values-grid">
+            <div class="abt-value">
+                <div class="abt-value-icon">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
                 </div>
-                {% endfor %}
-            {% else %}
-                <!-- Placeholder Team Members -->
-                <div class="team-card">
-                    <div class="team-photo-placeholder">👤</div>
-                    <div class="team-info">
-                        <div class="team-name">Team Member</div>
-                        <div class="team-role">Position</div>
-                        <div class="team-bio">Team-Mitglieder können im Admin-Panel hinzugefügt werden.</div>
-                    </div>
+                <div>
+                    <h3>Präzision</h3>
+                    <p>Akkurate und aktuelle Daten, auf die Sie sich verlassen können.</p>
                 </div>
-            {% endif %}
+            </div>
+            <div class="abt-value">
+                <div class="abt-value-icon">
+                    <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
+                <div>
+                    <h3>Geschwindigkeit</h3>
+                    <p>Stündliche Aktualisierung — Sie sind immer auf dem neuesten Stand.</p>
+                </div>
+            </div>
+            <div class="abt-value">
+                <div class="abt-value-icon">
+                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div>
+                    <h3>Partnerschaft</h3>
+                    <p>Wir verstehen uns als Partner Ihres Geschäftserfolgs.</p>
+                </div>
+            </div>
+            <div class="abt-value">
+                <div class="abt-value-icon">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+                <div>
+                    <h3>Vertrauen</h3>
+                    <p>Datenschutz und Sicherheit haben bei uns höchste Priorität.</p>
+                </div>
+            </div>
         </div>
-    </section>
+    </div>
+
+    <div class="abt-section-title" style="margin-bottom:var(--space-md);">Unser Team</div>
+    <div class="abt-team-grid">
+        {% if team and team|length > 0 %}
+            {% for member in team %}
+            <div class="abt-team-card">
+                {% if member.photo_url %}
+                    <img src="{{ member.photo_url }}" alt="{{ member.name }}" class="abt-team-photo">
+                {% else %}
+                    <div class="abt-team-placeholder">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                    </div>
+                {% endif %}
+                <div class="abt-team-info">
+                    <div class="abt-team-name">{{ member.name }}</div>
+                    <div class="abt-team-role">{{ member.role }}</div>
+                    <div class="abt-team-bio">{{ member.bio }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="abt-team-card">
+                <div class="abt-team-placeholder">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                </div>
+                <div class="abt-team-info">
+                    <div class="abt-team-name">Team Member</div>
+                    <div class="abt-team-role">Position</div>
+                    <div class="abt-team-bio">Team-Mitglieder können im Admin-Panel hinzugefügt werden.</div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
 </div>
+
 {% endblock %}

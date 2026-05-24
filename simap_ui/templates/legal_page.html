@@ -2,14 +2,34 @@
 {% block title %}{{ page_title }} - SAJF Strategies{% endblock %}
 {% block extra_css %}
 <style>
-    .legal-page { max-width: 720px; margin: 0 auto; padding: 2rem 1rem; }
-    .legal-page h1 { color: var(--primary); margin-bottom: 1rem; }
-    .legal-page p { color: var(--text-secondary); line-height: 1.7; }
-    .legal-page a { color: var(--accent); }
+    .legal-page {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: var(--space-3xl) var(--space-lg);
+    }
+    .legal-page h1 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: var(--space-md);
+        letter-spacing: -0.02em;
+    }
+    .legal-page p {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        line-height: 1.7;
+    }
+    .legal-page a {
+        color: var(--accent);
+        text-decoration: none;
+    }
+    .legal-page a:hover { text-decoration: underline; }
 </style>
 {% endblock %}
 {% block content %}
 <main class="legal-page">
+    <div class="section-label">Rechtliches</div>
     <h1>{{ page_title }}</h1>
     <p>Die ausführliche Fassung dieser Seite wird derzeit vorbereitet. Bei rechtlichen Fragen wenden Sie sich bitte an <a href="mailto:support@sajf-strategies.ch">support@sajf-strategies.ch</a>.</p>
 </main>

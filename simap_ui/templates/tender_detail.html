@@ -4,123 +4,121 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% if project %}{{ project.title[:60] }}{% else %}Ausschreibung{% endif %} – SAJF Strategies</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>(function(){var t=localStorage.getItem('sajf-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
     <style>
         :root {
-            --accent: #06b6d4; --accent-hover: #0891b2; --accent-light: rgba(6,182,212,.1);
-            --success: #10b981; --warning: #f59e0b;
-            --text-primary: #f4f4f5; --text-secondary: #a1a1aa; --text-muted: #71717a;
-            --bg: #09090b; --surface: #121214; --surface-hover: #1f1f23;
-            --border: #27272a; --border-light: #1f1f23;
-            --radius: 10px; --radius-lg: 16px;
-            --shadow: 0 4px 12px rgba(0,0,0,.5);
+            --accent: #3b82f6; --accent-hover: #2563eb; --accent-light: rgba(59,130,246,.08);
+            --success: #22c55e; --warning: #eab308; --danger: #ef4444;
+            --text-primary: #e8e8ec; --text-secondary: #a0a0ab; --text-muted: #6b6b76;
+            --bg: #0a0a0c; --surface: #111114; --surface-hover: #18181c;
+            --border: #2a2a30; --border-light: #1e1e24;
+            --radius-sm: 4px; --radius: 6px; --radius-lg: 8px;
         }
         html[data-theme="light"] {
-            --accent: #0891b2; --accent-hover: #0e7490; --accent-light: rgba(8,145,178,.1);
-            --success: #059669; --warning: #d97706;
-            --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #94a3b8;
-            --bg: #f8fafc; --surface: #ffffff; --surface-hover: #f1f5f9;
-            --border: #e2e8f0; --border-light: #f1f5f9;
-            --shadow: 0 4px 12px rgba(0,0,0,.1);
+            --accent: #2563eb; --accent-hover: #1d4ed8; --accent-light: rgba(37,99,235,.07);
+            --success: #16a34a; --warning: #ca8a04; --danger: #dc2626;
+            --text-primary: #111118; --text-secondary: #4b5563; --text-muted: #9ca3af;
+            --bg: #f4f4f6; --surface: #ffffff; --surface-hover: #f0f0f4;
+            --border: #e2e2e8; --border-light: #ebebf0;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DM Sans', -apple-system, sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+        body { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
         /* Top bar */
-        .top-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.5rem; height: 56px; display: flex; align-items: center; gap: 1rem; position: sticky; top: 0; z-index: 50; backdrop-filter: blur(16px); }
-        .back-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.875rem; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--text-secondary); font-size: 0.8125rem; font-weight: 500; cursor: pointer; text-decoration: none; font-family: inherit; transition: all 0.15s; }
+        .top-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.25rem; height: 56px; display: flex; align-items: center; gap: 0.75rem; position: sticky; top: 0; z-index: 50; }
+        .back-btn { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.375rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent; color: var(--text-secondary); font-size: 0.75rem; font-weight: 500; cursor: pointer; text-decoration: none; font-family: 'JetBrains Mono', monospace; transition: all 0.15s; }
         .back-btn:hover { border-color: var(--accent); color: var(--accent); }
-        .top-bar-title { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
-        .theme-toggle { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: auto; flex-shrink: 0; }
+        .top-bar-title { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+        .theme-toggle { width: 32px; height: 32px; border-radius: var(--radius); border: 1px solid var(--border); background: transparent; color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: auto; flex-shrink: 0; transition: all 0.15s; }
         .theme-toggle:hover { background: var(--surface-hover); color: var(--text-primary); }
         .icon-sun { display: block; } .icon-moon { display: none; }
         html[data-theme="light"] .icon-sun { display: none; } html[data-theme="light"] .icon-moon { display: block; }
 
         /* Layout */
-        .page-wrap { max-width: 900px; margin: 2rem auto; padding: 0 1.5rem 4rem; }
+        .page-wrap { max-width: 860px; margin: 1.5rem auto; padding: 0 1.25rem 3rem; }
 
         /* Simap legal banner */
-        .simap-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: var(--accent-light); border: 1px solid var(--accent); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1.75rem; }
-        .simap-banner-text { font-size: 0.875rem; color: var(--text-secondary); }
+        .simap-banner { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; background: var(--accent-light); border: 1px solid rgba(59,130,246,.2); border-radius: var(--radius); padding: 0.75rem 1rem; margin-bottom: 1.5rem; }
+        .simap-banner-text { font-size: 0.8rem; color: var(--text-secondary); }
         .simap-banner-text strong { color: var(--text-primary); }
-        .btn-simap { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; background: var(--accent); color: #000; border-radius: 8px; font-size: 0.875rem; font-weight: 700; text-decoration: none; transition: filter 0.15s; white-space: nowrap; }
-        .btn-simap:hover { filter: brightness(1.1); }
+        .btn-simap { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 1rem; background: var(--accent); color: white; border-radius: var(--radius); font-size: 0.8rem; font-weight: 600; text-decoration: none; transition: background 0.15s; white-space: nowrap; }
+        .btn-simap:hover { background: var(--accent-hover); }
 
         /* Not found state */
-        .not-found { text-align: center; padding: 5rem 1rem; }
-        .not-found h2 { font-size: 1.25rem; margin-bottom: 0.75rem; }
-        .not-found p { color: var(--text-muted); margin-bottom: 1.5rem; }
+        .not-found { text-align: center; padding: 4rem 1rem; }
+        .not-found h2 { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .not-found p { color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.875rem; }
 
         /* Tender header */
-        .tender-header { margin-bottom: 1.5rem; }
-        .tender-title { font-size: 1.375rem; font-weight: 700; line-height: 1.35; letter-spacing: -0.02em; margin-bottom: 0.75rem; }
-        .tender-badges { display: flex; flex-wrap: wrap; gap: 0.375rem; }
-        .badge { display: inline-flex; align-items: center; padding: 0.2rem 0.625rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+        .tender-header { margin-bottom: 1.25rem; }
+        .tender-title { font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 700; line-height: 1.35; letter-spacing: -0.02em; margin-bottom: 0.625rem; }
+        .tender-badges { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+        .badge { display: inline-flex; align-items: center; padding: 0.15rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.65rem; font-weight: 600; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.04em; }
         .badge-default { background: var(--surface-hover); color: var(--text-secondary); border: 1px solid var(--border); }
         .badge-accent { background: var(--accent-light); color: var(--accent); }
-        .badge-success { background: rgba(16,185,129,.12); color: var(--success); }
+        .badge-success { background: rgba(34,197,94,.1); color: var(--success); }
 
         /* Detail grid */
-        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem; }
         @media (max-width: 600px) { .detail-grid { grid-template-columns: 1fr; } }
-        .detail-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; }
+        .detail-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
         .detail-card-full { grid-column: 1 / -1; }
-        .detail-label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.5rem; }
-        .detail-value { font-size: 0.9375rem; color: var(--text-primary); font-weight: 500; }
-        .detail-value.mono { font-family: 'Space Mono', monospace; font-size: 0.875rem; }
-        .detail-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
+        .detail-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.375rem; }
+        .detail-value { font-size: 0.875rem; color: var(--text-primary); font-weight: 500; }
+        .detail-value.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.8125rem; }
+        .detail-desc { font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
 
         /* Notes section */
-        .notes-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; }
-        .notes-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-        .notes-title { font-size: 1rem; font-weight: 700; }
-        .notes-status { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; }
+        .notes-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+        .notes-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+        .notes-title { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; }
+        .notes-status { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; }
         .notes-status.saved { color: var(--success); }
-        .notes-textarea { width: 100%; min-height: 180px; padding: 0.875rem 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-hover); color: var(--text-primary); font-size: 0.9rem; font-family: inherit; line-height: 1.65; resize: vertical; transition: border-color 0.15s, box-shadow 0.15s; }
-        .notes-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(6,182,212,.12); }
-        .notes-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; }
-        .notes-actions { display: flex; justify-content: flex-end; margin-top: 0.875rem; }
-        .btn-save { padding: 0.6rem 1.5rem; background: var(--accent); color: #000; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: filter 0.15s; display: inline-flex; align-items: center; gap: 0.4rem; }
-        .btn-save:hover { filter: brightness(1.1); }
-        .btn-save:disabled { opacity: 0.5; cursor: not-allowed; filter: none; }
+        .notes-textarea { width: 100%; min-height: 160px; padding: 0.75rem 0.875rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text-primary); font-size: 0.8125rem; font-family: inherit; line-height: 1.65; resize: vertical; transition: border-color 0.15s; }
+        .notes-textarea:focus { outline: none; border-color: var(--accent); }
+        .notes-hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.375rem; }
+        .notes-actions { display: flex; justify-content: flex-end; margin-top: 0.75rem; }
+        .btn-save { padding: 0.5rem 1.25rem; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.15s; display: inline-flex; align-items: center; gap: 0.3rem; }
+        .btn-save:hover { background: var(--accent-hover); }
+        .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body>
     <div class="top-bar">
         <a href="/publications" class="back-btn">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
             Zurück
         </a>
         <span class="top-bar-title">{% if project %}{{ project.title[:80] }}{% else %}Ausschreibung nicht gefunden{% endif %}</span>
         <button class="theme-toggle" onclick="toggleTheme()">
-            <svg class="icon-sun" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-            <svg class="icon-moon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <svg class="icon-sun" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg class="icon-moon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
     </div>
 
     <div class="page-wrap">
         {% if not project %}
         <div class="not-found">
-            <svg width="56" height="56" fill="none" stroke="var(--text-muted)" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 1.25rem;display:block;opacity:.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <svg width="48" height="48" fill="none" stroke="var(--text-muted)" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 1rem;display:block;opacity:.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             <h2>Ausschreibung nicht gefunden</h2>
             <p>Die Ausschreibung mit der ID <strong>{{ simap_id }}</strong> wurde nicht in unserer Datenbank gefunden.</p>
-            <a href="https://www.simap.ch/de/project-detail/{{ simap_id }}" target="_blank" rel="noopener noreferrer" class="btn-simap" style="display:inline-flex;margin-bottom:1rem;">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            <a href="https://www.simap.ch/de/project-detail/{{ simap_id }}" target="_blank" rel="noopener noreferrer" class="btn-simap" style="display:inline-flex;margin-bottom:0.75rem;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                 Direkt auf simap.ch ansehen
             </a><br>
-            <a href="/publications" style="color:var(--accent);font-size:0.875rem;">← Zurück zur Übersicht</a>
+            <a href="/publications" style="color:var(--accent);font-size:0.8rem;font-weight:600;">← Zurück zur Übersicht</a>
         </div>
         {% else %}
 
-        <!-- Legal simap.ch link (required) -->
+        <!-- Legal simap.ch link -->
         <div class="simap-banner">
             <div class="simap-banner-text">
-                <strong>Offizielle Quelle:</strong> Diese Ausschreibung stammt aus dem öffentlichen Beschaffungsportal der Schweiz. Für rechtlich verbindliche Informationen besuchen Sie simap.ch.
+                <strong>Offizielle Quelle:</strong> Diese Ausschreibung stammt aus dem öffentlichen Beschaffungsportal der Schweiz.
             </div>
             <a href="{{ project.simap_url }}" target="_blank" rel="noopener noreferrer" class="btn-simap">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                Auf simap.ch ansehen
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                simap.ch
             </a>
         </div>
 
@@ -151,12 +149,12 @@
             </div>
             <div class="detail-card">
                 <div class="detail-label">Veröffentlicht</div>
-                <div class="detail-value">{{ project.publication_date or '–' }}</div>
+                <div class="detail-value mono">{{ project.publication_date or '–' }}</div>
             </div>
             {% if project.deadline %}
             <div class="detail-card">
                 <div class="detail-label">Einreichungsfrist</div>
-                <div class="detail-value">{{ project.deadline }}</div>
+                <div class="detail-value mono">{{ project.deadline }}</div>
             </div>
             {% endif %}
             {% if project.award_amount %}
@@ -195,7 +193,7 @@
             <p class="notes-hint">Notizen werden nur für Sie gespeichert und sind nicht öffentlich sichtbar.</p>
             <div class="notes-actions">
                 <button class="btn-save" id="save-btn" onclick="saveNote()">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                     Speichern
                 </button>
             </div>

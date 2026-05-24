@@ -1,540 +1,246 @@
 {% extends "base.html" %}
 
-{% block title %}Empfohlene Aufträge - SAJF Strategies Pro{% endblock %}
+{% block title %}Empfohlene Aufträge – SAJF Strategies Pro{% endblock %}
 
 {% block extra_css %}
 <style>
-    .disclaimer-top {
-        background: #2a2a1a;
-        border-bottom: 1px solid #f59e0b;
-        padding: 0.75rem 2rem;
-        font-size: 0.875rem;
-        color: #fbbf24;
-        text-align: center;
-    }
+    .pro-wrap { min-height: calc(100vh - 56px); padding: var(--space-xl) var(--space-lg) var(--space-3xl); }
+    .pro-container { max-width: 900px; margin: 0 auto; }
 
-    .disclaimer-top a {
-        color: #fbbf24;
-        font-weight: 600;
+    .pro-head { margin-bottom: var(--space-lg); }
+    .pro-head h1 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.25rem; font-weight: 700;
+        color: var(--text-primary); letter-spacing: -0.02em;
+        margin: 0 0 4px;
     }
+    .pro-head p { color: var(--text-secondary); font-size: 0.84rem; margin: 0; }
 
-    .pro-header {
-        background: linear-gradient(135deg, #1e3a5f, #3b82f6);
-        color: white;
-        padding: 1.5rem 2rem;
-        margin: 0 -2rem 2rem -2rem;
-    }
-
-    .pro-header-content {
-        max-width: 1400px;
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    .pro-header h1 {
-        font-size: 1.5rem;
-    }
-
-    .pro-nav {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
+    .pro-nav { display: flex; gap: 4px; margin-bottom: var(--space-lg); border-bottom: 1px solid var(--border); }
     .pro-nav a {
-        color: rgba(255,255,255,0.8);
-        text-decoration: none;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        transition: all 0.2s;
+        padding: 0.5rem 0.875rem; font-size: 0.8rem; font-weight: 500;
+        color: var(--text-muted); text-decoration: none;
+        border-bottom: 2px solid transparent; transition: color 0.15s;
     }
+    .pro-nav a:hover { color: var(--text-primary); }
+    .pro-nav a.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 
-    .pro-nav a:hover, .pro-nav a.active {
-        background: rgba(255,255,255,0.2);
-        color: white;
+    .disclaimer-bar {
+        background: rgba(234,179,8,0.06);
+        border: 1px solid rgba(234,179,8,0.2);
+        border-radius: var(--radius-sm);
+        padding: 0.5rem 0.875rem;
+        font-size: 0.72rem; color: var(--warning);
+        text-align: center; margin-bottom: var(--space-lg);
+        font-family: 'JetBrains Mono', monospace;
     }
+    .disclaimer-bar a { color: var(--warning); font-weight: 600; }
 
     .stats-bar {
-        display: flex;
+        display: flex; gap: var(--space-2xl);
         justify-content: center;
-        gap: 4rem;
-        margin-bottom: 2rem;
-        padding: 1.5rem 2rem;
-        background: var(--surface);
-        border-radius: 16px;
-        border: 1px solid var(--border);
+        margin-bottom: var(--space-lg);
+        padding: var(--space-md) var(--space-lg);
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius);
     }
-
-    .stat-item {
-        text-align: center;
-    }
-
     .stat-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--accent);
-        line-height: 1;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.5rem; font-weight: 700; color: var(--accent); line-height: 1;
     }
-
-    .stat-label {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        margin-top: 0.5rem;
-    }
+    .stat-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; }
 
     .results-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: var(--space-md);
     }
-
-    .results-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-
-    .results-count {
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-    }
+    .results-title { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; }
+    .results-count { color: var(--text-muted); font-size: 0.75rem; }
 
     .tender-card {
-        background: var(--surface);
-        border-radius: 12px;
-        padding: 1.25rem;
-        margin-bottom: 1rem;
-        box-shadow: var(--shadow);
-        cursor: pointer;
-        transition: all 0.2s;
-        border: 1px solid var(--border);
-        border-left: 4px solid var(--accent);
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: var(--space-md);
+        margin-bottom: var(--space-sm); cursor: pointer;
+        transition: border-color 0.15s; border-left: 3px solid var(--accent);
     }
+    .tender-card:hover { border-color: var(--accent); }
+    .tender-card.expanded { background: var(--surface-hover); }
+    .tender-card.is-liked { border-left-color: var(--success); border-color: var(--success); background: rgba(34,197,94,0.03); }
 
-    .tender-card:hover {
-        box-shadow: var(--shadow-lg);
-        transform: translateY(-2px);
-        border-color: var(--accent);
+    .tender-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .tender-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.6rem; font-weight: 600; color: var(--accent);
+        text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;
     }
+    .tender-card.is-liked .tender-label { color: var(--success); }
+    .tender-title { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); line-height: 1.4; }
+    .tender-preview { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
 
-    .tender-card.expanded {
-        border-color: var(--accent);
-        background: var(--surface-hover);
-    }
-
-    /* Persistenter gruener Rand, wenn der Nutzer die Karte als "Relevant" markiert hat */
-    .tender-card.is-liked {
-        border: 2px solid #10b981;
-        border-left: 4px solid #10b981;
-        box-shadow: var(--shadow), 0 0 0 1px rgba(16,185,129,0.25), 0 4px 18px rgba(16,185,129,0.08);
-        background: linear-gradient(180deg, rgba(16,185,129,0.05), var(--surface) 60%);
-    }
-    .tender-card.is-liked:hover {
-        border-color: #34d399;
-        box-shadow: var(--shadow-lg), 0 0 0 1px rgba(16,185,129,0.35), 0 6px 22px rgba(16,185,129,0.12);
-    }
-    .tender-card.is-liked .tender-label { color: #34d399; }
-
-    /* Meta-Chips im Karten-Header */
-    .tender-chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.4rem;
-        margin-top: 0.75rem;
-    }
+    .tender-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 0.5rem; }
     .tender-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        padding: 0.2rem 0.65rem;
-        background: var(--background);
-        border: 1px solid var(--border);
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        font-weight: 500;
-        line-height: 1.4;
+        display: inline-flex; align-items: center; gap: 3px;
+        padding: 2px 8px; background: var(--background);
+        border: 1px solid var(--border); border-radius: var(--radius-sm);
+        font-size: 0.65rem; color: var(--text-secondary);
+        font-family: 'JetBrains Mono', monospace; font-weight: 500;
     }
-    .tender-chip svg { width: 12px; height: 12px; color: var(--text-secondary); }
-    .tender-chip.accent {
-        background: rgba(59,130,246,0.12);
-        color: #60a5fa;
-        border-color: transparent;
-    }
-    .tender-chip.success {
-        background: rgba(16,185,129,0.12);
-        color: #34d399;
-        border-color: transparent;
+    .tender-chip svg { width: 10px; height: 10px; }
+
+    .badge-match {
+        padding: 3px 8px; border-radius: var(--radius-sm);
+        font-size: 0.65rem; font-weight: 700;
+        font-family: 'JetBrains Mono', monospace;
+        background: rgba(34,197,94,0.1); color: var(--success);
     }
 
-    /* Relevant-Button (Like-Toggle) pro Karte */
-    .tender-actions-row {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-        margin-top: 1rem;
-        flex-wrap: wrap;
-    }
+    .tender-actions-row { display: flex; gap: 0.4rem; align-items: center; margin-top: 0.75rem; }
     .rec-rate-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.5rem 0.9rem;
-        border: 1px solid var(--border);
-        background: transparent;
-        color: var(--text-secondary);
-        border-radius: 8px;
-        font-size: 0.8125rem;
-        font-weight: 600;
-        cursor: pointer;
-        font-family: inherit;
-        transition: all 0.15s;
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 0.35rem 0.625rem; border: 1px solid var(--border);
+        background: transparent; border-radius: var(--radius-sm);
+        font-size: 0.7rem; font-weight: 600; color: var(--text-secondary);
+        cursor: pointer; font-family: inherit; transition: all 0.15s;
     }
-    .rec-rate-btn:hover {
-        border-color: #10b981;
-        color: #34d399;
-        background: rgba(16,185,129,0.08);
-    }
-    .rec-rate-btn.active {
-        border-color: #10b981;
-        color: #10b981;
-        background: rgba(16,185,129,0.15);
-    }
+    .rec-rate-btn:hover { border-color: var(--success); color: var(--success); }
+    .rec-rate-btn.active { border-color: var(--success); color: var(--success); background: rgba(34,197,94,0.08); }
     .rec-rate-btn .check-icon { display: none; }
     .rec-rate-btn.active .check-icon { display: inline-flex; }
     .rec-rate-btn.active .plus-icon { display: none; }
 
-    .tender-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1rem;
-        margin-bottom: 0.75rem;
-    }
-
-    .tender-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--accent);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.25rem;
-    }
-
-    .tender-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        line-height: 1.4;
-    }
-
-    .tender-preview {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        margin-top: 0.5rem;
-        line-height: 1.5;
-    }
-
-    .tender-badges {
-        display: flex;
-        gap: 0.5rem;
-        flex-shrink: 0;
-    }
-
-    .badge-match {
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: white;
-    }
-
-    .tender-meta {
-        display: flex;
-        gap: 1.5rem;
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-        flex-wrap: wrap;
-    }
-
-    .tender-meta-item {
-        display: flex;
-        align-items: center;
-        gap: 0.375rem;
-    }
-
-    .time-ago {
-        color: var(--text-secondary);
-        font-size: 0.75rem;
-    }
-
-    .tender-details {
-        display: none;
-        margin-top: 1.5rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid var(--border);
-    }
-
-    .tender-card.expanded .tender-details {
-        display: block;
-    }
-
-    .tender-description {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        margin-bottom: 1.5rem;
-        line-height: 1.8;
-        white-space: pre-wrap;
-    }
+    .tender-details { display: none; margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--border); }
+    .tender-card.expanded .tender-details { display: block; }
+    .tender-description { color: var(--text-secondary); font-size: 0.8125rem; margin-bottom: var(--space-md); line-height: 1.7; white-space: pre-wrap; }
 
     .tender-info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-        padding: 1rem;
-        background: var(--background);
-        border-radius: 8px;
-        border: 1px solid var(--border);
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.75rem; margin-bottom: var(--space-md);
+        padding: 0.75rem; background: var(--background);
+        border-radius: var(--radius-sm); border: 1px solid var(--border);
     }
-
-    .tender-info-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .tender-info-label {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-    }
-
-    .tender-info-value {
-        font-weight: 500;
-        color: var(--text-primary);
-    }
-
-    .tender-disclaimer {
-        margin-top: 1rem;
-        padding: 0.75rem;
-        background: #2a2a1a;
-        border-radius: 6px;
-        font-size: 0.75rem;
-        color: #fbbf24;
-        text-align: center;
-        border: 1px solid #f59e0b33;
-    }
-
-    .tender-disclaimer a {
-        color: #fbbf24;
-        font-weight: 600;
-    }
+    .tender-info-label { font-family: 'JetBrains Mono', monospace; font-size: 0.55rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .tender-info-value { font-size: 0.8rem; font-weight: 500; color: var(--text-primary); margin-top: 2px; }
 
     .simap-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        background: var(--accent);
-        color: white;
-        text-decoration: none;
-        border-radius: 8px;
-        font-weight: 500;
-        transition: background 0.2s;
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        padding: 0.45rem 1rem; background: var(--accent); color: white;
+        text-decoration: none; border-radius: var(--radius);
+        font-size: 0.8rem; font-weight: 600; transition: background 0.15s;
     }
+    .simap-link:hover { background: var(--accent-hover); }
 
-    .simap-link:hover {
-        background: #2563eb;
+    .tender-disclaimer {
+        margin-top: 0.75rem; padding: 0.5rem 0.75rem;
+        background: rgba(234,179,8,0.05); border-radius: var(--radius-sm);
+        font-size: 0.65rem; color: var(--warning); text-align: center;
+        border: 1px solid rgba(234,179,8,0.15);
+        font-family: 'JetBrains Mono', monospace;
     }
+    .tender-disclaimer a { color: var(--warning); font-weight: 600; }
 
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        color: var(--text-secondary);
-    }
-
-    .empty-state-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-    }
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+    .empty-state h3 { font-family: 'JetBrains Mono', monospace; font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-primary); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="disclaimer-top">
-    ⚠️ Dies ist keine amtliche Veröffentlichung. Massgebend sind die auf der Plattform
-    <a href="https://www.simap.ch" target="_blank" rel="noopener">www.simap.ch</a> veröffentlichten Daten.
-</div>
+<div class="pro-wrap">
+    <div class="pro-container">
+        <div class="pro-head">
+            <div class="section-label">Pro</div>
+            <h1>Empfohlene Aufträge</h1>
+            <p>Für {{ company_name }} ausgewählt</p>
+        </div>
 
-<div class="pro-header">
-    <div class="pro-header-content">
-        <h1>🎯 Empfohlene Aufträge für {{ company_name }}</h1>
         <nav class="pro-nav">
             <a href="/pro/dashboard">Dashboard</a>
-            <a href="/pro/tenders">Alle Aufträge</a>
+            <a href="/pro/tenders">Aufträge</a>
+            <a href="/pro/recommended" class="active">Empfohlen</a>
             <a href="/pro/favorites">Merkliste</a>
             <a href="/pro/bkp-calculator">BKP-Rechner</a>
-            <a href="/logout">Logout</a>
         </nav>
+
+        <div class="disclaimer-bar">
+            ⚠ Keine amtliche Veröffentlichung. Massgebend: <a href="https://www.simap.ch" target="_blank" rel="noopener">simap.ch</a>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item" style="text-align:center;">
+                <div class="stat-value">{{ projects|length }}</div>
+                <div class="stat-label">Empfohlene Aufträge</div>
+            </div>
+            <div class="stat-item" style="text-align:center;">
+                <div class="stat-value">{{ avg_match }}%</div>
+                <div class="stat-label">Ø Match-Rate</div>
+            </div>
+        </div>
+
+        <div class="results-header">
+            <span class="results-title">Für Sie ausgewählt</span>
+            <span class="results-count">{{ projects|length }} Aufträge</span>
+        </div>
+
+        {% if projects and projects|length > 0 %}
+            {% for project in projects %}
+            {% set pid = project.id or project.project_id %}
+            <div class="tender-card" data-pid="{{ pid }}" onclick="toggleCard(this)">
+                <div class="tender-header">
+                    <div style="min-width:0; flex:1;">
+                        <div class="tender-label">Empfohlen</div>
+                        <div class="tender-title">{{ project.title or 'Ohne Titel' }}</div>
+                        <div class="tender-preview">{{ (project.description or '')[:180] }}{% if project.description and project.description|length > 180 %}…{% endif %}</div>
+                        <div class="tender-chips">
+                            {% if project.canton %}<span class="tender-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>{{ project.canton }}</span>{% endif %}
+                            {% if project.cpv_code %}<span class="tender-chip">CPV {{ project.cpv_code }}</span>{% endif %}
+                            {% if project.time_ago %}<span class="tender-chip">{{ project.time_ago }}</span>{% endif %}
+                            {% if project.project_id %}<span class="tender-chip">#{{ project.project_id }}</span>{% endif %}
+                        </div>
+                    </div>
+                    <div><span class="badge-match">{{ (project.probability * 100)|round|int }}%</span></div>
+                </div>
+
+                <div class="tender-actions-row">
+                    <button class="rec-rate-btn" data-rate-pid="{{ pid }}" onclick="event.stopPropagation(); rateRecommended('{{ pid }}', this)" aria-pressed="false" title="Als relevant markieren">
+                        <span class="plus-icon"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></span>
+                        <span class="check-icon"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        <span class="rec-rate-label">Als relevant markieren</span>
+                    </button>
+                </div>
+
+                <div class="tender-details">
+                    <p class="tender-description">{{ project.description or 'Keine Beschreibung verfügbar.' }}</p>
+                    <div class="tender-info-grid">
+                        <div><span class="tender-info-label">Kanton</span><div class="tender-info-value">{{ project.canton or '–' }}</div></div>
+                        <div><span class="tender-info-label">CPV Code</span><div class="tender-info-value">{{ project.cpv_code or '–' }}</div></div>
+                        <div><span class="tender-info-label">Match-Rate</span><div class="tender-info-value">{{ (project.probability * 100)|round|int }}%</div></div>
+                        <div><span class="tender-info-label">Veröffentlicht</span><div class="tender-info-value">{{ project.time_ago or '–' }}</div></div>
+                        {% if project.project_id %}<div><span class="tender-info-label">Projekt-Nr.</span><div class="tender-info-value">{{ project.project_id }}</div></div>{% endif %}
+                        {% if project.publication_date %}<div><span class="tender-info-label">Publikationsdatum</span><div class="tender-info-value">{{ project.publication_date[:10] if project.publication_date is string else project.publication_date }}</div></div>{% endif %}
+                    </div>
+                    <a href="{{ project.simap_url }}" target="_blank" rel="noopener" class="simap-link" onclick="event.stopPropagation()">Auf simap.ch ansehen →</a>
+                    <div class="tender-disclaimer">⚠ Keine amtliche Veröffentlichung. <a href="{{ project.simap_url }}" target="_blank" rel="noopener noreferrer">Offizielle Daten auf simap.ch</a></div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <h3>Keine empfohlenen Aufträge</h3>
+                <p>Sobald passende Aufträge gefunden werden, erscheinen sie hier.</p>
+                <br><a href="/pro/tenders" class="simap-link">Alle Aufträge durchsuchen →</a>
+            </div>
+        {% endif %}
     </div>
 </div>
+{% endblock %}
 
-<div class="container">
-    <div class="stats-bar">
-        <div class="stat-item">
-            <div class="stat-value">{{ projects|length }}</div>
-            <div class="stat-label">Empfohlene Aufträge</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value">{{ avg_match }}%</div>
-            <div class="stat-label">Ø Match-Rate</div>
-        </div>
-    </div>
-
-    <div class="results-header">
-        <div class="results-title">
-            Für Sie ausgewählt
-            <span class="results-count">({{ projects|length }} Aufträge)</span>
-        </div>
-    </div>
-
-    {% if projects and projects|length > 0 %}
-        {% for project in projects %}
-        {% set pid = project.id or project.project_id %}
-        <div class="tender-card" data-pid="{{ pid }}" onclick="toggleCard(this)">
-            <div class="tender-header">
-                <div style="min-width:0; flex:1;">
-                    <div class="tender-label">📋 EMPFOHLEN</div>
-                    <div class="tender-title">{{ project.title or 'Ohne Titel' }}</div>
-                    <div class="tender-preview">{{ (project.description or '')[:200] }}{% if project.description and project.description|length > 200 %}...{% endif %}</div>
-
-                    <div class="tender-chips">
-                        {% if project.canton %}
-                        <span class="tender-chip">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            {{ project.canton }}
-                        </span>
-                        {% endif %}
-                        {% if project.cpv_code %}
-                        <span class="tender-chip">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                            CPV {{ project.cpv_code }}
-                        </span>
-                        {% endif %}
-                        {% if project.time_ago %}
-                        <span class="tender-chip">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            {{ project.time_ago }}
-                        </span>
-                        {% endif %}
-                        {% if project.project_id %}
-                        <span class="tender-chip">#{{ project.project_id }}</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="tender-badges">
-                    <span class="badge-match">{{ (project.probability * 100)|round|int }}% Match</span>
-                </div>
-            </div>
-
-            <div class="tender-actions-row">
-                <button class="rec-rate-btn"
-                        data-rate-pid="{{ pid }}"
-                        onclick="event.stopPropagation(); rateRecommended('{{ pid }}', this)"
-                        aria-pressed="false"
-                        title="Als relevant markieren">
-                    <span class="plus-icon" aria-hidden="true">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"/>
-                            <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
-                        </svg>
-                    </span>
-                    <span class="check-icon" aria-hidden="true">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                            <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                    </span>
-                    <span class="rec-rate-label">Als relevant markieren</span>
-                </button>
-            </div>
-
-            <div class="tender-details">
-                <p class="tender-description">{{ project.description or 'Keine Beschreibung verfügbar.' }}</p>
-
-                <div class="tender-info-grid">
-                    <div class="tender-info-item">
-                        <span class="tender-info-label">Kanton</span>
-                        <span class="tender-info-value">{{ project.canton or '-' }}</span>
-                    </div>
-                    <div class="tender-info-item">
-                        <span class="tender-info-label">CPV Code</span>
-                        <span class="tender-info-value">{{ project.cpv_code or '-' }}</span>
-                    </div>
-                    <div class="tender-info-item">
-                        <span class="tender-info-label">Match-Rate</span>
-                        <span class="tender-info-value">{{ (project.probability * 100)|round|int }}%</span>
-                    </div>
-                    <div class="tender-info-item">
-                        <span class="tender-info-label">Veröffentlicht</span>
-                        <span class="tender-info-value">{{ project.time_ago or '-' }}</span>
-                    </div>
-                    {% if project.project_id %}
-                    <div class="tender-info-item">
-                        <span class="tender-info-label">Projekt-Nr.</span>
-                        <span class="tender-info-value">{{ project.project_id }}</span>
-                    </div>
-                    {% endif %}
-                    {% if project.publication_date %}
-                    <div class="tender-info-item">
-                        <span class="tender-info-label">Publikationsdatum</span>
-                        <span class="tender-info-value">{{ project.publication_date[:10] if project.publication_date is string else project.publication_date }}</span>
-                    </div>
-                    {% endif %}
-                </div>
-
-                <a href="{{ project.simap_url }}" target="_blank" rel="noopener" class="simap-link" onclick="event.stopPropagation()">
-                    Auf simap.ch ansehen →
-                </a>
-
-                <div class="tender-disclaimer">
-                    ⚠️ Dies ist keine amtliche Veröffentlichung.
-                    <a href="{{ project.simap_url }}" target="_blank" rel="noopener noreferrer">Offizielle Daten auf simap.ch</a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    {% else %}
-        <div class="empty-state">
-            <div class="empty-state-icon">🔍</div>
-            <h3>Keine empfohlenen Aufträge</h3>
-            <p>Sobald passende Aufträge gefunden werden, erscheinen sie hier.</p>
-            <br>
-            <a href="/pro/tenders" class="simap-link">Alle Aufträge durchsuchen →</a>
-        </div>
-    {% endif %}
-</div>
-
+{% block extra_js %}
 <script>
 function toggleCard(card) {
-    const wasExpanded = card.classList.contains('expanded');
-    document.querySelectorAll('.tender-card.expanded').forEach(c => {
-        c.classList.remove('expanded');
-    });
-    if (!wasExpanded) {
-        card.classList.add('expanded');
-    }
+    var wasExpanded = card.classList.contains('expanded');
+    document.querySelectorAll('.tender-card.expanded').forEach(function(c) { c.classList.remove('expanded'); });
+    if (!wasExpanded) card.classList.add('expanded');
 }
 
-// Like-Status (Relevant-Button) fuer die empfohlenen Karten.
-// Quelle: /api/feed-ratings (Map {tender_id: rating}).
-// Toggle: /api/feed-rate (rating 1 = relevant, 0 = entfernen).
 var userRatings = {};
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -542,26 +248,21 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(function (r) { return r.json(); })
         .then(function (data) {
             userRatings = (data && data.ratings) || {};
-            // Initial-Zustand auf alle bereits gerenderten Karten anwenden.
             Object.keys(userRatings).forEach(function (pid) {
                 if (userRatings[pid] === 1) applyLikedState(pid, true);
             });
-        })
-        .catch(function () { /* silent fallback: Initialzustand bleibt neutral */ });
+        }).catch(function () {});
 });
 
 function applyLikedState(pid, liked) {
     document.querySelectorAll('.tender-card[data-pid="' + pid + '"]').forEach(function (card) {
-        if (liked) card.classList.add('is-liked');
-        else card.classList.remove('is-liked');
+        if (liked) card.classList.add('is-liked'); else card.classList.remove('is-liked');
     });
     document.querySelectorAll('.rec-rate-btn[data-rate-pid="' + pid + '"]').forEach(function (btn) {
-        if (liked) btn.classList.add('active');
-        else btn.classList.remove('active');
+        if (liked) btn.classList.add('active'); else btn.classList.remove('active');
         btn.setAttribute('aria-pressed', liked ? 'true' : 'false');
         var label = btn.querySelector('.rec-rate-label');
         if (label) label.textContent = liked ? 'Relevant' : 'Als relevant markieren';
-        btn.title = liked ? 'Markierung entfernen' : 'Als relevant markieren';
     });
 }
 
@@ -569,28 +270,15 @@ function rateRecommended(pid, btn) {
     if (!pid) return;
     var prev = userRatings[pid] || 0;
     var next = prev === 1 ? 0 : 1;
-
-    // Optimistisches UI-Update: gruener Rand sofort sichtbar/entfernt.
     userRatings[pid] = next;
     applyLikedState(pid, next === 1);
-
     fetch('/api/feed-rate', {
-        method: 'POST',
-        credentials: 'same-origin',
+        method: 'POST', credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tender_id: pid, rating: next, source: 'project' })
-    })
-    .then(function (r) { return r.json().catch(function () { return {}; }); })
-    .then(function (res) {
-        if (!res || res.success !== true) {
-            userRatings[pid] = prev;
-            applyLikedState(pid, prev === 1);
-        }
-    })
-    .catch(function () {
-        userRatings[pid] = prev;
-        applyLikedState(pid, prev === 1);
-    });
+    }).then(function (r) { return r.json().catch(function () { return {}; }); })
+    .then(function (res) { if (!res || res.success !== true) { userRatings[pid] = prev; applyLikedState(pid, prev === 1); } })
+    .catch(function () { userRatings[pid] = prev; applyLikedState(pid, prev === 1); });
 }
 </script>
 {% endblock %}

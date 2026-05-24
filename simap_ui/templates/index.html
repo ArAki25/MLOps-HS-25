@@ -1,564 +1,252 @@
 {% extends "base.html" %}
 
-{% block title %}SAJF Strategies - Public Tenders{% endblock %}
+{% block title %}SAJF Strategies – Öffentliche Ausschreibungen{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Disclaimer Banner */
-    .disclaimer-top {
-        background: #2a2a1a;
-        border-bottom: 1px solid #f59e0b;
-        padding: 0.75rem 2rem;
-        font-size: 0.875rem;
-        color: #fbbf24;
+    .idx-wrap { min-height: calc(100vh - 56px); padding: var(--space-xl) var(--space-lg) var(--space-3xl); }
+    .idx-container { max-width: 960px; margin: 0 auto; }
+
+    .disclaimer-bar {
+        background: var(--surface); border: 1px solid var(--warning);
+        border-radius: var(--radius); padding: 0.5rem 1rem;
+        font-size: 0.75rem; color: var(--warning); text-align: center;
+        margin-bottom: var(--space-lg);
+        font-family: 'JetBrains Mono', monospace;
+    }
+    .disclaimer-bar a { color: var(--warning); font-weight: 600; }
+
+    .stats-row {
+        display: flex; gap: var(--space-sm); margin-bottom: var(--space-lg);
+    }
+    .stat-card {
+        flex: 1; background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: var(--space-md);
         text-align: center;
     }
-
-    .disclaimer-top a {
-        color: #fbbf24;
-        font-weight: 600;
+    .stat-card-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.5rem; font-weight: 700; color: var(--accent);
+    }
+    .stat-card-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.6rem; color: var(--text-muted);
+        text-transform: uppercase; letter-spacing: 0.06em;
+        margin-top: 2px;
     }
 
-    /* Stats Bar */
-    .stats-bar {
-        display: flex;
-        justify-content: center;
-        gap: 4rem;
-        margin-bottom: 2rem;
-        padding: 2rem;
-        background: linear-gradient(135deg, #1e3a5f, #3b82f6);
-        border-radius: 16px;
-        box-shadow: var(--shadow-lg);
-    }
-
-    .stat-item {
-        text-align: center;
-        color: white;
-    }
-
-    .stat-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: white;
-        line-height: 1;
-    }
-
-    .stat-label {
-        font-size: 0.875rem;
-        color: rgba(255,255,255,0.8);
-        margin-top: 0.5rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    /* Search & Filter Section */
     .search-section {
-        background: var(--surface);
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--shadow);
-        border: 1px solid var(--border);
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: var(--space-lg);
+        margin-bottom: var(--space-lg);
     }
-
     .search-section h2 {
-        font-size: 1.125rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-        color: var(--text-primary);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem; font-weight: 600; color: var(--text-primary);
+        margin-bottom: var(--space-md);
     }
 
-    .search-box {
-        position: relative;
-        margin-bottom: 1rem;
-    }
-
+    .search-box { position: relative; margin-bottom: var(--space-md); }
     .search-input {
-        width: 100%;
-        padding: 0.875rem 1rem 0.875rem 3rem;
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        font-size: 1rem;
-        transition: border-color 0.2s, box-shadow 0.2s;
-        background: var(--background);
-        color: var(--text-primary);
+        width: 100%; padding: 0.6rem 0.75rem 0.6rem 2.25rem;
+        border: 1px solid var(--border); border-radius: var(--radius-sm);
+        font-size: 0.84rem; background: var(--background);
+        color: var(--text-primary); transition: border-color 0.15s;
     }
+    .search-input:focus { outline: none; border-color: var(--accent); }
+    .search-icon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
 
-    .search-input::placeholder {
-        color: var(--text-secondary);
-    }
-
-    .search-input:focus {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-secondary);
-    }
-
-    .filter-row {
-        display: flex;
-        gap: 2rem;
-        flex-wrap: wrap;
-    }
-
-    .filter-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
+    .filter-row { display: flex; gap: var(--space-lg); flex-wrap: wrap; }
+    .filter-group { display: flex; flex-direction: column; gap: 4px; }
     .filter-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.6rem; font-weight: 600; color: var(--text-muted);
+        text-transform: uppercase; letter-spacing: 0.06em;
     }
-
-    .filter-options {
-        display: flex;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-    }
-
+    .filter-options { display: flex; gap: 4px; flex-wrap: wrap; }
     .filter-chip {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        background: var(--background);
-        border: 2px solid var(--border);
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        font-size: 0.875rem;
-        color: var(--text-secondary);
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 4px 10px; background: var(--background);
+        border: 1px solid var(--border); border-radius: var(--radius-sm);
+        cursor: pointer; font-size: 0.75rem; font-weight: 500;
+        color: var(--text-secondary); transition: border-color 0.15s, color 0.15s;
         user-select: none;
     }
-
-    .filter-chip:hover {
-        border-color: var(--accent);
-        color: var(--text-primary);
-        background: var(--surface-hover);
-    }
-
-    .filter-chip.active {
-        background: #3b82f6 !important;
-        color: white !important;
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
-        font-weight: 600;
-    }
-
-    .filter-chip input {
-        display: none;
-    }
+    .filter-chip:hover { border-color: var(--text-muted); color: var(--text-primary); }
+    .filter-chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .filter-chip input { display: none; }
 
     .canton-select {
-        padding: 0.5rem 1rem;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        font-size: 0.875rem;
-        background: var(--background);
-        color: var(--text-primary);
-        cursor: pointer;
-        min-width: 150px;
+        padding: 0.5rem 0.75rem; border: 1px solid var(--border);
+        border-radius: var(--radius-sm); font-size: 0.8rem;
+        background: var(--background); color: var(--text-primary);
+        min-width: 140px;
     }
 
-    .canton-select option {
-        background: var(--surface);
-        color: var(--text-primary);
-    }
-
-    /* Tenders List */
     .tenders-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: var(--space-sm);
     }
-
     .tenders-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: var(--text-primary);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem; font-weight: 600; color: var(--text-primary);
     }
+    .tenders-title small { font-weight: 400; color: var(--text-muted); font-size: 0.72rem; }
+    .tenders-source { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted); }
 
-    .tenders-title small {
-        font-weight: 400;
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-    }
+    .tenders-list { display: flex; flex-direction: column; gap: var(--space-sm); }
 
-    .tenders-source {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-    }
-
-    .tenders-list {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    /* Tender Card */
     .tender-card {
-        background: var(--surface);
-        border-radius: 12px;
-        padding: 1.25rem;
-        box-shadow: var(--shadow);
-        cursor: pointer;
-        transition: all 0.2s;
-        border: 1px solid var(--border);
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: var(--space-md);
+        cursor: pointer; transition: border-color 0.15s;
     }
+    .tender-card:hover { border-color: var(--text-muted); }
+    .tender-card.expanded { border-color: var(--accent); }
+    .tender-card.new { border-left: 3px solid var(--success); }
 
-    .tender-card:hover {
-        box-shadow: var(--shadow-lg);
-        transform: translateY(-2px);
-        border-color: var(--accent);
-    }
-
-    .tender-card.expanded {
-        border-color: var(--accent);
-        background: var(--surface-hover);
-    }
-
-    .tender-card.new {
-        border-left: 4px solid var(--success);
-    }
-
-    .tender-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1rem;
-        margin-bottom: 0.75rem;
-    }
-
+    .tender-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.4rem; }
     .tender-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--accent);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.25rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.6rem; font-weight: 600; color: var(--accent);
+        text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px;
     }
+    .tender-title { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); line-height: 1.4; }
+    .tender-preview { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
 
-    .tender-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        line-height: 1.4;
-    }
-
-    .tender-preview {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        margin-top: 0.5rem;
-        line-height: 1.5;
-    }
-
-    .tender-badges {
-        display: flex;
-        gap: 0.5rem;
-        flex-shrink: 0;
-    }
-
+    .tender-badges { display: flex; gap: 4px; flex-shrink: 0; align-items: center; }
     .badge {
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 500;
+        display: inline-block; padding: 2px 6px;
+        border-radius: var(--radius-sm); font-size: 0.6rem;
+        font-weight: 600; font-family: 'JetBrains Mono', monospace;
     }
-
-    .badge-new {
-        background: rgba(16, 185, 129, 0.2);
-        color: #10b981;
-    }
-
-    .badge-open {
-        background: rgba(59, 130, 246, 0.2);
-        color: #3b82f6;
-    }
-
-    .badge-selective {
-        background: rgba(245, 158, 11, 0.2);
-        color: #f59e0b;
-    }
-
-    .badge-awarded {
-        background: rgba(139, 92, 246, 0.2);
-        color: #8b5cf6;
-    }
+    .badge-new { background: rgba(34,197,94,0.1); color: var(--success); border: 1px solid rgba(34,197,94,0.2); }
+    .badge-open { background: var(--accent-light); color: var(--accent); border: 1px solid rgba(59,130,246,0.2); }
+    .badge-selective { background: rgba(234,179,8,0.1); color: var(--warning); border: 1px solid rgba(234,179,8,0.2); }
+    .badge-awarded { background: rgba(139,92,246,0.1); color: #8b5cf6; border: 1px solid rgba(139,92,246,0.2); }
 
     .tender-meta {
-        display: flex;
-        gap: 1.5rem;
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-        flex-wrap: wrap;
+        display: flex; gap: 1rem; color: var(--text-muted); font-size: 0.72rem;
+        flex-wrap: wrap; font-family: 'JetBrains Mono', monospace;
     }
+    .tender-meta-item { display: flex; align-items: center; gap: 4px; }
 
-    .tender-meta-item {
-        display: flex;
-        align-items: center;
-        gap: 0.375rem;
-    }
-
-    .time-ago {
-        color: var(--text-secondary);
-        font-size: 0.75rem;
-    }
-
-    /* Tender Details (expanded) */
-    .tender-details {
-        display: none;
-        margin-top: 1.5rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid var(--border);
-    }
-
-    .tender-card.expanded .tender-details {
-        display: block;
-    }
-
-    .tender-description {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        margin-bottom: 1.5rem;
-        line-height: 1.8;
-        white-space: pre-wrap;
-        max-height: none;
-    }
+    .tender-details { display: none; margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--border); }
+    .tender-card.expanded .tender-details { display: block; }
+    .tender-description { color: var(--text-secondary); font-size: 0.84rem; margin-bottom: var(--space-md); line-height: 1.7; white-space: pre-wrap; }
 
     .tender-info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-        padding: 1rem;
-        background: var(--background);
-        border-radius: 8px;
-        border: 1px solid var(--border);
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: var(--space-sm); margin-bottom: var(--space-md);
+        padding: var(--space-md); background: var(--background);
+        border-radius: var(--radius-sm); border: 1px solid var(--border);
     }
-
-    .tender-info-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
     .tender-info-label {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        text-transform: uppercase;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.6rem; color: var(--text-muted);
+        text-transform: uppercase; letter-spacing: 0.04em;
     }
-
-    .tender-info-value {
-        font-weight: 500;
-        color: var(--text-primary);
-    }
-
-    .tender-disclaimer {
-        margin-top: 1rem;
-        padding: 0.75rem;
-        background: #2a2a1a;
-        border-radius: 6px;
-        font-size: 0.75rem;
-        color: #fbbf24;
-        text-align: center;
-        border: 1px solid #f59e0b33;
-    }
-
-    .tender-disclaimer a {
-        color: #fbbf24;
-        font-weight: 600;
-    }
+    .tender-info-value { font-size: 0.8rem; font-weight: 500; color: var(--text-primary); margin-top: 2px; }
 
     .simap-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        background: var(--accent);
-        color: white;
-        text-decoration: none;
-        border-radius: 8px;
-        font-weight: 500;
-        transition: background 0.2s;
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 12px; background: var(--accent); color: white;
+        text-decoration: none; border-radius: var(--radius-sm);
+        font-size: 0.75rem; font-weight: 600; transition: background 0.15s;
     }
+    .simap-link:hover { background: var(--accent-hover); color: white; }
 
-    .simap-link:hover {
-        background: #2563eb;
+    .tender-disclaimer {
+        margin-top: var(--space-sm); padding: 0.5rem 0.75rem;
+        background: var(--surface); border-radius: var(--radius-sm);
+        font-size: 0.68rem; color: var(--warning); text-align: center;
+        border: 1px solid rgba(234,179,8,0.2);
     }
+    .tender-disclaimer a { color: var(--warning); font-weight: 600; }
 
-    /* Loading */
-    .loading {
-        text-align: center;
-        padding: 3rem;
-        color: var(--text-secondary);
-    }
+    .loading { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.84rem; }
+    .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 0.75rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid var(--border);
-        border-top-color: var(--accent);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 1rem;
-    }
-
-    .favorite-btn {
-        background: transparent;
-        border: none;
-        font-size: 1.25rem;
-        cursor: pointer;
-        padding: 0.25rem;
-        transition: transform 0.2s;
-    }
-
-    .favorite-btn:hover {
-        transform: scale(1.2);
-    }
-
-    .favorite-btn.active {
-        animation: heartbeat 0.3s ease;
-    }
-
-    @keyframes heartbeat {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.3); }
-        100% { transform: scale(1); }
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 3rem;
-        color: var(--text-secondary);
-    }
+    .favorite-btn { background: transparent; border: none; font-size: 1rem; cursor: pointer; padding: 2px; }
+    .empty-state { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.84rem; }
 
     @media (max-width: 768px) {
-        .stats-bar {
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .filter-row {
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .tender-header {
-            flex-direction: column;
-        }
-
-        .tender-badges {
-            order: -1;
-        }
+        .stats-row { flex-direction: column; }
+        .filter-row { flex-direction: column; gap: var(--space-sm); }
+        .tender-header { flex-direction: column; }
+        .tender-badges { order: -1; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Disclaimer Banner oben -->
-<div class="disclaimer-top">
-    ⚠️ Dies ist keine amtliche Veröffentlichung. Massgebend sind die auf der Plattform
-    <a href="https://www.simap.ch" target="_blank" rel="noopener">www.simap.ch</a> veröffentlichten Daten.
-</div>
-
-<div class="container">
-    <!-- Stats Bar -->
-    <div class="stats-bar">
-        <div class="stat-item">
-            <div class="stat-value" id="stat-total">-</div>
-            <div class="stat-label">Total Tenders</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value" id="stat-today">-</div>
-            <div class="stat-label">New Today</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value">26</div>
-            <div class="stat-label">Kantone</div>
-        </div>
-    </div>
-
-    <!-- Search & Filter -->
-    <section class="search-section">
-        <h2>Advanced Tender Search</h2>
-
-        <div class="search-box">
-            <svg class="search-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-            <input type="text" class="search-input" id="search-input" placeholder="Search by Keyword or Simap ID...">
+<div class="idx-wrap">
+    <div class="idx-container">
+        <div class="disclaimer-bar">
+            Keine amtliche Veröffentlichung – massgebend sind die Daten auf
+            <a href="https://www.simap.ch" target="_blank" rel="noopener">simap.ch</a>
         </div>
 
-        <div class="filter-row">
-            <div class="filter-group">
-                <span class="filter-label">Kanton</span>
-                <select class="canton-select" id="canton-filter">
-                    <option value="">All Cantons</option>
-                </select>
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-card-value" id="stat-total">–</div>
+                <div class="stat-card-label">Total</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-card-value" id="stat-today">–</div>
+                <div class="stat-card-label">Heute neu</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">26</div>
+                <div class="stat-card-label">Kantone</div>
+            </div>
+        </div>
 
-            <div class="filter-group">
-                <span class="filter-label">Verfahrenstyp</span>
-                <div class="filter-options">
-                    <label class="filter-chip" data-filter="process_type" data-value="open">
-                        <input type="checkbox"> Open
-                    </label>
-                    <label class="filter-chip" data-filter="process_type" data-value="selective">
-                        <input type="checkbox"> Selective
-                    </label>
-                    <label class="filter-chip" data-filter="process_type" data-value="invitation">
-                        <input type="checkbox"> Invitation
-                    </label>
+        <section class="search-section">
+            <h2>Suche & Filter</h2>
+            <div class="search-box">
+                <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" class="search-input" id="search-input" placeholder="Stichwort oder Simap-ID...">
+            </div>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <span class="filter-label">Kanton</span>
+                    <select class="canton-select" id="canton-filter">
+                        <option value="">Alle Kantone</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label">Verfahrenstyp</span>
+                    <div class="filter-options">
+                        <label class="filter-chip" data-filter="process_type" data-value="open"><input type="checkbox"> Offen</label>
+                        <label class="filter-chip" data-filter="process_type" data-value="selective"><input type="checkbox"> Selektiv</label>
+                        <label class="filter-chip" data-filter="process_type" data-value="invitation"><input type="checkbox"> Einladung</label>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label">Auftragsart</span>
+                    <div class="filter-options">
+                        <label class="filter-chip" data-filter="order_type" data-value="service"><input type="checkbox"> Dienstleistung</label>
+                        <label class="filter-chip" data-filter="order_type" data-value="construction"><input type="checkbox"> Bauauftrag</label>
+                        <label class="filter-chip" data-filter="order_type" data-value="supply"><input type="checkbox"> Lieferung</label>
+                    </div>
                 </div>
             </div>
+        </section>
 
-            <div class="filter-group">
-                <span class="filter-label">Auftragsart</span>
-                <div class="filter-options">
-                    <label class="filter-chip" data-filter="order_type" data-value="service">
-                        <input type="checkbox"> Service
-                    </label>
-                    <label class="filter-chip" data-filter="order_type" data-value="construction">
-                        <input type="checkbox"> Construction
-                    </label>
-                    <label class="filter-chip" data-filter="order_type" data-value="supply">
-                        <input type="checkbox"> Supply
-                    </label>
-                </div>
-            </div>
+        <div class="tenders-header">
+            <h2 class="tenders-title">Ausschreibungen <small id="results-count"></small></h2>
+            <span class="tenders-source">Quelle: simap.ch</span>
         </div>
-    </section>
 
-    <!-- Tenders List -->
-    <div class="tenders-header">
-        <h2 class="tenders-title">
-            PUBLIC TENDERS (Aufträge/Tenders)
-            <small id="results-count"></small>
-        </h2>
-        <span class="tenders-source">simap.ch</span>
-    </div>
-
-    <div class="tenders-list" id="tenders-list">
-        <div class="loading">
-            <div class="spinner"></div>
-            Loading tenders...
+        <div class="tenders-list" id="tenders-list">
+            <div class="loading">
+                <div class="spinner"></div>
+                Ausschreibungen werden geladen…
+            </div>
         </div>
     </div>
 </div>
@@ -566,417 +254,245 @@
 
 {% block extra_js %}
 <script>
-    let allProjects = [];
-    let filteredProjects = [];
-    let isProUser = false;
-    let userFavorites = [];
-    let activeFilters = {
-        search: '',
-        canton: '',
-        process_type: [],
-        order_type: []
-    };
+var allProjects = [];
+var filteredProjects = [];
+var isProUser = false;
+var userFavorites = [];
+var activeFilters = { search: '', canton: '', process_type: [], order_type: [] };
 
-    document.addEventListener('DOMContentLoaded', () => {
-        checkProStatus();
-        loadProjects();
-        loadCantons();
-        loadStatistics();
-        setupEventListeners();
-        setInterval(loadProjects, 5 * 60 * 1000);
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    checkProStatus();
+    loadProjects();
+    loadCantons();
+    loadStatistics();
+    setupEventListeners();
+    setInterval(loadProjects, 5 * 60 * 1000);
+});
 
-    async function checkProStatus() {
-        try {
-            const response = await fetch('/api/favorites');
-            const data = await response.json();
-            userFavorites = data.favorites || [];
-            isProUser = true;
-        } catch (error) {
-            isProUser = false;
-            userFavorites = [];
-        }
-    }
+function checkProStatus() {
+    fetch('/api/favorites').then(function(r) { return r.json(); }).then(function(data) {
+        userFavorites = data.favorites || [];
+        isProUser = true;
+    }).catch(function() { isProUser = false; userFavorites = []; });
+}
 
-    async function toggleFavorite(projectId, button, project) {
-        const isFavorite = userFavorites.includes(projectId);
-        const endpoint = isFavorite ? '/api/favorites/remove' : '/api/favorites/add';
-
-        try {
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    project_id: projectId,
-                    title: project.title,
-                    canton: project.canton,
-                    description: project.description,
-                    simap_url: project.simap_url
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                if (isFavorite) {
-                    userFavorites = userFavorites.filter(id => id !== projectId);
-                    button.innerHTML = '🤍';
-                    button.classList.remove('active');
-                } else {
-                    userFavorites.push(projectId);
-                    button.innerHTML = '❤️';
-                    button.classList.add('active');
-                }
-            }
-        } catch (error) {
-            console.error('Fehler:', error);
-        }
-    }
-
-    async function loadProjects() {
-        try {
-            showLoading();
-            const response = await fetch('/api/projects?limit=200');
-            allProjects = await response.json();
-            filteredProjects = allProjects;
-            renderProjects();
-        } catch (error) {
-            console.error('Error loading projects:', error);
-            document.getElementById('tenders-list').innerHTML =
-                '<div class="empty-state">Error loading tenders. Please try again.</div>';
-        }
-    }
-
-    async function searchProjects(query) {
-        try {
-            showLoading();
-            const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-            filteredProjects = await response.json();
-            renderProjects();
-        } catch (error) {
-            console.error('Error searching:', error);
-        }
-    }
-
-    async function filterProjects() {
-        try {
-            showLoading();
-
-            let params = new URLSearchParams();
-
-            if (activeFilters.canton) {
-                params.append('canton', activeFilters.canton);
-            }
-            if (activeFilters.process_type.length === 1) {
-                params.append('process_type', activeFilters.process_type[0]);
-            }
-            if (activeFilters.order_type.length === 1) {
-                params.append('order_type', activeFilters.order_type[0]);
-            }
-
-            if (params.toString()) {
-                const response = await fetch(`/api/filter?${params.toString()}`);
-                let results = await response.json();
-
-                if (activeFilters.process_type.length > 1) {
-                    results = results.filter(p => activeFilters.process_type.includes(p.process_type));
-                }
-                if (activeFilters.order_type.length > 1) {
-                    results = results.filter(p => activeFilters.order_type.includes(p.order_type));
-                }
-
-                if (activeFilters.search) {
-                    const searchLower = activeFilters.search.toLowerCase();
-                    results = results.filter(p =>
-                        (p.title || '').toLowerCase().includes(searchLower) ||
-                        (p.description || '').toLowerCase().includes(searchLower) ||
-                        (p.organization || '').toLowerCase().includes(searchLower) ||
-                        (p.project_number || '').toLowerCase().includes(searchLower)
-                    );
-                }
-
-                filteredProjects = results;
-            } else if (activeFilters.search) {
-                await searchProjects(activeFilters.search);
-                return;
+function toggleFavorite(projectId, button, project) {
+    var isFavorite = userFavorites.indexOf(projectId) !== -1;
+    var endpoint = isFavorite ? '/api/favorites/remove' : '/api/favorites/add';
+    fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id: projectId, title: project.title, canton: project.canton, description: project.description, simap_url: project.simap_url })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.success) {
+            if (isFavorite) {
+                userFavorites = userFavorites.filter(function(id) { return id !== projectId; });
+                button.innerHTML = '☆';
+                button.classList.remove('active');
             } else {
-                filteredProjects = allProjects;
+                userFavorites.push(projectId);
+                button.innerHTML = '★';
+                button.classList.add('active');
             }
+        }
+    }).catch(function(e) { console.error(e); });
+}
 
+function loadProjects() {
+    showLoading();
+    fetch('/api/projects?limit=200').then(function(r) { return r.json(); }).then(function(data) {
+        allProjects = data;
+        filteredProjects = data;
+        renderProjects();
+    }).catch(function() {
+        document.getElementById('tenders-list').innerHTML = '<div class="empty-state">Fehler beim Laden. Bitte erneut versuchen.</div>';
+    });
+}
+
+function searchProjects(query) {
+    showLoading();
+    fetch('/api/search?q=' + encodeURIComponent(query)).then(function(r) { return r.json(); }).then(function(data) {
+        filteredProjects = data;
+        renderProjects();
+    }).catch(function(e) { console.error(e); });
+}
+
+function filterProjects() {
+    showLoading();
+    var params = new URLSearchParams();
+    if (activeFilters.canton) params.append('canton', activeFilters.canton);
+    if (activeFilters.process_type.length === 1) params.append('process_type', activeFilters.process_type[0]);
+    if (activeFilters.order_type.length === 1) params.append('order_type', activeFilters.order_type[0]);
+
+    if (params.toString()) {
+        fetch('/api/filter?' + params.toString()).then(function(r) { return r.json(); }).then(function(results) {
+            if (activeFilters.process_type.length > 1) {
+                results = results.filter(function(p) { return activeFilters.process_type.indexOf(p.process_type) !== -1; });
+            }
+            if (activeFilters.order_type.length > 1) {
+                results = results.filter(function(p) { return activeFilters.order_type.indexOf(p.order_type) !== -1; });
+            }
+            if (activeFilters.search) {
+                var s = activeFilters.search.toLowerCase();
+                results = results.filter(function(p) {
+                    return (p.title || '').toLowerCase().indexOf(s) !== -1 ||
+                           (p.description || '').toLowerCase().indexOf(s) !== -1 ||
+                           (p.organization || '').toLowerCase().indexOf(s) !== -1 ||
+                           (p.project_number || '').toLowerCase().indexOf(s) !== -1;
+                });
+            }
+            filteredProjects = results;
             renderProjects();
-        } catch (error) {
-            console.error('Error filtering:', error);
-        }
+        }).catch(function(e) { console.error(e); });
+    } else if (activeFilters.search) {
+        searchProjects(activeFilters.search);
+    } else {
+        filteredProjects = allProjects;
+        renderProjects();
     }
+}
 
-    function showLoading() {
-        document.getElementById('tenders-list').innerHTML = `
-            <div class="loading">
-                <div class="spinner"></div>
-                Loading tenders...
-            </div>
-        `;
-    }
+function showLoading() {
+    document.getElementById('tenders-list').innerHTML = '<div class="loading"><div class="spinner"></div>Laden…</div>';
+}
 
-    async function loadCantons() {
-        const allCantons = {
-            'AG': 'Aargau', 'AI': 'Appenzell Innerrhoden', 'AR': 'Appenzell Ausserrhoden',
-            'BE': 'Bern', 'BL': 'Basel-Landschaft', 'BS': 'Basel-Stadt',
-            'FR': 'Freiburg', 'GE': 'Genf', 'GL': 'Glarus', 'GR': 'Graubünden',
-            'JU': 'Jura', 'LU': 'Luzern', 'NE': 'Neuenburg', 'NW': 'Nidwalden',
-            'OW': 'Obwalden', 'SG': 'St. Gallen', 'SH': 'Schaffhausen', 'SO': 'Solothurn',
-            'SZ': 'Schwyz', 'TG': 'Thurgau', 'TI': 'Tessin', 'UR': 'Uri',
-            'VD': 'Waadt', 'VS': 'Wallis', 'ZG': 'Zug', 'ZH': 'Zürich'
-        };
-
-        try {
-            const response = await fetch('/api/cantons');
-            const cantonData = await response.json();
-
-            const cantonCounts = {};
-            cantonData.forEach(c => {
-                if (c.code) {
-                    const upperCode = c.code.toUpperCase();
-                    cantonCounts[upperCode] = c.count;
-                }
-            });
-
-            const select = document.getElementById('canton-filter');
-            const sortedCantons = Object.entries(allCantons).sort((a, b) => a[1].localeCompare(b[1]));
-
-            sortedCantons.forEach(([code, name]) => {
-                const option = document.createElement('option');
-                option.value = code;
-                const count = cantonCounts[code] || 0;
-                option.textContent = `${name} (${count})`;
-                select.appendChild(option);
-            });
-        } catch (error) {
-            console.error('Error loading cantons:', error);
-        }
-    }
-
-    async function loadStatistics() {
-        try {
-            const response = await fetch('/api/statistics');
-            const stats = await response.json();
-
-            document.getElementById('stat-total').textContent = stats.total || 0;
-            document.getElementById('stat-today').textContent = stats.today || 0;
-        } catch (error) {
-            console.error('Error loading statistics:', error);
-        }
-    }
-
-    function setupEventListeners() {
-        const searchInput = document.getElementById('search-input');
-        let searchTimeout;
-        searchInput.addEventListener('input', (e) => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                activeFilters.search = e.target.value;
-                filterProjects();
-            }, 500);
+function loadCantons() {
+    var allCantons = {
+        'AG':'Aargau','AI':'Appenzell I.','AR':'Appenzell A.','BE':'Bern','BL':'Basel-Land',
+        'BS':'Basel-Stadt','FR':'Freiburg','GE':'Genf','GL':'Glarus','GR':'Graubünden',
+        'JU':'Jura','LU':'Luzern','NE':'Neuenburg','NW':'Nidwalden','OW':'Obwalden',
+        'SG':'St. Gallen','SH':'Schaffhausen','SO':'Solothurn','SZ':'Schwyz','TG':'Thurgau',
+        'TI':'Tessin','UR':'Uri','VD':'Waadt','VS':'Wallis','ZG':'Zug','ZH':'Zürich'
+    };
+    fetch('/api/cantons').then(function(r) { return r.json(); }).then(function(cantonData) {
+        var counts = {};
+        cantonData.forEach(function(c) { if (c.code) counts[c.code.toUpperCase()] = c.count; });
+        var select = document.getElementById('canton-filter');
+        var sorted = Object.keys(allCantons).sort(function(a,b) { return allCantons[a].localeCompare(allCantons[b]); });
+        sorted.forEach(function(code) {
+            var opt = document.createElement('option');
+            opt.value = code;
+            opt.textContent = allCantons[code] + ' (' + (counts[code] || 0) + ')';
+            select.appendChild(opt);
         });
+    }).catch(function(e) { console.error(e); });
+}
 
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                activeFilters.search = e.target.value;
-                filterProjects();
+function loadStatistics() {
+    fetch('/api/statistics').then(function(r) { return r.json(); }).then(function(stats) {
+        document.getElementById('stat-total').textContent = stats.total || 0;
+        document.getElementById('stat-today').textContent = stats.today || 0;
+    }).catch(function(e) { console.error(e); });
+}
+
+function setupEventListeners() {
+    var searchInput = document.getElementById('search-input');
+    var searchTimeout;
+    searchInput.addEventListener('input', function(e) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(function() { activeFilters.search = e.target.value; filterProjects(); }, 500);
+    });
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') { activeFilters.search = e.target.value; filterProjects(); }
+    });
+    document.getElementById('canton-filter').addEventListener('change', function(e) {
+        activeFilters.canton = e.target.value; filterProjects();
+    });
+    document.querySelectorAll('.filter-chip').forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            var filterType = chip.dataset.filter;
+            var value = chip.dataset.value;
+            chip.classList.toggle('active');
+            if (chip.classList.contains('active')) {
+                if (activeFilters[filterType].indexOf(value) === -1) activeFilters[filterType].push(value);
+            } else {
+                activeFilters[filterType] = activeFilters[filterType].filter(function(v) { return v !== value; });
             }
-        });
-
-        document.getElementById('canton-filter').addEventListener('change', (e) => {
-            activeFilters.canton = e.target.value;
             filterProjects();
         });
+    });
+}
 
-        document.querySelectorAll('.filter-chip').forEach(chip => {
-            chip.addEventListener('click', () => {
-                const filterType = chip.dataset.filter;
-                const value = chip.dataset.value;
-
-                chip.classList.toggle('active');
-
-                if (chip.classList.contains('active')) {
-                    if (!activeFilters[filterType].includes(value)) {
-                        activeFilters[filterType].push(value);
-                    }
-                } else {
-                    activeFilters[filterType] = activeFilters[filterType].filter(v => v !== value);
-                }
-
-                filterProjects();
-            });
-        });
+function renderProjects() {
+    var container = document.getElementById('tenders-list');
+    var countEl = document.getElementById('results-count');
+    countEl.textContent = '(' + filteredProjects.length + ')';
+    if (filteredProjects.length === 0) {
+        container.innerHTML = '<div class="empty-state">Keine Ausschreibungen gefunden.</div>';
+        return;
     }
+    container.innerHTML = filteredProjects.map(function(p) { return createTenderCard(p); }).join('');
+    container.querySelectorAll('.tender-card').forEach(function(card) {
+        card.addEventListener('click', function() { toggleCard(card); });
+    });
+}
 
-    function renderProjects() {
-        const container = document.getElementById('tenders-list');
-        const countEl = document.getElementById('results-count');
+function createTenderCard(project) {
+    var isNew = isNewProject(project.publication_date);
+    var processTypeBadge = getProcessTypeBadge(project.process_type);
+    var pubTypeBadge = getPubTypeBadge(project.pub_type);
+    var isFavorite = userFavorites.indexOf(project.id) !== -1;
+    var projectDataStr = JSON.stringify({id:project.id,title:project.title,canton:project.canton,description:project.description,simap_url:project.simap_url}).replace(/'/g,"\\'").replace(/"/g,'&quot;');
 
-        countEl.textContent = `(${filteredProjects.length} Ergebnisse)`;
+    return '<div class="tender-card ' + (isNew ? 'new' : '') + '" data-id="' + project.id + '">' +
+        '<div class="tender-header"><div>' +
+            '<div class="tender-label">' + pubTypeBadge + '</div>' +
+            '<div class="tender-title">' + escapeHtml(project.title) + '</div>' +
+            '<div class="tender-preview">' + escapeHtml(project.description ? project.description.substring(0, 150) + '…' : '') + '</div>' +
+        '</div><div class="tender-badges">' +
+            (isProUser ? '<button class="favorite-btn ' + (isFavorite?'active':'') + '" onclick="event.stopPropagation();toggleFavorite(\'' + project.id + '\',this,' + projectDataStr + ')" title="Merkliste">' + (isFavorite?'★':'☆') + '</button>' : '') +
+            (isNew ? '<span class="badge badge-new">NEU</span>' : '') +
+            processTypeBadge +
+        '</div></div>' +
+        '<div class="tender-meta">' +
+            '<span class="tender-meta-item">' + (project.city || '') + (project.canton ? ' ' + project.canton : '') + '</span>' +
+            '<span class="tender-meta-item">' + escapeHtml(project.organization || '') + '</span>' +
+            '<span>' + (project.time_ago || '') + '</span>' +
+        '</div>' +
+        '<div class="tender-details">' +
+            '<p class="tender-description">' + escapeHtml(project.description) + '</p>' +
+            '<div class="tender-info-grid">' +
+                '<div><div class="tender-info-label">Projektnummer</div><div class="tender-info-value">' + (project.project_number || '–') + '</div></div>' +
+                '<div><div class="tender-info-label">Auftragsart</div><div class="tender-info-value">' + capitalize(project.order_type) + '</div></div>' +
+                '<div><div class="tender-info-label">Verfahren</div><div class="tender-info-value">' + capitalize(project.process_type) + '</div></div>' +
+                '<div><div class="tender-info-label">Frist</div><div class="tender-info-value">' + (formatDate(project.deadline) || '–') + '</div></div>' +
+            '</div>' +
+            '<a href="' + project.simap_url + '" target="_blank" rel="noopener noreferrer" class="simap-link" onclick="event.stopPropagation()">Auf simap.ch ansehen →</a>' +
+            '<div class="tender-disclaimer">Keine amtliche Veröffentlichung – <a href="' + project.simap_url + '" target="_blank" rel="noopener noreferrer">offizielle Daten auf simap.ch</a></div>' +
+        '</div></div>';
+}
 
-        if (filteredProjects.length === 0) {
-            container.innerHTML = '<div class="empty-state">Keine Ausschreibungen mit diesen Kriterien gefunden.</div>';
-            return;
-        }
+function getPubTypeBadge(pubType) {
+    var types = { 'tender':'Ausschreibung', 'award':'Zuschlag', 'cancel':'Abbruch', 'correction':'Korrektur', 'prior_information':'Vorinformation' };
+    return (types[pubType] || pubType || 'Auftrag').toUpperCase();
+}
 
-        container.innerHTML = filteredProjects.map(project => createTenderCard(project)).join('');
+function toggleCard(card) {
+    var wasExpanded = card.classList.contains('expanded');
+    document.querySelectorAll('.tender-card.expanded').forEach(function(c) { c.classList.remove('expanded'); });
+    if (!wasExpanded) card.classList.add('expanded');
+}
 
-        container.querySelectorAll('.tender-card').forEach(card => {
-            card.addEventListener('click', () => toggleCard(card));
-        });
-    }
+function isNewProject(dateStr) {
+    if (!dateStr) return false;
+    return (new Date() - new Date(dateStr)) / 3600000 < 24;
+}
 
-    function createTenderCard(project) {
-        const isNew = isNewProject(project.publication_date);
-        const processTypeBadge = getProcessTypeBadge(project.process_type);
-        const pubTypeBadge = getPubTypeBadge(project.pub_type);
-        const isFavorite = userFavorites.includes(project.id);
+function getProcessTypeBadge(type) {
+    var badges = { 'open':'<span class="badge badge-open">Offen</span>', 'selective':'<span class="badge badge-selective">Selektiv</span>', 'invitation':'<span class="badge badge-awarded">Einladung</span>' };
+    return badges[type] || '';
+}
 
-        const projectData = {
-            id: project.id,
-            title: project.title,
-            canton: project.canton,
-            description: project.description,
-            simap_url: project.simap_url
-        };
-        const projectDataStr = JSON.stringify(projectData).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+function formatDate(dateStr) {
+    if (!dateStr) return null;
+    try { return new Date(dateStr).toLocaleDateString('de-CH'); } catch(e) { return dateStr; }
+}
 
-        return `
-            <div class="tender-card ${isNew ? 'new' : ''}" data-id="${project.id}">
-                <div class="tender-header">
-                    <div>
-                        <div class="tender-label">${pubTypeBadge}</div>
-                        <div class="tender-title">${escapeHtml(project.title)}</div>
-                        <div class="tender-preview">${escapeHtml(project.description ? project.description.substring(0, 150) + '...' : '')}</div>
-                    </div>
-                    <div class="tender-badges">
-                        ${isProUser ? `
-                            <button class="favorite-btn ${isFavorite ? 'active' : ''}"
-                                    onclick="event.stopPropagation(); toggleFavorite('${project.id}', this, ${projectDataStr})"
-                                    title="${isFavorite ? 'Aus Merkliste entfernen' : 'Zur Merkliste hinzufügen'}">
-                                ${isFavorite ? '❤️' : '🤍'}
-                            </button>
-                        ` : ''}
-                        ${isNew ? '<span class="badge badge-new">NEU</span>' : ''}
-                        ${processTypeBadge}
-                    </div>
-                </div>
-                <div class="tender-meta">
-                    <span class="tender-meta-item">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        ${project.city || ''} ${project.canton ? ', ' + project.canton : ''}
-                    </span>
-                    <span class="tender-meta-item">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                        </svg>
-                        ${escapeHtml(project.organization)}
-                    </span>
-                    <span class="time-ago">${project.time_ago || ''}</span>
-                </div>
+function capitalize(str) { return str ? str.charAt(0).toUpperCase() + str.slice(1) : ''; }
 
-                <div class="tender-details">
-                    <p class="tender-description">${escapeHtml(project.description)}</p>
-
-                    <div class="tender-info-grid">
-                        <div class="tender-info-item">
-                            <span class="tender-info-label">Projektnummer</span>
-                            <span class="tender-info-value">${project.project_number || '-'}</span>
-                        </div>
-                        <div class="tender-info-item">
-                            <span class="tender-info-label">Auftragsart</span>
-                            <span class="tender-info-value">${capitalize(project.order_type) || '-'}</span>
-                        </div>
-                        <div class="tender-info-item">
-                            <span class="tender-info-label">Verfahren</span>
-                            <span class="tender-info-value">${capitalize(project.process_type) || '-'}</span>
-                        </div>
-                        <div class="tender-info-item">
-                            <span class="tender-info-label">Frist</span>
-                            <span class="tender-info-value">${formatDate(project.deadline) || '-'}</span>
-                        </div>
-                    </div>
-
-                    <a href="${project.simap_url}" target="_blank" rel="noopener noreferrer" class="simap-link" onclick="event.stopPropagation()">
-                        Auf simap.ch ansehen
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                        </svg>
-                    </a>
-
-                    <div class="tender-disclaimer">
-                        ⚠️ Dies ist keine amtliche Veröffentlichung.
-                        <a href="${project.simap_url}" target="_blank" rel="noopener noreferrer">Offizielle Daten auf simap.ch</a>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    function getPubTypeBadge(pubType) {
-        const types = {
-            'tender': '📋 AUSSCHREIBUNG',
-            'award': '🏆 ZUSCHLAG',
-            'cancel': '❌ ABBRUCH',
-            'correction': '✏️ KORREKTUR',
-            'prior_information': 'ℹ️ VORINFORMATION'
-        };
-        return types[pubType] || pubType?.toUpperCase() || 'AUFTRAG';
-    }
-
-    function toggleCard(card) {
-        const wasExpanded = card.classList.contains('expanded');
-        document.querySelectorAll('.tender-card.expanded').forEach(c => {
-            c.classList.remove('expanded');
-        });
-        if (!wasExpanded) {
-            card.classList.add('expanded');
-        }
-    }
-
-    function isNewProject(dateStr) {
-        if (!dateStr) return false;
-        const pubDate = new Date(dateStr);
-        const now = new Date();
-        const diffHours = (now - pubDate) / (1000 * 60 * 60);
-        return diffHours < 24;
-    }
-
-    function getProcessTypeBadge(type) {
-        const badges = {
-            'open': '<span class="badge badge-open">Open</span>',
-            'selective': '<span class="badge badge-selective">Selective</span>',
-            'invitation': '<span class="badge badge-awarded">Invitation</span>'
-        };
-        return badges[type] || '';
-    }
-
-    function formatDate(dateStr) {
-        if (!dateStr) return null;
-        try {
-            const date = new Date(dateStr);
-            return date.toLocaleDateString('de-CH');
-        } catch {
-            return dateStr;
-        }
-    }
-
-    function capitalize(str) {
-        if (!str) return '';
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+function escapeHtml(text) {
+    if (!text) return '';
+    var d = document.createElement('div'); d.textContent = text; return d.innerHTML;
+}
 </script>
 {% endblock %}

@@ -2,559 +2,381 @@
 {% block title %}SAJF Strategies – Schweizer Ausschreibungen, intelligenter entdecken{% endblock %}
 {% block extra_css %}
 <style>
-    /* Specific Landing Page Styles - enhancing the base style.css */
+    /* ── Hero ── */
     .hero {
-        position: relative;
-        padding: 6rem 2rem 5rem;
-        overflow: hidden;
-        min-height: 90vh;
-        display: flex;
-        align-items: center;
+        padding: var(--space-3xl) var(--space-lg) var(--space-2xl);
     }
-    
-    /* Background Glow Effects */
-    .hero::before, .hero::after {
-        content: '';
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(100px);
-        opacity: 0.15;
-        z-index: 0;
-        pointer-events: none;
-    }
-    
-    .hero::before {
-        top: -10%;
-        right: -5%;
-        width: 600px;
-        height: 600px;
-        background: var(--accent);
-    }
-    
-    .hero::after {
-        bottom: -20%;
-        left: -10%;
-        width: 500px;
-        height: 500px;
-        background: var(--accent-secondary);
-    }
-
     .hero-inner {
         max-width: 1200px;
         margin: 0 auto;
-        position: relative;
-        z-index: 2;
         display: grid;
         grid-template-columns: 1.1fr 0.9fr;
-        gap: 4rem;
-        align-items: center;
+        gap: var(--space-3xl);
+        align-items: start;
     }
-
     .hero-badge {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.4rem 1.25rem;
-        background: rgba(6, 182, 212, 0.1);
-        border: 1px solid rgba(6, 182, 212, 0.2);
-        border-radius: 100px;
-        font-size: 0.8125rem;
-        color: var(--accent);
+        gap: 6px;
+        padding: 4px 12px;
+        background: var(--accent-light);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-sm);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.72rem;
         font-weight: 600;
-        margin-bottom: 2rem;
-        backdrop-filter: blur(8px);
-        box-shadow: var(--shadow-glow);
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: var(--space-lg);
     }
-
     .hero-badge-dot {
-        width: 8px;
-        height: 8px;
-        background: var(--accent);
+        width: 6px; height: 6px;
+        background: var(--success);
         border-radius: 50%;
-        box-shadow: 0 0 10px var(--accent);
-        animation: pulse 2s infinite;
     }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.5; transform: scale(0.8); }
-    }
-
     .hero h1 {
-        font-size: 3.75rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 2.75rem;
         font-weight: 700;
-        line-height: 1.1;
-        letter-spacing: -0.04em;
-        margin-bottom: 1.5rem;
+        line-height: 1.15;
+        letter-spacing: -0.03em;
+        margin-bottom: var(--space-lg);
+        color: var(--text-primary);
     }
-
+    .hero h1 .accent { color: var(--accent); }
     .hero-desc {
-        font-size: 1.125rem;
+        font-size: 1rem;
         color: var(--text-secondary);
         line-height: 1.7;
-        margin-bottom: 2.5rem;
-        max-width: 540px;
+        margin-bottom: var(--space-xl);
+        max-width: 520px;
     }
-
     .hero-actions {
         display: flex;
-        gap: 1rem;
+        gap: var(--space-sm);
         flex-wrap: wrap;
     }
+    .hero-actions .btn { padding: 10px 20px; font-size: 0.88rem; }
 
-    /* Cards */
-    .hero-card {
-        padding: 2rem;
-        border-radius: 24px;
-        position: relative;
-        box-shadow: var(--shadow-lg);
+    /* ── Hero Data Panel ── */
+    .hero-data {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
     }
-
-    .hero-card-header {
+    .hero-data-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
     }
-
-    .hero-card-title {
-        font-size: 0.875rem;
-        color: var(--text-muted);
+    .hero-data-title {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68rem;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.15em;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
     }
-
+    .hero-data-live {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.65rem;
+        color: var(--success);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .hero-data-live::before {
+        content: '';
+        width: 5px; height: 5px;
+        border-radius: 50%;
+        background: var(--success);
+    }
     .hero-tender {
-        padding: 1rem;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        margin-bottom: 0.75rem;
-        transition: all var(--transition-fast);
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-light);
+        transition: background 150ms ease;
         cursor: pointer;
     }
-
-    .hero-tender:hover {
-        background: rgba(255, 255, 255, 0.04);
-        border-color: rgba(6, 182, 212, 0.3);
-        transform: translateX(4px);
-    }
-
+    .hero-tender:last-child { border-bottom: none; }
+    .hero-tender:hover { background: var(--surface-hover); }
     .hero-tender-title {
-        font-size: 0.95rem;
-        color: var(--text-primary);
+        font-size: 0.84rem;
         font-weight: 600;
-        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-
     .hero-tender-meta {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: var(--text-secondary);
         display: flex;
-        gap: 0.75rem;
+        gap: 8px;
         align-items: center;
     }
-
     .hero-tender-tag {
-        padding: 0.2rem 0.6rem;
-        background: rgba(6, 182, 212, 0.15);
+        font-family: 'JetBrains Mono', monospace;
+        padding: 1px 6px;
+        background: var(--accent-light);
         color: var(--accent);
-        border-radius: 6px;
+        border-radius: var(--radius-sm);
         font-weight: 600;
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         text-transform: uppercase;
+        letter-spacing: 0.02em;
     }
-
     .hero-tender-time {
-        color: var(--success) !important;
-        font-weight: 600;
+        font-family: 'JetBrains Mono', monospace;
+        color: var(--text-muted);
+        font-size: 0.7rem;
     }
-
-    /* Floating Elements */
-    .hero-visual {
-        position: relative;
-        perspective: 1000px;
+    .hero-stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        border-top: 1px solid var(--border);
     }
-
-    .hero-float {
-        position: absolute;
-        z-index: 10;
-        animation: float 6s ease-in-out infinite;
-        padding: 1rem 1.5rem;
-        border-radius: 16px;
-        border: none !important;
-        box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 0 18px 6px rgba(255,255,255,0.05), 0 8px 24px rgba(0,0,0,0.35);
+    .hero-stat {
+        padding: 12px 16px;
+        text-align: center;
+        border-right: 1px solid var(--border-light);
     }
-
-    html[data-theme="light"] .hero-float {
-        box-shadow: 0 0 0 1px rgba(100,150,190,0.18), 0 0 14px 6px rgba(140,180,210,0.22), 0 8px 20px rgba(0,0,0,0.07);
-    }
-
-    .hero-float.top-left {
-        top: -4rem;
-        left: -2rem;
-        animation-delay: -2s;
-    }
-
-    .hero-float.bottom-right {
-        bottom: -2rem;
-        right: -2rem;
-        animation-delay: -4s;
-    }
-
-    @keyframes float {
-        0%, 100% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-15px) rotate(2deg); }
-    }
-
-    .hero-float-val {
-        font-size: 2rem;
+    .hero-stat:last-child { border-right: none; }
+    .hero-stat-val {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.25rem;
         font-weight: 700;
         color: var(--text-primary);
-        font-family: 'Space Mono', monospace;
-        line-height: 1;
-        text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
     }
-
-    .hero-float-lbl {
-        font-size: 0.7rem;
-        color: var(--text-muted);
+    .hero-stat-lbl {
+        font-size: 0.65rem;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-top: 0.4rem;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
         font-weight: 600;
+        margin-top: 2px;
     }
 
-    /* Trust Section */
+    /* ── Trust Bar ── */
     .trust-bar {
-        padding: 3rem 2rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.01));
+        padding: var(--space-lg) var(--space-lg);
+        border-bottom: 1px solid var(--border);
     }
-
     .trust-inner {
-        max-width: 1000px;
+        max-width: 900px;
         margin: 0 auto;
         display: flex;
         justify-content: center;
-        gap: 5rem;
+        gap: var(--space-2xl);
         align-items: center;
     }
-
     .trust-item {
         display: flex;
         align-items: center;
-        gap: 1rem;
-        opacity: 0.8;
-        transition: opacity 0.3s;
+        gap: 10px;
     }
-
-    .trust-item:hover {
-        opacity: 1;
-    }
-
-    .trust-icon {
-        width: 44px;
-        height: 44px;
-        background: rgba(6, 182, 212, 0.1);
-        border: 1px solid rgba(6, 182, 212, 0.2);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 0 15px rgba(6, 182, 212, 0.1);
-    }
-
-    .trust-text {
-        font-size: 0.875rem;
-    }
-
+    .trust-item svg { color: var(--text-muted); flex-shrink: 0; }
+    .trust-text { font-size: 0.82rem; }
     .trust-text strong {
         display: block;
         color: var(--text-primary);
-        font-size: 1rem;
-        margin-bottom: 0.1rem;
+        font-size: 0.84rem;
     }
+    .trust-text span { color: var(--text-muted); font-size: 0.75rem; }
 
-    /* Sections Shared */
-    .section-header {
-        text-align: center;
-        max-width: 650px;
-        margin: 0 auto 4rem;
-    }
-
-    .section-label {
-        font-size: 0.875rem;
-        font-weight: 700;
-        color: var(--accent);
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
-        margin-bottom: 1rem;
-    }
-
-    .section-header h2 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        letter-spacing: -0.03em;
-        margin-bottom: 1rem;
-        line-height: 1.2;
-    }
-
-    .section-header p {
-        font-size: 1.125rem;
-        color: var(--text-secondary);
-        line-height: 1.8;
-    }
-
-    /* Features */
-    .features {
-        padding: 6rem 2rem;
-        position: relative;
-    }
-
+    /* ── Features ── */
+    .features { padding: var(--space-3xl) var(--space-lg); }
     .features-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 1.5rem;
+        gap: var(--space-md);
         max-width: 1200px;
         margin: 0 auto;
     }
-
     .feature-card {
-        padding: 2rem;
-        border-radius: 20px;
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        position: relative;
-        overflow: hidden;
-        z-index: 1;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-lg);
+        transition: border-color 150ms ease;
     }
-    
-    /* Magical hover border effect */
-    .feature-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: 20px;
-        padding: 2px; /* Border thickness */
-        background: linear-gradient(135deg, rgba(6, 182, 212, 0.5), rgba(59, 130, 246, 0.5));
-        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        opacity: 0;
-        transition: opacity 0.4s ease;
-        z-index: -1;
-    }
-
-    .feature-card:hover {
-        transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.03);
-    }
-    
-    .feature-card:hover::before {
-        opacity: 1;
-    }
-
+    .feature-card:hover { border-color: var(--text-muted); }
     .feature-icon {
-        width: 52px;
-        height: 52px;
-        background: linear-gradient(135deg, rgba(6,182,212,0.1) 0%, rgba(59,130,246,0.1) 100%);
-        border: 1px solid rgba(6, 182, 212, 0.2);
-        border-radius: 14px;
+        width: 40px; height: 40px;
+        background: var(--accent-light);
+        border-radius: var(--radius-sm);
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 4px 20px rgba(6, 182, 212, 0.1);
+        margin-bottom: var(--space-md);
     }
-
     .feature-card h3 {
-        font-size: 1.125rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: var(--text-primary);
-        margin-bottom: 0.75rem;
+        margin-bottom: 6px;
     }
-
     .feature-card p {
-        font-size: 0.95rem;
+        font-size: 0.84rem;
         color: var(--text-secondary);
         line-height: 1.6;
     }
 
-    /* Steps */
-    .how-section {
-        padding: 6rem 2rem;
-        background: var(--surface);
-        border-top: 1px solid rgba(255, 255, 255, 0.02);
+    /* ── Stats ── */
+    .stats-section {
+        padding: var(--space-2xl) var(--space-lg);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+    }
+    .stats-grid {
+        max-width: 900px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--space-md);
+    }
+    .stat-card {
+        text-align: center;
+        padding: var(--space-md);
+    }
+    .stat-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 2.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+    }
+    .stat-label {
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+        margin-top: 4px;
     }
 
+    /* ── How It Works ── */
+    .how-section {
+        padding: var(--space-3xl) var(--space-lg);
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+    }
     .steps-container {
         max-width: 1000px;
         margin: 0 auto;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 3rem;
+        gap: var(--space-xl);
         position: relative;
     }
-
     .steps-container::after {
         content: '';
         position: absolute;
-        top: 45px;
-        left: 15%;
-        right: 15%;
-        height: 2px;
-        background: linear-gradient(90deg, rgba(6,182,212,0.1), rgba(6,182,212,0.5), rgba(6,182,212,0.1));
+        top: 28px;
+        left: 16%;
+        right: 16%;
+        height: 1px;
+        background: var(--border);
         z-index: 0;
     }
-
     .step-card {
         text-align: center;
         position: relative;
         z-index: 1;
     }
-
     .step-number {
-        width: 90px;
-        height: 90px;
-        border-radius: 50%;
-        background: var(--surface);
-        border: 2px solid var(--border);
-        box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 0 8px var(--surface);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.5rem;
+        font-weight: 700;
+        width: 56px; height: 56px;
+        border-radius: var(--radius);
+        background: var(--background);
+        border: 1px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 1.5rem;
+        margin: 0 auto var(--space-md);
         color: var(--text-primary);
-        font-size: 1.5rem;
-        font-weight: 700;
-        transition: all 0.3s ease;
+        transition: border-color 150ms ease, color 150ms ease;
     }
-    
     .step-card:hover .step-number {
         border-color: var(--accent);
         color: var(--accent);
-        box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.2), 0 0 0 8px var(--surface), 0 0 30px rgba(6, 182, 212, 0.3);
     }
-
     .step-card h3 {
-        font-size: 1.25rem;
+        font-size: 1rem;
         font-weight: 600;
-        margin-bottom: 0.75rem;
+        margin-bottom: 6px;
+    }
+    .step-card p {
+        font-size: 0.84rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
     }
 
-    /* Stats */
-    .stats-section {
-        padding: 5rem 2rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.05);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        position: relative;
-    }
-
-    .stats-grid {
-        max-width: 1000px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 2rem;
+    /* ── Section Header ── */
+    .section-header {
         text-align: center;
-    }
-
-    .stat-value {
-        font-size: 3rem;
-        font-weight: 700;
-        line-height: 1.1;
-        font-family: 'Space Mono', monospace;
-    }
-
-    .stat-label {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
-        font-weight: 600;
-        margin-top: 0.5rem;
-    }
-
-    /* CTA */
-    .cta-section {
-        padding: 8rem 2rem;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .cta-section::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 800px;
-        height: 400px;
-        background: radial-gradient(ellipse at center, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
-        pointer-events: none;
-    }
-
-    .cta-inner {
         max-width: 600px;
+        margin: 0 auto var(--space-2xl);
+    }
+    .section-header h2 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+        margin-bottom: var(--space-sm);
+    }
+    .section-header p {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+        padding: var(--space-3xl) var(--space-lg);
+        text-align: center;
+        border-top: 1px solid var(--border);
+    }
+    .cta-inner {
+        max-width: 500px;
         margin: 0 auto;
-        position: relative;
-        z-index: 2;
     }
-
     .cta-inner h2 {
-        font-size: 2.75rem;
-        margin-bottom: 1rem;
-        letter-spacing: -0.03em;
+        font-size: 1.75rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: var(--space-sm);
+    }
+    .cta-inner p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: var(--space-lg);
     }
 
+    /* ── Responsive ── */
     @media (max-width: 1024px) {
-        .hero-inner { grid-template-columns: 1fr; text-align: center; }
-        .hero-visual { display: none; }
-        .hero h1 { font-size: 3rem; }
-        .hero-desc { margin: 0 auto 2.5rem; }
-        .hero-actions { justify-content: center; }
+        .hero-inner { grid-template-columns: 1fr; gap: var(--space-xl); }
+        .hero h1 { font-size: 2.25rem; }
         .features-grid { grid-template-columns: repeat(2, 1fr); }
     }
-
     @media (max-width: 768px) {
-        .hero { padding: 4rem 1.5rem 3rem; min-height: auto; }
-        .hero h1 { font-size: 2.5rem; }
-        .hero-actions { flex-wrap: nowrap; justify-content: center; gap: 0.75rem; }
-        .hero-actions .btn { font-size: 0.875rem; padding: 0.7rem 1.1rem; white-space: nowrap; }
+        .hero { padding: var(--space-2xl) var(--space-md); }
+        .hero h1 { font-size: 1.75rem; }
         .features-grid, .steps-container { grid-template-columns: 1fr; }
         .steps-container::after { display: none; }
-        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 3rem; }
-        .trust-inner { flex-direction: column; gap: 2rem; }
-    }
-
-    /* ─── Light-mode overrides ─── */
-    html[data-theme="light"] .hero-float-val {
-        text-shadow: 0 1px 4px rgba(0,0,0,0.12);
-    }
-    html[data-theme="light"] .hero-card-header {
-        border-bottom-color: rgba(0,0,0,0.07);
-    }
-    html[data-theme="light"] .hero-tender {
-        background: rgba(0,0,0,0.03);
-        border-color: rgba(0,0,0,0.07);
-    }
-    html[data-theme="light"] .hero-tender:hover {
-        background: rgba(0,0,0,0.05);
-        border-color: rgba(6,182,212,0.4);
-    }
-    html[data-theme="light"] .trust-bar {
-        border-bottom-color: rgba(0,0,0,0.07);
-    }
-    html[data-theme="light"] .stats-section {
-        border-color: rgba(0,0,0,0.07);
-    }
-    html[data-theme="light"] .how-section {
-        border-top-color: rgba(0,0,0,0.05);
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        .trust-inner { flex-direction: column; gap: var(--space-md); }
+        .hero-stats-row { grid-template-columns: 1fr; }
+        .hero-stat { border-right: none; border-bottom: 1px solid var(--border-light); }
+        .hero-stat:last-child { border-bottom: none; }
     }
 </style>
 {% endblock %}
@@ -567,53 +389,58 @@
                 <span class="hero-badge-dot"></span>
                 <span data-i18n="hero_badge">Täglich aktualisiert</span>
             </div>
-            <h1><span data-i18n="hero_title">Schweizer Ausschreibungen</span> <span class="gradient-text" data-i18n="hero_title_accent">intelligenter entdecken.</span></h1>
+            <h1><span data-i18n="hero_title">Schweizer Ausschreibungen</span> <span class="accent" data-i18n="hero_title_accent">intelligenter entdecken.</span></h1>
             <p class="hero-desc" data-i18n="hero_desc">Alle öffentlichen Ausschreibungen aus dem Schweizer Beschaffungswesen — direkt von simap.ch, stündlich aktualisiert, mit KI-gestützter Relevanzanalyse für Ihr Unternehmen.</p>
             <div class="hero-actions">
-                <a href="/register" class="btn btn-primary" style="font-size: 1rem; padding: 0.8rem 1.75rem;">
+                <a href="/register" class="btn btn-primary">
                     <span data-i18n="hero_cta_primary">Kostenlos starten</span>
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                 </a>
-                <a href="/login" class="btn btn-ghost" style="font-size: 1rem; padding: 0.8rem 1.75rem; border-color: rgba(255,255,255,0.2);" data-i18n="hero_cta_secondary">Anmelden</a>
+                <a href="/login" class="btn btn-ghost" data-i18n="hero_cta_secondary">Anmelden</a>
             </div>
         </div>
-        <div class="hero-visual">
-            <div class="hero-float glass-panel top-left">
-                <div class="hero-float-val" id="float-total">–</div>
-                <div class="hero-float-lbl">Ausschreibungen</div>
+        <div class="hero-data">
+            <div class="hero-data-header">
+                <span class="hero-data-title">Neueste Ausschreibungen</span>
+                <span class="hero-data-live">LIVE</span>
             </div>
-            <div class="hero-card glass-panel">
-                <div class="hero-card-header">
-                    <span class="hero-card-title">Neueste Ausschreibungen</span>
-                </div>
-                <div class="hero-tender">
-                    <div class="hero-tender-title">Sanierung Schulanlage Muster</div>
-                    <div class="hero-tender-meta">
-                        <span class="hero-tender-tag">Bauauftrag</span>
-                        <span>Kanton Zürich</span>
-                        <span class="hero-tender-time">vor 2 Std.</span>
-                    </div>
-                </div>
-                <div class="hero-tender">
-                    <div class="hero-tender-title">IT-Dienstleistungen Bund 2025</div>
-                    <div class="hero-tender-meta">
-                        <span class="hero-tender-tag">Dienstleistung</span>
-                        <span>Bund</span>
-                        <span class="hero-tender-time">vor 5 Std.</span>
-                    </div>
-                </div>
-                <div class="hero-tender">
-                    <div class="hero-tender-title">Lieferung medizinischer Geräte</div>
-                    <div class="hero-tender-meta">
-                        <span class="hero-tender-tag">Lieferauftrag</span>
-                        <span>Kanton Bern</span>
-                        <span class="hero-tender-time">vor 1 Tag</span>
-                    </div>
+            <div class="hero-tender">
+                <div class="hero-tender-title">Sanierung Schulanlage Muster</div>
+                <div class="hero-tender-meta">
+                    <span class="hero-tender-tag">Bauauftrag</span>
+                    <span>Kanton Zürich</span>
+                    <span class="hero-tender-time">2h</span>
                 </div>
             </div>
-            <div class="hero-float glass-panel bottom-right">
-                <div class="hero-float-val">26</div>
-                <div class="hero-float-lbl">Kantone</div>
+            <div class="hero-tender">
+                <div class="hero-tender-title">IT-Dienstleistungen Bund 2025</div>
+                <div class="hero-tender-meta">
+                    <span class="hero-tender-tag">Dienstleistung</span>
+                    <span>Bund</span>
+                    <span class="hero-tender-time">5h</span>
+                </div>
+            </div>
+            <div class="hero-tender">
+                <div class="hero-tender-title">Lieferung medizinischer Geräte</div>
+                <div class="hero-tender-meta">
+                    <span class="hero-tender-tag">Lieferauftrag</span>
+                    <span>Kanton Bern</span>
+                    <span class="hero-tender-time">1d</span>
+                </div>
+            </div>
+            <div class="hero-stats-row">
+                <div class="hero-stat">
+                    <div class="hero-stat-val" id="float-total">--</div>
+                    <div class="hero-stat-lbl">Total</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-val">26</div>
+                    <div class="hero-stat-lbl">Kantone</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-val" id="hero-today">--</div>
+                    <div class="hero-stat-lbl">Heute</div>
+                </div>
             </div>
         </div>
     </div>
@@ -622,27 +449,24 @@
 <section class="trust-bar">
     <div class="trust-inner">
         <div class="trust-item">
-            <div class="trust-icon">
-                <svg width="24" height="24" fill="none" stroke="currentColor" class="gradient-text" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </div>
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             <div class="trust-text">
-                <strong data-i18n="trust_official">Offizielle Daten</strong><span data-i18n="trust_official_sub">Basierend auf simap.ch</span>
+                <strong data-i18n="trust_official">Offizielle Daten</strong>
+                <span data-i18n="trust_official_sub">Basierend auf simap.ch</span>
             </div>
         </div>
         <div class="trust-item">
-            <div class="trust-icon">
-                <svg width="24" height="24" fill="none" stroke="currentColor" class="gradient-text" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-            </div>
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
             <div class="trust-text">
-                <strong data-i18n="trust_privacy">Datenschutzkonform</strong><span data-i18n="trust_privacy_sub">Schweizer Hosting</span>
+                <strong data-i18n="trust_privacy">Datenschutzkonform</strong>
+                <span data-i18n="trust_privacy_sub">Schweizer Hosting</span>
             </div>
         </div>
         <div class="trust-item">
-            <div class="trust-icon">
-                <svg width="24" height="24" fill="none" stroke="currentColor" class="gradient-text" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            </div>
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             <div class="trust-text">
-                <strong data-i18n="trust_realtime">Echtzeit-Updates</strong><span data-i18n="trust_realtime_sub">Tägliche Synchronisation</span>
+                <strong data-i18n="trust_realtime">Echtzeit-Updates</strong>
+                <span data-i18n="trust_realtime_sub">Tägliche Synchronisation</span>
             </div>
         </div>
     </div>
@@ -655,44 +479,44 @@
         <p data-i18n="feat_sub">Eine Plattform, die den Zugang zu Schweizer Ausschreibungen in ein unvergleichliches Erlebnis verwandelt.</p>
     </div>
     <div class="features-grid">
-        <div class="feature-card glass-panel">
+        <div class="feature-card">
             <div class="feature-icon">
-                <svg width="24" height="24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <svg width="20" height="20" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
             <h3 data-i18n="feat1_title">Intelligente Suche</h3>
             <p data-i18n="feat1_desc">Volltextsuche über alle Ausschreibungen mit Filtern nach Kanton, Auftragsart, Verfahrenstyp und mehr.</p>
         </div>
-        <div class="feature-card glass-panel">
+        <div class="feature-card">
             <div class="feature-icon">
-                <svg width="24" height="24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L12 22l-.75-12.07A4.001 4.001 0 0 1 12 2z"/><circle cx="12" cy="19" r="2"/></svg>
+                <svg width="20" height="20" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             </div>
             <h3 data-i18n="feat2_title">KI-Relevanzanalyse</h3>
             <p data-i18n="feat2_desc">Unser ML-Modell bewertet automatisch, welche Ausschreibungen für Ihr Unternehmen relevant sind.</p>
         </div>
-        <div class="feature-card glass-panel">
+        <div class="feature-card">
             <div class="feature-icon">
-                <svg width="24" height="24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <svg width="20" height="20" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
             <h3 data-i18n="feat3_title">Echtzeit-Updates</h3>
             <p data-i18n="feat3_desc">Neue Ausschreibungen werden sofort an den Client gepusht – Sie sehen immer sofort was aktuell ist.</p>
         </div>
-        <div class="feature-card glass-panel">
+        <div class="feature-card">
             <div class="feature-icon">
-                <svg width="24" height="24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <svg width="20" height="20" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             </div>
             <h3 data-i18n="feat4_title">Merkliste</h3>
             <p data-i18n="feat4_desc">Speichern Sie interessante Ausschreibungen und behalten Sie den Überblick über alle Termine und Fristen.</p>
         </div>
-        <div class="feature-card glass-panel">
+        <div class="feature-card">
             <div class="feature-icon">
-                <svg width="24" height="24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                <svg width="20" height="20" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             </div>
             <h3 data-i18n="feat5_title">Modernes Dashboard</h3>
             <p data-i18n="feat5_desc">Ihr persönliches Cockpit mit interaktiven Statistiken, ML-Empfehlungen und tiefgreifender Marktübersicht.</p>
         </div>
-        <div class="feature-card glass-panel">
+        <div class="feature-card">
             <div class="feature-icon">
-                <svg width="24" height="24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <svg width="20" height="20" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
             </div>
             <h3 data-i18n="feat6_title">Mehrsprachig & Adaptiv</h3>
             <p data-i18n="feat6_desc">Ausschreibungen nahtlos in Deutsch, Französisch, Italienisch und Englisch durchsuchbar.</p>
@@ -702,20 +526,20 @@
 
 <section class="stats-section">
     <div class="stats-grid">
-        <div>
-            <div class="stat-value gradient-text" id="stat-total">–</div>
+        <div class="stat-card">
+            <div class="stat-value" id="stat-total">--</div>
             <div class="stat-label" data-i18n="stat_tenders">Ausschreibungen</div>
         </div>
-        <div>
-            <div class="stat-value gradient-text">26</div>
+        <div class="stat-card">
+            <div class="stat-value">26</div>
             <div class="stat-label" data-i18n="stat_cantons">Kantone</div>
         </div>
-        <div>
-            <div class="stat-value gradient-text" id="stat-today">–</div>
+        <div class="stat-card">
+            <div class="stat-value" id="stat-today">--</div>
             <div class="stat-label" data-i18n="stat_today">Neue heute</div>
         </div>
-        <div>
-            <div class="stat-value gradient-text">100%</div>
+        <div class="stat-card">
+            <div class="stat-value">100%</div>
             <div class="stat-label" data-i18n="stat_transparency">Transparenz</div>
         </div>
     </div>
@@ -728,23 +552,17 @@
     </div>
     <div class="steps-container">
         <div class="step-card">
-            <div class="step-number">
-                <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-            </div>
+            <div class="step-number">01</div>
             <h3 data-i18n="step1_title">1. Profil erstellen</h3>
             <p data-i18n="step1_desc">Registrieren Sie sich kostenlos und hinterlegen Sie Ihr Unternehmensprofil — Branche, Kanton, Auftragstypen.</p>
         </div>
         <div class="step-card">
-            <div class="step-number">
-                <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21.17 8H12V2.83A10 10 0 0 1 21.17 8z"/></svg>
-            </div>
+            <div class="step-number">02</div>
             <h3 data-i18n="step2_title">2. KI findet passende Ausschreibungen</h3>
             <p data-i18n="step2_desc">Unser ML-Modell analysiert Ihr Profil und liefert automatisch die relevantesten Aufträge — ohne manuelles Suchen.</p>
         </div>
         <div class="step-card">
-            <div class="step-number">
-                <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            </div>
+            <div class="step-number">03</div>
             <h3 data-i18n="step3_title">3. Direkt bewerben</h3>
             <p data-i18n="step3_desc">Mit einem Klick zur offiziellen Ausschreibung auf simap.ch — Unterlagen herunterladen und Offerte einreichen.</p>
         </div>
@@ -755,13 +573,14 @@
     <div class="cta-inner">
         <h2 data-i18n="cta_title">Bereit für den nächsten Schritt?</h2>
         <p data-i18n="cta_desc">Registrieren Sie sich kostenlos und entdecken Sie täglich neue Geschäftschancen für Ihr Unternehmen. Keine Kreditkarte erforderlich.</p>
-        <a href="/register" class="btn btn-primary" style="font-size: 1rem; padding: 1rem 2rem; margin-top: 1rem;">
+        <a href="/register" class="btn btn-primary btn-lg">
             <span data-i18n="cta_btn">Kostenlos registrieren</span>
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-left: 0.5rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
         </a>
     </div>
 </section>
 {% endblock %}
+
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -771,6 +590,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('stat-today').textContent = s.today || 0;
         var fl = document.getElementById('float-total');
         if (fl) fl.textContent = t.toLocaleString('de-CH');
+        var ht = document.getElementById('hero-today');
+        if (ht) ht.textContent = s.today || 0;
     }).catch(function(e) { console.error(e); });
 });
 </script>

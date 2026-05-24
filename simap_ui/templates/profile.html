@@ -3,275 +3,111 @@
 
 {% block extra_css %}
 <style>
-    .pf-bg-blobs { position: fixed; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; }
-    .pf-blob { position: absolute; filter: blur(120px); opacity: 0.22; border-radius: 50%; }
-    .pf-blob-1 { top: -10%; left: -5%; width: 45vw; height: 45vw; background: rgba(37, 99, 235, 0.35); }
-    .pf-blob-2 { bottom: -10%; right: -5%; width: 40vw; height: 40vw; background: rgba(6, 182, 212, 0.25); }
-
     .pf-wrapper {
-        min-height: calc(100vh - 72px);
-        padding: 3.5rem 1.5rem 4rem;
-        position: relative;
-        z-index: 1;
+        min-height: calc(100vh - 56px);
+        padding: var(--space-2xl) var(--space-lg) var(--space-3xl);
     }
     .pf-container { max-width: 860px; margin: 0 auto; }
 
-    .pf-head { margin-bottom: 2rem; }
-    .pf-eyebrow {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: var(--accent, #06b6d4);
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
+    .pf-head { margin-bottom: var(--space-xl); }
     .pf-head h1 {
-        font-size: 2rem;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        color: #fff;
-        margin: 0 0 0.25rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.5rem; font-weight: 700;
+        color: var(--text-primary); letter-spacing: -0.02em;
+        margin: 0 0 4px;
     }
-    .pf-head p {
-        color: #a1a1aa;
-        font-size: 0.95rem;
-        margin: 0;
-    }
+    .pf-head p { color: var(--text-secondary); font-size: 0.88rem; margin: 0; }
 
     .pf-card {
-        background: rgba(18, 18, 20, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 20px;
-        padding: 2rem 2rem 1.75rem;
-        backdrop-filter: blur(20px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-        margin-bottom: 1.5rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-md);
     }
 
     .pf-section-title {
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: var(--accent, #06b6d4);
-        margin: 0 0 1.1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.65rem; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.1em;
+        color: var(--text-muted);
+        margin: 0 0 var(--space-md);
+        padding-bottom: var(--space-xs);
+        border-bottom: 1px solid var(--border);
     }
 
-    .pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.25rem; }
+    .pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
     .pf-grid-full { grid-column: 1 / -1; }
     @media (max-width: 640px) { .pf-grid { grid-template-columns: 1fr; } }
 
-    .pf-field { display: flex; flex-direction: column; gap: 0.4rem; }
+    .pf-field { display: flex; flex-direction: column; gap: 4px; }
     .pf-label {
-        font-size: 0.8125rem;
-        font-weight: 600;
-        color: #e4e4e7;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68rem; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.06em;
+        color: var(--text-primary);
     }
-    .pf-hint {
-        font-size: 0.75rem;
-        color: #71717a;
-    }
+    .pf-hint { font-size: 0.72rem; color: var(--text-muted); }
     .pf-input, .pf-select {
-        width: 100%;
-        padding: 0.75rem 0.9rem;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 10px;
-        background: rgba(0, 0, 0, 0.25);
-        color: #fff;
-        font-size: 0.9rem;
-        font-family: inherit;
-        transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+        width: 100%; padding: 10px 12px;
+        border: 1px solid var(--border); border-radius: var(--radius-sm);
+        background: var(--background); color: var(--text-primary);
+        font-size: 0.88rem; font-family: inherit;
+        transition: border-color 150ms ease;
     }
-    .pf-input:focus, .pf-select:focus {
-        outline: none;
-        border-color: var(--accent, #06b6d4);
-        background: rgba(0, 0, 0, 0.4);
-        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
-    }
-    .pf-input[readonly] {
-        opacity: 0.7;
-        cursor: not-allowed;
-        background: rgba(0, 0, 0, 0.15);
-    }
-    .pf-select option { background: #18181b; color: #fff; }
+    .pf-input:focus, .pf-select:focus { outline: none; border-color: var(--accent); }
+    .pf-input[readonly] { opacity: 0.6; cursor: not-allowed; }
+    .pf-select option { background: var(--surface); color: var(--text-primary); }
 
     .pf-range-row {
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
-        gap: 0.6rem;
-        align-items: center;
+        display: grid; grid-template-columns: 1fr auto 1fr;
+        gap: 8px; align-items: center;
     }
-    .pf-range-dash {
-        color: #71717a;
-        font-weight: 600;
-        padding-top: 0.2rem;
-    }
+    .pf-range-dash { color: var(--text-muted); font-weight: 600; }
 
     .pf-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 0.75rem;
-        margin-top: 2rem;
-    }
-    .pf-btn {
-        padding: 0.8rem 1.6rem;
-        border-radius: 11px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        font-family: inherit;
-        cursor: pointer;
-        border: none;
-        transition: transform 0.2s, box-shadow 0.2s, background 0.18s, color 0.18s, border-color 0.18s;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    .pf-btn-primary {
-        background: linear-gradient(135deg, var(--accent, #06b6d4), #3b82f6);
-        color: #fff;
-        box-shadow: 0 8px 18px rgba(6, 182, 212, 0.25);
-    }
-    .pf-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(6, 182, 212, 0.35); }
-    .pf-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
-    .pf-btn-ghost {
-        background: rgba(255, 255, 255, 0.03);
-        color: #e4e4e7;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .pf-btn-ghost:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.2);
-        color: #fff;
+        display: flex; justify-content: flex-end;
+        gap: 8px; margin-top: var(--space-lg);
     }
 
     .pf-link-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.85rem 1rem;
-        background: rgba(0, 0, 0, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        margin-top: 0.75rem;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 10px 12px; background: var(--background);
+        border: 1px solid var(--border); border-radius: var(--radius-sm);
+        margin-top: var(--space-sm);
     }
-    .pf-link-row a {
-        color: var(--accent, #06b6d4);
-        font-weight: 600;
-        font-size: 0.875rem;
-        text-decoration: none;
-    }
+    .pf-link-row a { color: var(--accent); font-weight: 600; font-size: 0.82rem; text-decoration: none; }
     .pf-link-row a:hover { text-decoration: underline; }
-    .pf-link-label {
-        color: #a1a1aa;
-        font-size: 0.875rem;
-    }
+    .pf-link-label { color: var(--text-secondary); font-size: 0.82rem; }
 
-    /* ── Toast ── */
     .pf-toast {
-        position: fixed;
-        bottom: 1.75rem;
-        left: 50%;
-        transform: translateX(-50%) translateY(30px);
-        padding: 0.8rem 1.3rem;
-        background: rgba(18, 18, 20, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 12px;
-        color: #fff;
-        font-size: 0.9rem;
-        box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5);
-        opacity: 0;
-        transition: opacity 0.22s ease, transform 0.22s ease;
-        pointer-events: none;
-        z-index: 999;
-        backdrop-filter: blur(12px);
+        position: fixed; bottom: var(--space-lg); left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        padding: 10px 16px; background: var(--surface);
+        border: 1px solid var(--border); border-radius: var(--radius-sm);
+        color: var(--text-primary); font-size: 0.84rem;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        opacity: 0; transition: opacity 200ms ease, transform 200ms ease;
+        pointer-events: none; z-index: 999;
     }
-    .pf-toast.show {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-    .pf-toast.success { border-color: rgba(16, 185, 129, 0.45); }
-    .pf-toast.error   { border-color: rgba(248, 113, 113, 0.45); }
-
-    /* ─── Light-mode overrides ─── */
-    html[data-theme="light"] .pf-head h1 { color: #0f172a; }
-    html[data-theme="light"] .pf-head p  { color: #475569; }
-
-    html[data-theme="light"] .pf-card {
-        background: #ffffff;
-        border-color: #b8cad9;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9);
-    }
-    html[data-theme="light"] .pf-section-title {
-        border-bottom-color: #b8cad9;
-    }
-    html[data-theme="light"] .pf-label { color: #1e293b; }
-    html[data-theme="light"] .pf-hint  { color: #64748b; }
-
-    html[data-theme="light"] .pf-input,
-    html[data-theme="light"] .pf-select {
-        background: #f8fafc;
-        border-color: #a8bccf;
-        color: #0f172a;
-    }
-    html[data-theme="light"] .pf-input:focus,
-    html[data-theme="light"] .pf-select:focus {
-        background: #ffffff;
-        border-color: var(--accent, #06b6d4);
-        box-shadow: 0 0 0 3px rgba(6,182,212,0.15);
-    }
-    html[data-theme="light"] .pf-input[readonly] {
-        background: #f1f5f9;
-        color: #64748b;
-    }
-    html[data-theme="light"] .pf-select option { background: #fff; color: #0f172a; }
-    html[data-theme="light"] .pf-range-dash { color: #94a3b8; }
-
-    html[data-theme="light"] .pf-btn-ghost {
-        background: rgba(0,0,0,0.03);
-        color: #334155;
-        border-color: #a8bccf;
-    }
-    html[data-theme="light"] .pf-btn-ghost:hover {
-        background: rgba(0,0,0,0.07);
-        border-color: #94a3b8;
-        color: #0f172a;
-    }
-
-    html[data-theme="light"] .pf-link-row {
-        background: #f8fafc;
-        border-color: #b8cad9;
-    }
-    html[data-theme="light"] .pf-link-label { color: #64748b; }
-
-    html[data-theme="light"] .pf-toast {
-        background: rgba(255,255,255,0.97);
-        border-color: #b8cad9;
-        color: #0f172a;
-        box-shadow: 0 14px 32px rgba(0,0,0,0.12);
-    }
+    .pf-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .pf-toast.success { border-color: var(--success); }
+    .pf-toast.error { border-color: var(--danger); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="pf-bg-blobs">
-    <div class="pf-blob pf-blob-1"></div>
-    <div class="pf-blob pf-blob-2"></div>
-</div>
-
 <div class="pf-wrapper">
     <div class="pf-container">
 
         <div class="pf-head">
-            <div class="pf-eyebrow">Konto</div>
+            <div class="section-label">Konto</div>
             <h1>Mein Profil</h1>
             <p>Passen Sie Ihre Firmendaten und Ausschreibungs-Präferenzen an. Änderungen wirken sich direkt auf Ihre Empfehlungen aus.</p>
         </div>
 
         <form id="pf-form" novalidate>
 
-            <!-- FIRMENDATEN -->
             <section class="pf-card">
                 <h2 class="pf-section-title">Firmendaten</h2>
                 <div class="pf-grid">
@@ -300,14 +136,12 @@
                 </div>
             </section>
 
-            <!-- BEVORZUGTE KANTONE -->
             <section class="pf-card">
                 <h2 class="pf-section-title">Bevorzugte Kantone</h2>
                 {% set initial_cantons = profile.preferred_cantons or ([profile.canton] if profile.canton else []) %}
                 {% include '_canton_map.html' %}
             </section>
 
-            <!-- AUFTRAGSPRÄFERENZEN -->
             <section class="pf-card">
                 <h2 class="pf-section-title">Auftragspräferenzen</h2>
                 <div class="pf-grid">
@@ -322,13 +156,11 @@
                         <label class="pf-label">Auftragsvolumen (CHF)</label>
                         <div class="pf-range-row">
                             <input type="number" id="pf-amount-min" class="pf-input"
-                                   placeholder="Min"
-                                   min="0" step="1000"
+                                   placeholder="Min" min="0" step="1000"
                                    value="{{ profile.award_amount_min if profile.award_amount_min is not none else '' }}">
                             <span class="pf-range-dash">–</span>
                             <input type="number" id="pf-amount-max" class="pf-input"
-                                   placeholder="Max (leer = offen)"
-                                   min="0" step="1000"
+                                   placeholder="Max (leer = offen)" min="0" step="1000"
                                    value="{{ profile.award_amount_max if profile.award_amount_max is not none else '' }}">
                         </div>
                         <span class="pf-hint">Leer lassen für keine Obergrenze.</span>
@@ -336,7 +168,6 @@
                 </div>
             </section>
 
-            <!-- KONTO -->
             <section class="pf-card">
                 <h2 class="pf-section-title">Konto</h2>
                 <div class="pf-grid">
@@ -349,18 +180,13 @@
                 </div>
                 <div class="pf-link-row">
                     <span class="pf-link-label">Passwort ändern</span>
-                    <a href="/change-password">Passwort aktualisieren →</a>
+                    <a href="/change-password">Passwort aktualisieren</a>
                 </div>
             </section>
 
             <div class="pf-actions">
-                <a href="/publications" class="pf-btn pf-btn-ghost">Abbrechen</a>
-                <button type="submit" id="pf-save" class="pf-btn pf-btn-primary">
-                    Änderungen speichern
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                </button>
+                <a href="/publications" class="btn btn-ghost">Abbrechen</a>
+                <button type="submit" id="pf-save" class="btn btn-primary">Änderungen speichern</button>
             </div>
         </form>
     </div>
@@ -389,7 +215,6 @@
                     var allowed  = ['construction', 'supply', 'service'];
                     var opts = allowed.filter(function (s) { return subtypes.indexOf(s) !== -1; });
                     if (opts.length === 0) opts = allowed;
-
                     subtypeSelect.innerHTML = '<option value="">Bitte wählen</option>';
                     opts.forEach(function (s) {
                         var o = document.createElement('option');
@@ -429,7 +254,6 @@
 
         document.getElementById('pf-form').addEventListener('submit', function (ev) {
             ev.preventDefault();
-
             var saveBtn = document.getElementById('pf-save');
             var min = toIntOrNull(document.getElementById('pf-amount-min').value);
             var max = toIntOrNull(document.getElementById('pf-amount-max').value);

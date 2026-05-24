@@ -4,312 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SAJF Strategies{% endblock %}</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Link to our global premium stylesheet -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Theme-Init: verhindert Flash beim Laden -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
     <script>(function(){var t=localStorage.getItem('sajf-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
-    <style>
-        /* ─── User-Menü (Nav, nur bei login) ─── */
-        .user-menu { position: relative; }
-        .user-menu-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.45rem 0.85rem 0.45rem 0.5rem;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.03);
-            color: #e4e4e7;
-            font-family: inherit;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: border-color 0.18s, background 0.18s, color 0.18s;
-        }
-        .user-menu-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.2);
-            color: #fff;
-        }
-        .user-menu-avatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent, #06b6d4), #3b82f6);
-            color: #000;
-            font-weight: 700;
-            font-size: 0.78rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .user-menu-name {
-            max-width: 160px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .user-menu-caret {
-            transition: transform 0.2s;
-            opacity: 0.7;
-        }
-        .user-menu.open .user-menu-caret { transform: rotate(180deg); }
-
-        .user-menu-dropdown {
-            position: absolute;
-            top: calc(100% + 0.5rem);
-            right: 0;
-            min-width: 220px;
-            padding: 0.4rem;
-            background: rgba(18, 18, 20, 0.96);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
-            backdrop-filter: blur(16px);
-            opacity: 0;
-            transform: translateY(-6px);
-            pointer-events: none;
-            transition: opacity 0.15s, transform 0.15s;
-            z-index: 60;
-        }
-        .user-menu.open .user-menu-dropdown {
-            opacity: 1;
-            transform: translateY(0);
-            pointer-events: auto;
-        }
-        .user-menu-email {
-            padding: 0.55rem 0.7rem 0.5rem;
-            font-size: 0.78rem;
-            color: #71717a;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            margin-bottom: 0.3rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .user-menu-item {
-            display: flex;
-            align-items: center;
-            gap: 0.55rem;
-            padding: 0.55rem 0.7rem;
-            border-radius: 8px;
-            color: #e4e4e7;
-            font-size: 0.875rem;
-            font-weight: 500;
-            text-decoration: none;
-            transition: background 0.15s, color 0.15s;
-        }
-        .user-menu-item:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
-        .user-menu-item.danger { color: #fca5a5; }
-        .user-menu-item.danger:hover { background: rgba(248, 113, 113, 0.1); color: #f87171; }
-        .user-menu-item svg { opacity: 0.75; flex-shrink: 0; }
-
-        /* ─── Theme Toggle Button ─── */
-        .theme-toggle {
-            width: 36px; height: 36px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,.1);
-            background: rgba(255,255,255,.03);
-            color: #a1a1aa;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all .18s; flex-shrink: 0;
-        }
-        .theme-toggle:hover { background: rgba(255,255,255,.08); color: #f4f4f5; border-color: rgba(255,255,255,.2); }
-        html[data-theme="light"] .theme-toggle { border-color: rgba(0,0,0,.1); background: rgba(0,0,0,.03); color: #475569; }
-        html[data-theme="light"] .theme-toggle:hover { background: rgba(0,0,0,.06); color: #0f172a; }
-        .theme-toggle .icon-sun { display: block; }
-        .theme-toggle .icon-moon { display: none; }
-        html[data-theme="light"] .theme-toggle .icon-sun { display: none; }
-        html[data-theme="light"] .theme-toggle .icon-moon { display: block; }
-
-        /* ─── Light-mode overrides for user-menu ─── */
-        html[data-theme="light"] .user-menu-btn {
-            color: #0f172a;
-            border-color: rgba(0,0,0,0.12);
-            background: rgba(0,0,0,0.04);
-        }
-        html[data-theme="light"] .user-menu-btn:hover {
-            background: rgba(0,0,0,0.08);
-            border-color: rgba(0,0,0,0.22);
-            color: #000;
-        }
-        html[data-theme="light"] .user-menu-dropdown {
-            background: rgba(255,255,255,0.97);
-            border-color: rgba(0,0,0,0.1);
-            box-shadow: 0 14px 32px rgba(0,0,0,0.15);
-        }
-        html[data-theme="light"] .user-menu-email {
-            color: #64748b;
-            border-bottom-color: rgba(0,0,0,0.07);
-        }
-        html[data-theme="light"] .user-menu-item {
-            color: #1e293b;
-        }
-        html[data-theme="light"] .user-menu-item:hover {
-            background: rgba(0,0,0,0.05);
-            color: #000;
-        }
-        html[data-theme="light"] .user-menu-item.danger { color: #dc2626; }
-        html[data-theme="light"] .user-menu-item.danger:hover { background: rgba(220,38,38,0.07); color: #b91c1c; }
-
-        /* ─── Language switcher ─── */
-        .lang-menu { position: relative; }
-        .lang-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            height: 36px;
-            padding: 0 0.7rem;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.03);
-            color: #a1a1aa;
-            font-family: inherit;
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            cursor: pointer;
-            transition: all 0.18s;
-            flex-shrink: 0;
-        }
-        .lang-btn:hover { background: rgba(255,255,255,0.08); color: #f4f4f5; border-color: rgba(255,255,255,0.2); }
-        .lang-btn .lang-caret { opacity: 0.6; transition: transform 0.2s; }
-        .lang-menu.open .lang-caret { transform: rotate(180deg); }
-        .lang-dropdown {
-            position: absolute;
-            top: calc(100% + 0.5rem);
-            right: 0;
-            min-width: 150px;
-            padding: 0.35rem;
-            background: rgba(18,18,20,0.97);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            box-shadow: 0 14px 32px rgba(0,0,0,0.55);
-            backdrop-filter: blur(16px);
-            opacity: 0;
-            transform: translateY(-6px);
-            pointer-events: none;
-            transition: opacity 0.15s, transform 0.15s;
-            z-index: 60;
-        }
-        .lang-menu.open .lang-dropdown { opacity: 1; transform: translateY(0); pointer-events: auto; }
-        .lang-option {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            padding: 0.5rem 0.75rem;
-            border-radius: 8px;
-            color: #e4e4e7;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.12s, color 0.12s;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: left;
-            font-family: inherit;
-        }
-        .lang-option:hover { background: rgba(255,255,255,0.07); color: #fff; }
-        .lang-option.active { color: var(--accent); }
-        .lang-option .lang-code { font-weight: 700; font-size: 0.78rem; min-width: 24px; letter-spacing: 0.04em; }
-        html[data-theme="light"] .lang-btn { border-color: rgba(0,0,0,0.1); background: rgba(0,0,0,0.03); color: #475569; }
-        html[data-theme="light"] .lang-btn:hover { background: rgba(0,0,0,0.06); color: #0f172a; }
-        html[data-theme="light"] .lang-dropdown { background: rgba(255,255,255,0.97); border-color: rgba(0,0,0,0.1); box-shadow: 0 14px 32px rgba(0,0,0,0.12); }
-        html[data-theme="light"] .lang-option { color: #1e293b; }
-        html[data-theme="light"] .lang-option:hover { background: rgba(0,0,0,0.05); color: #000; }
-
-        /* ─── Nav dropdown (Über uns) ─── */
-        .nav-dropdown { position: relative; }
-        .nav-dropdown-trigger {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            cursor: pointer;
-            background: none;
-            border: none;
-            font-family: inherit;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius, 8px);
-            text-decoration: none;
-            transition: color 0.15s, background 0.15s;
-            position: relative;
-            overflow: hidden;
-        }
-        .nav-dropdown-trigger:hover {
-            color: var(--text-primary);
-            background: var(--nav-hover-bg);
-        }
-        .nav-dropdown-trigger.active { color: var(--accent); }
-        .nav-dropdown-trigger .nd-caret {
-            transition: transform 0.2s;
-            opacity: 0.6;
-        }
-        .nav-dropdown.open .nd-caret { transform: rotate(180deg); }
-        .nav-dropdown-menu {
-            position: absolute;
-            top: calc(100% + 0.6rem);
-            left: 50%;
-            transform: translateX(-50%) translateY(-6px);
-            min-width: 180px;
-            padding: 0.35rem;
-            background: rgba(18, 18, 20, 0.97);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            box-shadow: 0 14px 32px rgba(0,0,0,0.55);
-            backdrop-filter: blur(16px);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.15s, transform 0.15s;
-            z-index: 60;
-        }
-        .nav-dropdown.open .nav-dropdown-menu {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-            pointer-events: auto;
-        }
-        .nav-dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.55rem 0.85rem;
-            border-radius: 8px;
-            color: #e4e4e7;
-            font-size: 0.875rem;
-            font-weight: 500;
-            text-decoration: none;
-            white-space: nowrap;
-            transition: background 0.15s, color 0.15s;
-        }
-        .nav-dropdown-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
-        .nav-dropdown-item.active { color: var(--accent); }
-        html[data-theme="light"] .nav-dropdown-menu {
-            background: rgba(255,255,255,0.97);
-            border-color: rgba(0,0,0,0.1);
-            box-shadow: 0 14px 32px rgba(0,0,0,0.12);
-        }
-        html[data-theme="light"] .nav-dropdown-item { color: #1e293b; }
-        html[data-theme="light"] .nav-dropdown-item:hover { background: rgba(0,0,0,0.05); color: #000; }
-    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
         <div class="header-content">
             <div class="header-left">
-            <!-- LOGO -->
-            <a href="/" class="logo">
-                <div style="display:flex; flex-direction:column; align-items:center; text-align:center; line-height:1.1;">
-                    <span style="font-family:'DM Sans', sans-serif; font-weight:700; font-size:1.4rem; color:var(--logo-text-main); letter-spacing:-0.3px;">SAJF</span>
-                    <span style="font-family:'DM Sans', sans-serif; font-size:0.6rem; color:var(--logo-text-sub); text-transform:uppercase; letter-spacing:0.2em; font-weight:600;">Strategies</span>
-                </div>
-            </a>
+                <a href="/" class="logo">
+                    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;line-height:1.1;">
+                        <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.2rem;color:var(--logo-text-main);letter-spacing:-0.02em;">SAJF</span>
+                        <span style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:var(--logo-text-sub);text-transform:uppercase;letter-spacing:0.16em;font-weight:600;">Strategies</span>
+                    </div>
+                </a>
                 <nav class="nav" id="nav">
                     <a href="/" class="{% if request.path == '/' %}active{% endif %}" data-i18n="nav_home">Home</a>
                     <a href="/how-it-works" class="{% if request.path == '/how-it-works' %}active{% endif %}" data-i18n="nav_how">So funktioniert's</a>
@@ -317,21 +29,15 @@
                         <button class="nav-dropdown-trigger {% if request.path in ['/ueber-uns', '/features'] %}active{% endif %}"
                                 onclick="toggleNavDropdown(event, 'nav-ueber-dropdown')">
                             <span data-i18n="nav_about">Über uns</span>
-                            <svg class="nd-caret" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                                <polyline points="6 9 12 15 18 9"/>
-                            </svg>
+                            <svg class="nd-caret" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                         </button>
                         <div class="nav-dropdown-menu">
                             <a href="/ueber-uns" class="nav-dropdown-item {% if request.path == '/ueber-uns' %}active{% endif %}">
-                                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-                                </svg>
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                                 <span data-i18n="nav_about">Über uns</span>
                             </a>
                             <a href="/features" class="nav-dropdown-item {% if request.path == '/features' %}active{% endif %}">
-                                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                                </svg>
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                                 <span data-i18n="nav_features">Funktionen</span>
                             </a>
                         </div>
@@ -341,15 +47,10 @@
                 </nav>
             </div>
             <div class="nav-right">
-                <!-- Language switcher -->
                 <div class="lang-menu" id="lang-menu">
                     <button class="lang-btn" onclick="toggleLangMenu(event)" title="Sprache / Language">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                        </svg>
                         <span id="lang-current">DE</span>
-                        <svg class="lang-caret" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                        <svg class="lang-caret" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div class="lang-dropdown" id="lang-dropdown" role="menu">
                         <button class="lang-option active" data-lang="de" onclick="setLang('de')"><span class="lang-code">DE</span> Deutsch</button>
@@ -359,44 +60,30 @@
                     </div>
                 </div>
                 <button class="theme-toggle" onclick="toggleTheme()" title="Light/Dark Mode">
-                    <svg class="icon-sun" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                    <svg class="icon-moon" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    <svg class="icon-sun" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <svg class="icon-moon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                 </button>
                 {% if session.get('user_logged_in') %}
                     {% set _company = session.get('user_company_name') or session.get('user_email') or 'Konto' %}
                     {% set _initial = (_company[:1] | upper) if _company else '?' %}
                     <div class="user-menu" id="user-menu">
-                        <button type="button" class="user-menu-btn"
-                                aria-haspopup="true" aria-expanded="false"
-                                onclick="toggleUserMenu(event)">
+                        <button type="button" class="user-menu-btn" aria-haspopup="true" aria-expanded="false" onclick="toggleUserMenu(event)">
                             <span class="user-menu-avatar">{{ _initial }}</span>
                             <span class="user-menu-name">{{ _company }}</span>
-                            <svg class="user-menu-caret" width="14" height="14" fill="none"
-                                 stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <polyline points="6 9 12 15 18 9"/>
-                            </svg>
+                            <svg class="user-menu-caret" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                         </button>
                         <div class="user-menu-dropdown" role="menu">
                             <div class="user-menu-email">{{ session.get('user_email', '') }}</div>
                             <a href="/profile" class="user-menu-item" role="menuitem">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                    <circle cx="12" cy="7" r="4"/>
-                                </svg>
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                 <span data-i18n="um_profile">Mein Profil</span>
                             </a>
                             <a href="/publications" class="user-menu-item" role="menuitem">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>
-                                </svg>
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
                                 <span data-i18n="um_tenders">Ausschreibungen</span>
                             </a>
                             <a href="/logout" class="user-menu-item danger" role="menuitem">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                                    <polyline points="16 17 21 12 16 7"/>
-                                    <line x1="21" y1="12" x2="9" y2="12"/>
-                                </svg>
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                                 <span data-i18n="um_logout">Abmelden</span>
                             </a>
                         </div>
@@ -406,25 +93,21 @@
                     <a href="/register" class="btn btn-primary" data-i18n="nav_register">Kostenlos starten</a>
                 {% endif %}
                 <button class="mobile-menu-btn" onclick="document.getElementById('nav').classList.toggle('open')">
-                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
     <main>
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-brand">
                 <div>
-                    <span style="font-weight:700;font-size:1.125rem;">SAJF Strategies</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1rem;">SAJF Strategies</span>
                 </div>
                 <p data-i18n="footer_tagline">Ihre intelligente Plattform für öffentliche Ausschreibungen in der Schweiz. KI-gestützt, aktuell, übersichtlich.</p>
             </div>
@@ -451,578 +134,12 @@
         </div>
     </footer>
 
-    <!-- DIESER BLOCK HAT GEFEHLT: Er lädt das JS von Login/Register -->
     {% block extra_js %}{% endblock %}
 
-    <script>
-        function toggleTheme() {
-            var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', next);
-            localStorage.setItem('sajf-theme', next);
-        }
+    <script src="{{ url_for('static', filename='js/core.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bob.js') }}"></script>
 
-        function toggleMenu() {
-            const nav = document.getElementById('nav');
-            nav.classList.toggle('open');
-        }
-
-        // User-Menü: toggle + Close-on-Outside-Click / ESC
-        function toggleUserMenu(evt) {
-            if (evt) evt.stopPropagation();
-            var menu = document.getElementById('user-menu');
-            if (!menu) return;
-            var willOpen = !menu.classList.contains('open');
-            menu.classList.toggle('open', willOpen);
-            var btn = menu.querySelector('.user-menu-btn');
-            if (btn) btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-        }
-        document.addEventListener('click', function (e) {
-            var menu = document.getElementById('user-menu');
-            if (!menu || !menu.classList.contains('open')) return;
-            if (!menu.contains(e.target)) {
-                menu.classList.remove('open');
-                var btn = menu.querySelector('.user-menu-btn');
-                if (btn) btn.setAttribute('aria-expanded', 'false');
-            }
-        });
-        document.addEventListener('keydown', function (e) {
-            if (e.key !== 'Escape') return;
-            var menu = document.getElementById('user-menu');
-            if (menu && menu.classList.contains('open')) {
-                menu.classList.remove('open');
-                var btn = menu.querySelector('.user-menu-btn');
-                if (btn) btn.setAttribute('aria-expanded', 'false');
-            }
-            document.querySelectorAll('.nav-dropdown.open').forEach(function(d) { d.classList.remove('open'); });
-        });
-
-        /* ── Language switcher ── */
-        var TRANSLATIONS = {
-            de: {
-                nav_home:'Home', nav_how:"So funktioniert's", nav_about:'Über uns',
-                nav_features:'Funktionen', nav_market:'Marktpuls', nav_support:'Support',
-                nav_login:'Anmelden', nav_register:'Kostenlos starten',
-                footer_tagline:'Ihre intelligente Plattform für öffentliche Ausschreibungen in der Schweiz. KI-gestützt, aktuell, übersichtlich.',
-                footer_platform:'Plattform', footer_legal:'Rechtliches', footer_contact:'Kontakt',
-                footer_impressum:'Impressum', footer_datenschutz:'Datenschutz', footer_agb:'AGB',
-                footer_copyright:'© 2025 SAJF Strategies. Alle Rechte vorbehalten.',
-                um_profile:'Mein Profil', um_tenders:'Ausschreibungen', um_logout:'Abmelden',
-                bob_greeting:'Hallo! Ich bin Bob, Ihr Assistent bei SAJF Strategies. Ich helfe Ihnen gerne bei Fragen zu öffentlichen Ausschreibungen oder zur Plattform. 👋',
-                bob_status:'Online', bob_placeholder:'Ihre Frage...',
-                hero_badge:'Täglich aktualisiert',
-                hero_title:'Schweizer Ausschreibungen', hero_title_accent:'intelligenter entdecken.',
-                hero_desc:'Alle öffentlichen Ausschreibungen aus dem Schweizer Beschaffungswesen — direkt von simap.ch, stündlich aktualisiert, mit KI-gestützter Relevanzanalyse für Ihr Unternehmen.',
-                hero_cta_primary:'Kostenlos starten', hero_cta_secondary:'Anmelden',
-                trust_official:'Offizielle Daten', trust_official_sub:'Basierend auf simap.ch',
-                trust_privacy:'Datenschutzkonform', trust_privacy_sub:'Schweizer Hosting',
-                trust_realtime:'Echtzeit-Updates', trust_realtime_sub:'Tägliche Synchronisation',
-                feat_label:'Features', feat_title:'Alles, was Sie für öffentliche Aufträge brauchen',
-                feat_sub:'Eine Plattform, die den Zugang zu Schweizer Ausschreibungen in ein unvergleichliches Erlebnis verwandelt.',
-                feat1_title:'Intelligente Suche', feat1_desc:'Volltextsuche über alle Ausschreibungen mit Filtern nach Kanton, Auftragsart, Verfahrenstyp und mehr.',
-                feat2_title:'KI-Relevanzanalyse', feat2_desc:'Unser ML-Modell bewertet automatisch, welche Ausschreibungen für Ihr Unternehmen relevant sind.',
-                feat3_title:'Echtzeit-Updates', feat3_desc:'Neue Ausschreibungen werden sofort an den Client gepusht – Sie sehen immer sofort was aktuell ist.',
-                feat4_title:'Merkliste', feat4_desc:'Speichern Sie interessante Ausschreibungen und behalten Sie den Überblick über alle Termine und Fristen.',
-                feat5_title:'Modernes Dashboard', feat5_desc:'Ihr persönliches Cockpit mit interaktiven Statistiken, ML-Empfehlungen und tiefgreifender Marktübersicht.',
-                feat6_title:'Mehrsprachig & Adaptiv', feat6_desc:'Ausschreibungen nahtlos in Deutsch, Französisch, Italienisch und Englisch durchsuchbar.',
-                stat_tenders:'Ausschreibungen', stat_cantons:'Kantone', stat_today:'Neue heute', stat_transparency:'Transparenz',
-                how_label:"So funktioniert's", how_title:'In 3 Schritten zu relevanten Aufträgen',
-                step1_title:'1. Profil erstellen', step1_desc:'Registrieren Sie sich kostenlos und hinterlegen Sie Ihr Unternehmensprofil — Branche, Kanton, Auftragstypen.',
-                step2_title:'2. KI findet passende Ausschreibungen', step2_desc:'Unser ML-Modell analysiert Ihr Profil und liefert automatisch die relevantesten Aufträge — ohne manuelles Suchen.',
-                step3_title:'3. Direkt bewerben', step3_desc:'Mit einem Klick zur offiziellen Ausschreibung auf simap.ch — Unterlagen herunterladen und Offerte einreichen.',
-                cta_title:'Bereit für den nächsten Schritt?',
-                cta_desc:'Registrieren Sie sich kostenlos und entdecken Sie täglich neue Geschäftschancen für Ihr Unternehmen. Keine Kreditkarte erforderlich.',
-                cta_btn:'Kostenlos registrieren',
-                mp_eyebrow:'Live-Daten', mp_title:'Marktpuls', mp_title_accent:'Schweiz',
-                mp_subtitle:'Öffentliche Beschaffungen in Echtzeit — alle Kantone, alle Kategorien, transparent und kostenlos.',
-                mp_stat_total:'Ausschreibungen total', mp_stat_today:'Heute neu', mp_stat_30d:'Letzte 30 Tage', mp_stat_avg:'Ø pro Tag',
-                mp_canton_title:'Ausschreibungen nach Kanton', mp_canton_sub:'Gesamtzahl aller erfassten Ausschreibungen je Kanton',
-                mp_cat_title:'Top Auftragsarten', mp_cat_sub:'Häufigste Kategorien über alle Ausschreibungen',
-                mp_org_title:'Aktivste Vergabestellen', mp_org_sub:'Letzte 30 Tage',
-                mp_tab_all:'Alle Aufträge', mp_tab_construction:'Construction', mp_tab_service:'Service', mp_tab_supply:'Supply',
-                mp_cta_title:'Keine passende Ausschreibung mehr verpassen',
-                mp_cta_desc:'Kostenlos registrieren und erhalten Sie personalisierte Ausschreibungen direkt auf Ihr Unternehmensprofil zugeschnitten.',
-                mp_cta_btn:'Kostenlos starten', mp_cta_btn2:'Alle Funktionen ansehen',
-            },
-            fr: {
-                nav_home:'Accueil', nav_how:'Comment ça marche', nav_about:'À propos',
-                nav_features:'Fonctionnalités', nav_market:'Pouls du Marché', nav_support:'Support',
-                nav_login:'Se connecter', nav_register:'Commencer gratuitement',
-                footer_tagline:"Votre plateforme intelligente pour les appels d'offres publics en Suisse. Propulsée par l'IA, actualisée, claire.",
-                footer_platform:'Plateforme', footer_legal:'Mentions légales', footer_contact:'Contact',
-                footer_impressum:'Mentions légales', footer_datenschutz:'Protection des données', footer_agb:'CGV',
-                footer_copyright:'© 2025 SAJF Strategies. Tous droits réservés.',
-                um_profile:'Mon profil', um_tenders:"Appels d'offres", um_logout:'Se déconnecter',
-                bob_greeting:"Bonjour! Je suis Bob, votre assistant chez SAJF Strategies. Je vous aide volontiers avec vos questions sur les appels d'offres publics ou la plateforme. 👋",
-                bob_status:'En ligne', bob_placeholder:'Votre question...',
-                hero_badge:'Mis à jour quotidiennement',
-                hero_title:"Appels d'offres suisses,", hero_title_accent:'découverts intelligemment.',
-                hero_desc:"Tous les appels d'offres publics suisses — directement de simap.ch, mis à jour toutes les heures, avec analyse de pertinence par IA pour votre entreprise.",
-                hero_cta_primary:'Commencer gratuitement', hero_cta_secondary:'Se connecter',
-                trust_official:'Données officielles', trust_official_sub:'Basé sur simap.ch',
-                trust_privacy:'Conforme RGPD', trust_privacy_sub:'Hébergement suisse',
-                trust_realtime:'Mises à jour en temps réel', trust_realtime_sub:'Synchronisation quotidienne',
-                feat_label:'Fonctionnalités', feat_title:"Tout ce dont vous avez besoin pour les marchés publics",
-                feat_sub:"Une plateforme qui transforme l'accès aux appels d'offres suisses en une expérience incomparable.",
-                feat1_title:'Recherche intelligente', feat1_desc:"Recherche plein texte sur tous les appels d'offres avec filtres par canton, type de marché et procédure.",
-                feat2_title:'Analyse IA de pertinence', feat2_desc:"Notre modèle ML évalue automatiquement quels appels d'offres sont pertinents pour votre entreprise.",
-                feat3_title:'Mises à jour en temps réel', feat3_desc:"Les nouveaux appels d'offres sont immédiatement poussés — vous voyez toujours ce qui est actuel.",
-                feat4_title:'Liste de favoris', feat4_desc:"Sauvegardez les appels d'offres intéressants et gardez une vue d'ensemble sur toutes les dates et délais.",
-                feat5_title:'Tableau de bord moderne', feat5_desc:"Votre cockpit personnel avec statistiques interactives, recommandations ML et vue d'ensemble du marché.",
-                feat6_title:'Multilingue & Adaptatif', feat6_desc:"Recherche d'appels d'offres en allemand, français, italien et anglais sans effort.",
-                stat_tenders:"Appels d'offres", stat_cantons:'Cantons', stat_today:"Nouveaux aujourd'hui", stat_transparency:'Transparence',
-                how_label:'Comment ça marche', how_title:'En 3 étapes vers les marchés pertinents',
-                step1_title:'1. Créer un profil', step1_desc:"Inscrivez-vous gratuitement et renseignez votre profil d'entreprise — secteur, canton, types de marchés.",
-                step2_title:"2. L'IA trouve les offres", step2_desc:"Notre modèle ML analyse votre profil et livre automatiquement les marchés les plus pertinents — sans recherche manuelle.",
-                step3_title:'3. Postuler directement', step3_desc:"En un clic vers l'appel d'offres officiel sur simap.ch — télécharger les documents et soumettre votre offre.",
-                cta_title:'Prêt pour la prochaine étape?',
-                cta_desc:"Inscrivez-vous gratuitement et découvrez chaque jour de nouvelles opportunités pour votre entreprise. Aucune carte de crédit requise.",
-                cta_btn:"S'inscrire gratuitement",
-                mp_eyebrow:'Données en direct', mp_title:'Pouls du Marché', mp_title_accent:'Suisse',
-                mp_subtitle:"Marchés publics en temps réel — tous les cantons, toutes les catégories, transparent et gratuit.",
-                mp_stat_total:"Appels d'offres total", mp_stat_today:"Aujourd'hui", mp_stat_30d:'30 derniers jours', mp_stat_avg:'Ø par jour',
-                mp_canton_title:"Appels d'offres par canton", mp_canton_sub:"Nombre total de tous les appels d'offres enregistrés par canton",
-                mp_cat_title:'Principales catégories', mp_cat_sub:"Catégories les plus fréquentes",
-                mp_org_title:'Entités adjudicatrices les plus actives', mp_org_sub:'30 derniers jours',
-                mp_tab_all:'Tous les marchés', mp_tab_construction:'Construction', mp_tab_service:'Services', mp_tab_supply:'Fournitures',
-                mp_cta_title:"Ne manquez plus aucun appel d'offres",
-                mp_cta_desc:"Inscrivez-vous gratuitement et recevez des appels d'offres personnalisés, adaptés à votre profil d'entreprise.",
-                mp_cta_btn:'Commencer gratuitement', mp_cta_btn2:'Voir toutes les fonctionnalités',
-            },
-            it: {
-                nav_home:'Home', nav_how:'Come funziona', nav_about:'Chi siamo',
-                nav_features:'Funzioni', nav_market:'Polso del Mercato', nav_support:'Supporto',
-                nav_login:'Accedi', nav_register:'Inizia gratis',
-                footer_tagline:"La vostra piattaforma intelligente per le gare d'appalto pubbliche in Svizzera. Basata sull'IA, aggiornata, chiara.",
-                footer_platform:'Piattaforma', footer_legal:'Note legali', footer_contact:'Contatto',
-                footer_impressum:'Note legali', footer_datenschutz:'Protezione dei dati', footer_agb:'CGV',
-                footer_copyright:'© 2025 SAJF Strategies. Tutti i diritti riservati.',
-                um_profile:'Il mio profilo', um_tenders:"Gare d'appalto", um_logout:'Disconnettersi',
-                bob_greeting:"Ciao! Sono Bob, il vostro assistente di SAJF Strategies. Sono lieto di aiutarvi con domande sulle gare d'appalto pubbliche o sulla piattaforma. 👋",
-                bob_status:'Online', bob_placeholder:'La sua domanda...',
-                hero_badge:'Aggiornato quotidianamente',
-                hero_title:"Gare d'appalto svizzere", hero_title_accent:'scoperte in modo intelligente.',
-                hero_desc:"Tutte le gare d'appalto pubbliche svizzere — direttamente da simap.ch, aggiornate ogni ora, con analisi di rilevanza basata sull'IA per la vostra azienda.",
-                hero_cta_primary:'Inizia gratis', hero_cta_secondary:'Accedi',
-                trust_official:'Dati ufficiali', trust_official_sub:'Basato su simap.ch',
-                trust_privacy:'Conforme alla privacy', trust_privacy_sub:'Hosting svizzero',
-                trust_realtime:'Aggiornamenti in tempo reale', trust_realtime_sub:'Sincronizzazione quotidiana',
-                feat_label:'Funzionalità', feat_title:"Tutto ciò di cui avete bisogno per gli appalti pubblici",
-                feat_sub:"Una piattaforma che trasforma l'accesso alle gare d'appalto svizzere in un'esperienza impareggiabile.",
-                feat1_title:'Ricerca intelligente', feat1_desc:"Ricerca full-text su tutte le gare d'appalto con filtri per cantone, tipo di appalto e procedura.",
-                feat2_title:'Analisi IA di rilevanza', feat2_desc:"Il nostro modello ML valuta automaticamente quali gare d'appalto sono rilevanti per la vostra azienda.",
-                feat3_title:'Aggiornamenti in tempo reale', feat3_desc:"Le nuove gare d'appalto vengono inviate immediatamente — vedete sempre ciò che è attuale.",
-                feat4_title:'Lista preferiti', feat4_desc:"Salvate le gare d'appalto interessanti e mantenete una panoramica di tutte le scadenze.",
-                feat5_title:'Dashboard moderno', feat5_desc:"Il vostro cockpit personale con statistiche interattive, raccomandazioni ML e panoramica del mercato.",
-                feat6_title:'Multilingue & Adattivo', feat6_desc:"Ricerca di gare d'appalto in tedesco, francese, italiano e inglese senza sforzo.",
-                stat_tenders:"Gare d'appalto", stat_cantons:'Cantoni', stat_today:'Nuove oggi', stat_transparency:'Trasparenza',
-                how_label:'Come funziona', how_title:'In 3 passi verso gli appalti pertinenti',
-                step1_title:'1. Creare un profilo', step1_desc:"Registratevi gratuitamente e inserite il profilo della vostra azienda — settore, cantone, tipi di appalto.",
-                step2_title:"2. L'IA trova le offerte", step2_desc:"Il nostro modello ML analizza il vostro profilo e fornisce automaticamente gli appalti più pertinenti — senza ricerca manuale.",
-                step3_title:'3. Candidarsi direttamente', step3_desc:"Con un clic alla gara d'appalto ufficiale su simap.ch — scaricare i documenti e presentare l'offerta.",
-                cta_title:'Pronti per il passo successivo?',
-                cta_desc:"Registratevi gratuitamente e scoprite ogni giorno nuove opportunità per la vostra azienda. Nessuna carta di credito richiesta.",
-                cta_btn:'Registrarsi gratuitamente',
-                mp_eyebrow:'Dati in diretta', mp_title:'Polso del Mercato', mp_title_accent:'Svizzera',
-                mp_subtitle:"Appalti pubblici in tempo reale — tutti i cantoni, tutte le categorie, trasparente e gratuito.",
-                mp_stat_total:"Gare d'appalto totali", mp_stat_today:'Nuove oggi', mp_stat_30d:'Ultimi 30 giorni', mp_stat_avg:'Ø al giorno',
-                mp_canton_title:"Gare d'appalto per cantone", mp_canton_sub:"Numero totale di tutte le gare d'appalto registrate per cantone",
-                mp_cat_title:'Principali categorie', mp_cat_sub:"Categorie più frequenti",
-                mp_org_title:'Enti appaltanti più attivi', mp_org_sub:'Ultimi 30 giorni',
-                mp_tab_all:'Tutti gli appalti', mp_tab_construction:'Costruzione', mp_tab_service:'Servizi', mp_tab_supply:'Forniture',
-                mp_cta_title:"Non perdere più nessuna gara d'appalto",
-                mp_cta_desc:"Registratevi gratuitamente e ricevete gare d'appalto personalizzate, adattate al vostro profilo aziendale.",
-                mp_cta_btn:'Inizia gratis', mp_cta_btn2:'Vedere tutte le funzionalità',
-            },
-            en: {
-                nav_home:'Home', nav_how:'How it works', nav_about:'About us',
-                nav_features:'Features', nav_market:'Market Pulse', nav_support:'Support',
-                nav_login:'Sign in', nav_register:'Get started free',
-                footer_tagline:'Your intelligent platform for public tenders in Switzerland. AI-powered, current, and clear.',
-                footer_platform:'Platform', footer_legal:'Legal', footer_contact:'Contact',
-                footer_impressum:'Legal Notice', footer_datenschutz:'Privacy Policy', footer_agb:'Terms of Service',
-                footer_copyright:'© 2025 SAJF Strategies. All rights reserved.',
-                um_profile:'My Profile', um_tenders:'Tenders', um_logout:'Sign out',
-                bob_greeting:"Hello! I'm Bob, your assistant at SAJF Strategies. I'm happy to help with questions about public tenders or the platform. 👋",
-                bob_status:'Online', bob_placeholder:'Your question...',
-                hero_badge:'Updated daily',
-                hero_title:'Swiss tenders,', hero_title_accent:'discovered smarter.',
-                hero_desc:'All public tenders from Swiss procurement — directly from simap.ch, updated hourly, with AI-powered relevance analysis for your business.',
-                hero_cta_primary:'Get started free', hero_cta_secondary:'Sign in',
-                trust_official:'Official Data', trust_official_sub:'Based on simap.ch',
-                trust_privacy:'Privacy compliant', trust_privacy_sub:'Swiss hosting',
-                trust_realtime:'Real-time updates', trust_realtime_sub:'Daily synchronisation',
-                feat_label:'Features', feat_title:'Everything you need for public tenders',
-                feat_sub:'A platform that transforms access to Swiss tenders into an unparalleled experience.',
-                feat1_title:'Smart Search', feat1_desc:'Full-text search across all tenders with filters by canton, order type, procedure type, and more.',
-                feat2_title:'AI Relevance Analysis', feat2_desc:'Our ML model automatically scores which tenders are relevant for your company.',
-                feat3_title:'Real-time Updates', feat3_desc:"New tenders are pushed immediately — you always see what's current right away.",
-                feat4_title:'Watchlist', feat4_desc:'Save interesting tenders and keep track of all deadlines and submission dates.',
-                feat5_title:'Modern Dashboard', feat5_desc:'Your personal cockpit with interactive statistics, ML recommendations, and deep market overview.',
-                feat6_title:'Multilingual & Adaptive', feat6_desc:'Search tenders seamlessly in German, French, Italian, and English.',
-                stat_tenders:'Tenders', stat_cantons:'Cantons', stat_today:'New today', stat_transparency:'Transparency',
-                how_label:'How it works', how_title:'3 steps to relevant contracts',
-                step1_title:'1. Create a profile', step1_desc:'Register for free and set up your company profile — industry, canton, order types.',
-                step2_title:'2. AI finds matching tenders', step2_desc:'Our ML model analyses your profile and automatically delivers the most relevant contracts — no manual searching.',
-                step3_title:'3. Apply directly', step3_desc:'One click to the official tender on simap.ch — download the documents and submit your offer.',
-                cta_title:'Ready for the next step?',
-                cta_desc:'Register for free and discover new business opportunities for your company every day. No credit card required.',
-                cta_btn:'Register for free',
-                mp_eyebrow:'Live Data', mp_title:'Market Pulse', mp_title_accent:'Switzerland',
-                mp_subtitle:'Public procurement in real time — all cantons, all categories, transparent and free.',
-                mp_stat_total:'Total tenders', mp_stat_today:'New today', mp_stat_30d:'Last 30 days', mp_stat_avg:'Avg per day',
-                mp_canton_title:'Tenders by canton', mp_canton_sub:'Total number of all recorded tenders per canton',
-                mp_cat_title:'Top order categories', mp_cat_sub:'Most frequent categories across all tenders',
-                mp_org_title:'Most active contracting authorities', mp_org_sub:'Last 30 days',
-                mp_tab_all:'All contracts', mp_tab_construction:'Construction', mp_tab_service:'Services', mp_tab_supply:'Supplies',
-                mp_cta_title:'Never miss a relevant tender again',
-                mp_cta_desc:'Register for free and receive personalised tenders tailored directly to your company profile.',
-                mp_cta_btn:'Get started free', mp_cta_btn2:'View all features',
-            },
-        };
-
-        function applyLang(lang) {
-            var t = TRANSLATIONS[lang] || TRANSLATIONS['de'];
-            document.querySelectorAll('[data-i18n]').forEach(function(el) {
-                var key = el.getAttribute('data-i18n');
-                if (t[key] !== undefined) el.textContent = t[key];
-            });
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
-                var key = el.getAttribute('data-i18n-placeholder');
-                if (t[key] !== undefined) el.placeholder = t[key];
-            });
-            var cur = document.getElementById('lang-current');
-            if (cur) cur.textContent = lang.toUpperCase();
-            document.querySelectorAll('.lang-option').forEach(function(btn) {
-                btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
-            });
-            document.documentElement.lang = lang;
-            localStorage.setItem('sajf-lang', lang);
-        }
-
-        function setLang(lang) {
-            applyLang(lang);
-            var menu = document.getElementById('lang-menu');
-            if (menu) menu.classList.remove('open');
-        }
-
-        function toggleLangMenu(evt) {
-            if (evt) evt.stopPropagation();
-            document.getElementById('lang-menu').classList.toggle('open');
-        }
-
-        document.addEventListener('click', function(e) {
-            var m = document.getElementById('lang-menu');
-            if (m && !m.contains(e.target)) m.classList.remove('open');
-        });
-
-        // Restore saved language on every page load
-        (function() {
-            var saved = localStorage.getItem('sajf-lang') || 'de';
-            applyLang(saved);
-        })();
-
-        function toggleNavDropdown(evt, id) {
-            if (evt) evt.stopPropagation();
-            var dd = document.getElementById(id);
-            if (!dd) return;
-            dd.classList.toggle('open');
-        }
-        document.addEventListener('click', function(e) {
-            document.querySelectorAll('.nav-dropdown.open').forEach(function(dd) {
-                if (!dd.contains(e.target)) dd.classList.remove('open');
-            });
-        });
-    </script>
-
-    <!-- ══════════════════════��═════════════════
-         BOB — Chat Assistant Widget
-    ════════════════════════════════════════ -->
-    <style>
-        .bob-bubble {
-            position: fixed;
-            bottom: 1.75rem;
-            right: 1.75rem;
-            z-index: 999;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0.75rem;
-        }
-
-        /* ── Trigger button ── */
-        .bob-trigger {
-            width: 56px; height: 56px;
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            background: linear-gradient(135deg, var(--accent, #06b6d4), #3b82f6);
-            color: #000;
-            box-shadow: 0 6px 22px rgba(6,182,212,0.45);
-            display: flex; align-items: center; justify-content: center;
-            transition: transform 0.2s, box-shadow 0.2s;
-            flex-shrink: 0;
-        }
-        .bob-trigger:hover { transform: scale(1.08); box-shadow: 0 8px 28px rgba(6,182,212,0.6); }
-        .bob-trigger .bob-icon-chat { display: block; }
-        .bob-trigger .bob-icon-close { display: none; }
-        .bob-bubble.open .bob-trigger .bob-icon-chat { display: none; }
-        .bob-bubble.open .bob-trigger .bob-icon-close { display: block; }
-
-        /* ── Chat panel ── */
-        .bob-panel {
-            width: 340px;
-            max-height: 520px;
-            display: flex;
-            flex-direction: column;
-            background: var(--surface, #18181b);
-            border: 1px solid var(--border, rgba(255,255,255,0.1));
-            border-radius: 18px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.55);
-            overflow: hidden;
-            opacity: 0;
-            transform: translateY(12px) scale(0.97);
-            pointer-events: none;
-            transition: opacity 0.2s, transform 0.2s;
-        }
-        .bob-bubble.open .bob-panel {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            pointer-events: auto;
-        }
-
-        /* ── Header ── */
-        .bob-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 1rem 1.1rem 0.85rem;
-            border-bottom: 1px solid var(--border, rgba(255,255,255,0.08));
-            flex-shrink: 0;
-        }
-        .bob-avatar {
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent, #06b6d4), #3b82f6);
-            color: #000;
-            font-weight: 800;
-            font-size: 0.95rem;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-        }
-        .bob-header-info { flex: 1; min-width: 0; }
-        .bob-header-name { font-weight: 700; font-size: 0.9rem; color: var(--text-primary, #f4f4f5); }
-        .bob-header-status { font-size: 0.72rem; color: #10b981; display: flex; align-items: center; gap: 0.3rem; }
-        .bob-header-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block; }
-
-        /* ── Messages ── */
-        .bob-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0.9rem 0.9rem 0.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.65rem;
-            scroll-behavior: smooth;
-        }
-        .bob-messages::-webkit-scrollbar { width: 4px; }
-        .bob-messages::-webkit-scrollbar-track { background: transparent; }
-        .bob-messages::-webkit-scrollbar-thumb { background: var(--border, rgba(255,255,255,0.1)); border-radius: 4px; }
-
-        .bob-msg {
-            max-width: 88%;
-            padding: 0.6rem 0.85rem;
-            border-radius: 14px;
-            font-size: 0.84rem;
-            line-height: 1.5;
-            word-break: break-word;
-        }
-        .bob-msg.bot {
-            align-self: flex-start;
-            background: var(--surface-hover, rgba(255,255,255,0.06));
-            color: var(--text-primary, #f4f4f5);
-            border-bottom-left-radius: 4px;
-        }
-        .bob-msg.user {
-            align-self: flex-end;
-            background: linear-gradient(135deg, var(--accent, #06b6d4), #3b82f6);
-            color: #000;
-            font-weight: 500;
-            border-bottom-right-radius: 4px;
-        }
-        .bob-typing {
-            align-self: flex-start;
-            padding: 0.6rem 0.85rem;
-            background: var(--surface-hover, rgba(255,255,255,0.06));
-            border-radius: 14px;
-            border-bottom-left-radius: 4px;
-            display: none;
-        }
-        .bob-typing span {
-            display: inline-block;
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: var(--text-muted, #71717a);
-            animation: bob-bounce 1.2s infinite;
-            margin: 0 1px;
-        }
-        .bob-typing span:nth-child(2) { animation-delay: 0.2s; }
-        .bob-typing span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bob-bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
-
-        /* ── Input row ── */
-        .bob-input-row {
-            display: flex;
-            gap: 0.5rem;
-            padding: 0.75rem 0.9rem;
-            border-top: 1px solid var(--border, rgba(255,255,255,0.08));
-            flex-shrink: 0;
-        }
-        .bob-input {
-            flex: 1;
-            background: var(--surface-hover, rgba(255,255,255,0.06));
-            border: 1px solid var(--border, rgba(255,255,255,0.1));
-            border-radius: 10px;
-            color: var(--text-primary, #f4f4f5);
-            font-family: inherit;
-            font-size: 0.84rem;
-            padding: 0.55rem 0.8rem;
-            outline: none;
-            resize: none;
-            transition: border-color 0.15s;
-            max-height: 90px;
-            overflow-y: auto;
-        }
-        .bob-input::placeholder { color: var(--text-muted, #71717a); }
-        .bob-input:focus { border-color: var(--accent, #06b6d4); }
-        .bob-send {
-            width: 36px; height: 36px;
-            border-radius: 9px;
-            border: none;
-            background: var(--accent, #06b6d4);
-            color: #000;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            align-self: flex-end;
-            transition: opacity 0.15s, transform 0.15s;
-        }
-        .bob-send:hover { opacity: 0.85; transform: scale(1.06); }
-        .bob-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-        /* ── Light mode ── */
-        html[data-theme="light"] .bob-panel { box-shadow: 0 20px 60px rgba(0,0,0,0.18); }
-        html[data-theme="light"] .bob-msg.bot { background: #f1f5f9; color: #0f172a; }
-        html[data-theme="light"] .bob-typing { background: #f1f5f9; }
-        html[data-theme="light"] .bob-input { background: #f8fafc; border-color: #c8d9e8; color: #0f172a; }
-        html[data-theme="light"] .bob-input:focus { border-color: var(--accent); }
-
-        @media (max-width: 480px) {
-            .bob-bubble { bottom: 1rem; right: 1rem; }
-            .bob-panel { width: calc(100vw - 2rem); }
-        }
-    </style>
-
-    <div class="bob-bubble" id="bob-bubble">
-        <div class="bob-panel" id="bob-panel" role="dialog" aria-label="Chat mit Bob">
-            <div class="bob-header">
-                <div class="bob-avatar">B</div>
-                <div class="bob-header-info">
-                    <div class="bob-header-name">Bob</div>
-                    <div class="bob-header-status" data-i18n="bob_status">Online</div>
-                </div>
-            </div>
-            <div class="bob-messages" id="bob-messages">
-                <div class="bob-msg bot" data-i18n="bob_greeting">Hallo! Ich bin Bob, Ihr Assistent bei SAJF Strategies. Ich helfe Ihnen gerne bei Fragen zu öffentlichen Ausschreibungen oder zur Plattform. 👋</div>
-            </div>
-            <div class="bob-typing" id="bob-typing">
-                <span></span><span></span><span></span>
-            </div>
-            <div class="bob-input-row">
-                <textarea class="bob-input" id="bob-input" placeholder="Ihre Frage..." data-i18n-placeholder="bob_placeholder" rows="1"
-                          onkeydown="bobKeydown(event)" oninput="bobAutoResize(this)"></textarea>
-                <button class="bob-send" id="bob-send" onclick="bobSend()" title="Senden">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        <button class="bob-trigger" id="bob-trigger" onclick="bobToggle()" title="Chat mit Bob">
-            <svg class="bob-icon-chat" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-            <svg class="bob-icon-close" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-        </button>
-    </div>
-
-    <script>
-        var bobHistory = [];
-        var bobWaiting = false;
-
-        function bobToggle() {
-            document.getElementById('bob-bubble').classList.toggle('open');
-            if (document.getElementById('bob-bubble').classList.contains('open')) {
-                setTimeout(function() { document.getElementById('bob-input').focus(); }, 210);
-            }
-        }
-
-        function bobKeydown(e) {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); bobSend(); }
-        }
-
-        function bobAutoResize(el) {
-            el.style.height = 'auto';
-            el.style.height = Math.min(el.scrollHeight, 90) + 'px';
-        }
-
-        function bobSend() {
-            if (bobWaiting) return;
-            var input = document.getElementById('bob-input');
-            var msg = input.value.trim();
-            if (!msg) return;
-
-            bobAddMessage('user', msg);
-            bobHistory.push({ role: 'user', content: msg });
-            input.value = '';
-            input.style.height = 'auto';
-            bobSetWaiting(true);
-
-            fetch('/api/bob/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: msg, history: bobHistory.slice(-10) })
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                var reply = data.reply || 'Entschuldigung, ich konnte keine Antwort generieren.';
-                bobAddMessage('bot', reply);
-                bobHistory.push({ role: 'assistant', content: reply });
-            })
-            .catch(function() {
-                bobAddMessage('bot', 'Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
-            })
-            .finally(function() { bobSetWaiting(false); });
-        }
-
-        function bobAddMessage(role, text) {
-            var el = document.createElement('div');
-            el.className = 'bob-msg ' + role;
-            el.textContent = text;
-            var container = document.getElementById('bob-messages');
-            container.appendChild(el);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function bobSetWaiting(on) {
-            bobWaiting = on;
-            document.getElementById('bob-typing').style.display = on ? 'block' : 'none';
-            document.getElementById('bob-send').disabled = on;
-            var container = document.getElementById('bob-messages');
-            container.scrollTop = container.scrollHeight;
-        }
-    </script>
+    {% include '_bob_widget.html' %}
 </body>
 </html>
