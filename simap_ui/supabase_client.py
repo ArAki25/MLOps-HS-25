@@ -11,7 +11,9 @@ import os
 import re
 import secrets
 import string
+import time
 from datetime import UTC, datetime, timedelta
+from functools import wraps
 from typing import Any
 
 import numpy as np
@@ -19,6 +21,29 @@ import numpy as np
 from supabase import Client, create_client
 
 logger = logging.getLogger(__name__)
+
+
+def _ttl_cache(ttl_seconds: int):
+    """In-Process-Cache für parameterlose Read-Funktionen.
+
+    Fehler-Fallbacks (Dicts ohne truthy Werte) werden nicht gecacht,
+    damit ein DB-Aussetzer nicht für die ganze TTL leere Filter liefert.
+    """
+    def deco(fn):
+        state: dict[str, Any] = {'at': 0.0, 'value': None}
+
+        @wraps(fn)
+        def wrapper():
+            now = time.monotonic()
+            if state['value'] is not None and now - state['at'] < ttl_seconds:
+                return state['value']
+            value = fn()
+            if isinstance(value, dict) and any(value.values()):
+                state['at'] = now
+                state['value'] = value
+            return value
+        return wrapper
+    return deco
 
 # ============================================
 # GLOBAL CLIENT
@@ -194,6 +219,7 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
         return {'data': [], 'total': 0, 'page': page, 'per_page': per_page, 'pages': 0}
 
 
+@_ttl_cache(15 * 60)
 def get_filter_options() -> dict:
     try:
         all_rows = []
@@ -1234,6 +1260,7 @@ def save_user_simap_ids(user_id, ids):
         return {'success': False, 'error': str(e)}
 
 
+@_ttl_cache(15 * 60)
 def get_onboarding_filter_options():
     """Distinct project_subtypes für das Onboarding-Dropdown"""
     try:

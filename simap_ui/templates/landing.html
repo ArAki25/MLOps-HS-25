@@ -404,28 +404,30 @@
                 <span class="hero-data-title">Neueste Ausschreibungen</span>
                 <span class="hero-data-live">LIVE</span>
             </div>
-            <div class="hero-tender">
-                <div class="hero-tender-title">Sanierung Schulanlage Muster</div>
-                <div class="hero-tender-meta">
-                    <span class="hero-tender-tag">Bauauftrag</span>
-                    <span>Kanton Zürich</span>
-                    <span class="hero-tender-time">2h</span>
+            <div id="hero-tenders">
+                <div class="hero-tender">
+                    <div class="hero-tender-title">Sanierung Schulanlage Muster</div>
+                    <div class="hero-tender-meta">
+                        <span class="hero-tender-tag">Bauauftrag</span>
+                        <span>Kanton Zürich</span>
+                        <span class="hero-tender-time">2h</span>
+                    </div>
                 </div>
-            </div>
-            <div class="hero-tender">
-                <div class="hero-tender-title">IT-Dienstleistungen Bund 2025</div>
-                <div class="hero-tender-meta">
-                    <span class="hero-tender-tag">Dienstleistung</span>
-                    <span>Bund</span>
-                    <span class="hero-tender-time">5h</span>
+                <div class="hero-tender">
+                    <div class="hero-tender-title">IT-Dienstleistungen Bund 2025</div>
+                    <div class="hero-tender-meta">
+                        <span class="hero-tender-tag">Dienstleistung</span>
+                        <span>Bund</span>
+                        <span class="hero-tender-time">5h</span>
+                    </div>
                 </div>
-            </div>
-            <div class="hero-tender">
-                <div class="hero-tender-title">Lieferung medizinischer Geräte</div>
-                <div class="hero-tender-meta">
-                    <span class="hero-tender-tag">Lieferauftrag</span>
-                    <span>Kanton Bern</span>
-                    <span class="hero-tender-time">1d</span>
+                <div class="hero-tender">
+                    <div class="hero-tender-title">Lieferung medizinischer Geräte</div>
+                    <div class="hero-tender-meta">
+                        <span class="hero-tender-tag">Lieferauftrag</span>
+                        <span>Kanton Bern</span>
+                        <span class="hero-tender-time">1d</span>
+                    </div>
                 </div>
             </div>
             <div class="hero-stats-row">
@@ -592,6 +594,37 @@ document.addEventListener('DOMContentLoaded', function() {
         if (fl) fl.textContent = t.toLocaleString('de-CH');
         var ht = document.getElementById('hero-today');
         if (ht) ht.textContent = s.today || 0;
+    }).catch(function(e) { console.error(e); });
+
+    // Echte neueste Ausschreibungen ins LIVE-Widget laden
+    // (die statischen Einträge bleiben als Fallback stehen, falls der Fetch scheitert)
+    var TAG_DE = { construction: 'Bauauftrag', service: 'Dienstleistung', supply: 'Lieferauftrag' };
+    fetch('/api/projects?per_page=3').then(function(r) { return r.json(); }).then(function(res) {
+        var items = (res.data || []).filter(function(p) { return p.title; }).slice(0, 3);
+        if (items.length < 3) return;
+        var wrap = document.getElementById('hero-tenders');
+        if (!wrap) return;
+        wrap.innerHTML = '';
+        items.forEach(function(p) {
+            var el = document.createElement('div');
+            el.className = 'hero-tender';
+            var title = document.createElement('div');
+            title.className = 'hero-tender-title';
+            title.textContent = p.title;
+            var meta = document.createElement('div');
+            meta.className = 'hero-tender-meta';
+            var tag = document.createElement('span');
+            tag.className = 'hero-tender-tag';
+            tag.textContent = TAG_DE[p.order_type] || 'Ausschreibung';
+            var canton = document.createElement('span');
+            canton.textContent = p.canton ? 'Kanton ' + p.canton : 'Schweiz';
+            var time = document.createElement('span');
+            time.className = 'hero-tender-time';
+            time.textContent = p.time_ago || '';
+            meta.append(tag, canton, time);
+            el.append(title, meta);
+            wrap.appendChild(el);
+        });
     }).catch(function(e) { console.error(e); });
 });
 </script>

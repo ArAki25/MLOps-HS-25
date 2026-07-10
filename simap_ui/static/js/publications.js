@@ -208,7 +208,8 @@ function showAllRecs() {
 function renderEmpfehlungen(recs) {
     var html = '';
     recs.forEach(function(r) {
-        var score = Math.round((r.similarity || 0) * 100);
+        // Similarity kann durch serverseitige Boosts > 1.0 sein - Anzeige bei 99% kappen
+        var score = Math.min(99, Math.round((r.similarity || 0) * 100));
         var scoreClass = score >= 75 ? 'high' : (score >= 55 ? 'mid' : 'low');
         var desc = stripHtml(r.description_de || '');
         var canton = r.canton ? (KANTON_NAMES[r.canton] || r.canton) : '';
