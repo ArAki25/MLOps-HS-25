@@ -119,6 +119,7 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
         count_q = ui('projects_ui').select('id', count='exact')
         data_q = ui('projects_ui').select('*')
 
+        search = _sanitize_filter_value(search)
         if search:
             search_filter = (
                 f'title_de.ilike.%{search}%,'
@@ -138,7 +139,9 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
             data_q = data_q.in_('canton', cantons_list)
 
         if cpv:
-            cpv_list = [c.strip() for c in cpv.split(',') if c.strip()]
+            # CPV-Codes sind numerisch; alles andere fliegt raus (Injection-Schutz)
+            cpv_list = [c.strip() for c in cpv.split(',')
+                        if re.fullmatch(r'\d{2,8}', c.strip())]
             if len(cpv_list) == 1:
                 count_q = count_q.like('cpv_code_main', cpv_list[0] + '%')
                 data_q = data_q.like('cpv_code_main', cpv_list[0] + '%')
@@ -230,6 +233,7 @@ def get_project_by_id(project_id: str) -> Optional[Dict]:
 
 
 def search_projects(query: str, limit: int = 50) -> List[Dict]:
+    query = _sanitize_filter_value(query)
     if not query:
         return []
     try:

@@ -118,6 +118,16 @@ def admin_required(f):
     return decorated_function
 
 
+def api_login_required(f):
+    """Decorator für JSON-APIs: 401 statt Redirect wenn nicht eingeloggt."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('user_logged_in'):
+            return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 # ============================================
 # ONBOARDING
 # ============================================
@@ -130,22 +140,18 @@ def onboarding_page():
 
 
 @app.route('/api/onboarding/profile', methods=['POST'])
+@api_login_required
 def api_onboarding_profile():
     """Speichere Firmenprofil"""
-    if not session.get('user_logged_in'):
-        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
-
     data = request.get_json()
     result = save_user_profile(session.get('user_id'), data)
     return jsonify(result)
 
 
 @app.route('/api/onboarding/simap-ids', methods=['POST'])
+@api_login_required
 def api_onboarding_simap_ids():
     """Speichere Simap Projekt-IDs"""
-    if not session.get('user_logged_in'):
-        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
-
     data = request.get_json()
     ids = data.get('ids', [])
     result = save_user_simap_ids(session.get('user_id'), ids)
@@ -153,11 +159,9 @@ def api_onboarding_simap_ids():
 
 
 @app.route('/api/onboarding/ratings', methods=['POST'])
+@api_login_required
 def api_onboarding_ratings():
     """Speichere Tender-Bewertungen"""
-    if not session.get('user_logged_in'):
-        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
-
     data = request.get_json()
     ratings_list = data.get('ratings', [])
     result = save_user_ratings(session.get('user_id'), ratings_list)
@@ -165,6 +169,7 @@ def api_onboarding_ratings():
 
 
 @app.route('/api/onboarding/random-tenders', methods=['GET'])
+@api_login_required
 def api_random_tenders():
     """Zufällige Archiv-Ausschreibungen für Rating"""
     count = request.args.get('count', 20, type=int)
@@ -381,11 +386,9 @@ def profile_page():
 
 
 @app.route('/api/profile/update', methods=['POST'])
+@api_login_required
 def api_profile_update():
     """API: Firmenprofil aktualisieren (inkl. preferred_cantons)."""
-    if not session.get('user_logged_in'):
-        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
-
     data = request.get_json(silent=True) or {}
     result = save_user_profile(session.get('user_id'), data)
 
@@ -412,9 +415,8 @@ def api_sample_projects():
 
 
 @app.route('/api/onboarding/submit-ratings', methods=['POST'])
+@api_login_required
 def api_submit_ratings():
-    if not session.get('user_logged_in'):
-        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
     data = request.get_json()
     result = save_user_ratings_v2(session.get('user_id'), data.get('ratings', []))
     return jsonify(result)
@@ -471,10 +473,9 @@ def api_user_ratings():
 
 
 @app.route('/api/remove-rating', methods=['POST'])
+@api_login_required
 def api_remove_rating():
     """Einzelnes Like entfernen (Unlike)."""
-    if not session.get('user_logged_in'):
-        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
     data = request.get_json() or {}
     result = remove_user_rating(
         session.get('user_id'),
@@ -485,13 +486,12 @@ def api_remove_rating():
 
 
 @app.route('/api/feed-rate', methods=['POST'])
+@api_login_required
 def api_feed_rate():
     """Idempotentes Like aus dem Live-Feed (Tab 'Ausschreibungen').
     Body: {tender_id: uuid, rating: 0|1, source?: 'project'|'archive'}
       rating=1 setzt das Like, rating=0 entfernt es (Toggle).
     """
-    if not session.get('user_logged_in'):
-        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
     data = request.get_json() or {}
     result = upsert_feed_rating(
         session.get('user_id'),
@@ -566,11 +566,9 @@ def api_get_favorites():
 
 
 @app.route('/api/favorites/add', methods=['POST'])
+@api_login_required
 def api_add_favorite():
     """API: Füge Favorit hinzu"""
-    if not session.get('user_logged_in'):
-        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
-
     user_id = session.get('user_id')
     data = request.get_json()
 
@@ -588,11 +586,9 @@ def api_add_favorite():
 
 
 @app.route('/api/favorites/remove', methods=['POST'])
+@api_login_required
 def api_remove_favorite():
     """API: Entferne Favorit"""
-    if not session.get('user_logged_in'):
-        return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
-
     user_id = session.get('user_id')
     data = request.get_json()
     project_id = data.get('project_id')
