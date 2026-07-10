@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content bearbeiten - SAJF Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --accent: #0f3460;
+            --background: #f1f5f9;
+            --surface: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+        }
+
+        .admin-header {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-logo { font-size: 1.25rem; font-weight: 700; }
+
+        .admin-nav {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .admin-nav a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+
+        .admin-nav a:hover, .admin-nav a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .content-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        .content-tab {
+            padding: 0.75rem 1.5rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .content-tab:hover {
+            background: var(--background);
+        }
+
+        .content-tab.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .content-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-hint {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        .form-textarea.large {
+            min-height: 300px;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary);
+        }
+
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .preview-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .preview-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .preview-box {
+            background: var(--background);
+            border-radius: 8px;
+            padding: 1.5rem;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <header class="admin-header">
+        <div class="admin-logo">🔐 SAJF Admin</div>
+        <nav class="admin-nav">
+            <a href="/admin">Dashboard</a>
+            <a href="/admin/content/about" class="active">Content</a>
+            <a href="/admin/team">Team</a>
+            <a href="/" target="_blank">Website →</a>
+            <a href="/admin/logout">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">Content bearbeiten</h1>
+        <p class="page-subtitle">Bearbeiten Sie die Texte Ihrer Website</p>
+
+        <div class="content-tabs">
+            <a href="/admin/content/about" class="content-tab {% if page == 'about' %}active{% endif %}">Über uns</a>
+            <a href="/admin/content/pro" class="content-tab {% if page == 'pro' %}active{% endif %}">Pro Version</a>
+            <a href="/admin/content/support" class="content-tab {% if page == 'support' %}active{% endif %}">Support</a>
+        </div>
+
+        <div class="content-card">
+            {% if request.args.get('saved') %}
+            <div class="success-message">
+                ✓ Änderungen wurden gespeichert!
+            </div>
+            {% endif %}
+
+            <form method="POST">
+                {% if page == 'about' %}
+                    <div class="form-group">
+                        <label class="form-label">Untertitel</label>
+                        <input type="text" name="subtitle" class="form-input" 
+                               value="{{ content.subtitle or '' }}"
+                               placeholder="z.B. Wir machen öffentliche Ausschreibungen zugänglich">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Mission Text</label>
+                        <textarea name="mission" class="form-textarea large" 
+                                  placeholder="Beschreiben Sie Ihre Mission...">{{ content.mission or '' }}</textarea>
+                        <div class="form-hint">Sie können HTML verwenden für Formatierung (z.B. &lt;p&gt;, &lt;strong&gt;)</div>
+                    </div>
+
+                {% elif page == 'pro' %}
+                    <div class="form-group">
+                        <label class="form-label">Hero Titel</label>
+                        <input type="text" name="hero_title" class="form-input" 
+                               value="{{ content.hero_title or '' }}"
+                               placeholder="z.B. SAJF Pro">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Hero Beschreibung</label>
+                        <textarea name="hero_description" class="form-textarea"
+                                  placeholder="Beschreiben Sie die Vorteile...">{{ content.hero_description or '' }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Preis (CHF/Monat)</label>
+                        <input type="text" name="price" class="form-input" 
+                               value="{{ content.price or '49' }}"
+                               placeholder="49">
+                    </div>
+
+                {% elif page == 'support' %}
+                    <div class="form-group">
+                        <label class="form-label">Support E-Mail</label>
+                        <input type="email" name="support_email" class="form-input" 
+                               value="{{ content.support_email or '' }}"
+                               placeholder="support@sajf-strategies.ch">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Zusätzliche FAQ (optional)</label>
+                        <textarea name="extra_faq" class="form-textarea"
+                                  placeholder="Zusätzliche häufige Fragen...">{{ content.extra_faq or '' }}</textarea>
+                    </div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary">💾 Speichern</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
