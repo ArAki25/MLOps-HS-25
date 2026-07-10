@@ -344,7 +344,8 @@ def publications():
     """Ausschreibungen-Seite (geschützt) — nur nach abgeschlossenem Onboarding."""
     if not is_onboarding_complete(session.get('user_id')):
         return redirect(url_for('onboarding_page'))
-    return render_template('publications.html')
+    profile = get_user_profile(session.get('user_id')) or {}
+    return render_template('publications.html', profile=profile)
 
 
 @app.route('/api/profile/data', methods=['GET'])
