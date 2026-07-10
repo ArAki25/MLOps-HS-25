@@ -39,6 +39,9 @@ Thumbs.db
 
 # Data outputs
 data/
+# Ausnahme: statische Assets der Web-App (Schweizer Kantons-Karte)
+!simap_ui/static/data/
+!simap_ui/static/data/**
 
 # Alte/experimentelle Dateien
 Main_fenlin.py
