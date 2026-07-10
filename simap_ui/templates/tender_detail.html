@@ -83,6 +83,7 @@
         .btn-save:hover { background: var(--accent-hover); }
         .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bob.css') }}">
 </head>
 <body>
     <div class="top-bar">
@@ -252,5 +253,7 @@
             el.className = 'notes-status' + (ok ? ' saved' : '');
         }
     </script>
+    {% include '_bob_widget.html' %}
+    <script src="{{ url_for('static', filename='js/bob.js') }}"></script>
 </body>
 </html>

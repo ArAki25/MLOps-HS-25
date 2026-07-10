@@ -96,6 +96,7 @@
             .shared-info { flex-direction: column; }
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bob.css') }}">
 </head>
 <body>
     <div class="top-bar">
@@ -289,5 +290,7 @@
         }
         {% endif %}
     </script>
+    {% include '_bob_widget.html' %}
+    <script src="{{ url_for('static', filename='js/bob.js') }}"></script>
 </body>
 </html>

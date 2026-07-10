@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>(function(){var t=localStorage.getItem('sajf-theme')||'dark';document.documentElement.setAttribute('data-theme',t);if(localStorage.getItem('sajf-sidebar')==='hidden'){document.addEventListener('DOMContentLoaded',function(){document.body.classList.add('sidebar-hidden');});}})();</script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/publications.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bob.css') }}">
 </head>
 <body>
     <!-- Top Header -->
@@ -356,5 +357,7 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/publications.js') }}"></script>
+    {% include '_bob_widget.html' %}
+    <script src="{{ url_for('static', filename='js/bob.js') }}"></script>
 </body>
 </html>
