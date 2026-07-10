@@ -3,71 +3,73 @@ app.py - SAJF Strategies Tender Platform
 Mit Admin Panel für Content Management
 """
 
-from flask import Flask, render_template, jsonify, request, session, redirect, url_for
-from functools import wraps
+import json
 import logging
 import os
 import secrets as _secrets
+from functools import wraps
+
 from dotenv import load_dotenv
+from flask import Flask, jsonify, redirect, render_template, request, session, url_for
+from logging_setup import setup_logging
+from security import hash_password, verify_password
 from supabase_client import (
-    init_supabase,
-    get_all_projects,
-    get_projects_paginated,
-    get_filter_options,
-    get_project_by_id,
-    search_projects,
+    TEST_COMPANY_SEEDS,
+    add_favorite,
+    add_team_member,
+    create_team,
+    delete_team,
+    delete_team_member,
     filter_projects,
-    get_statistics,
+    get_admin_by_email,
+    get_analytics_data,
     get_cantons,
     get_content,
-    update_content,
-    get_team_members,
-    add_team_member,
-    update_team_member,
-    delete_team_member,
-    get_admin_by_email,
-    update_admin_password,
-    add_favorite,
-    remove_favorite,
-    get_user_favorites_ids,
-    register_user,
-    login_user,
-    logout_user,
-    get_user_by_id,
-    is_onboarding_complete,
-    save_user_profile,
-    get_user_profile,
-    save_user_simap_ids,
-    get_onboarding_filter_options,
-    get_filtered_sample_projects,
-    save_user_ratings_v2,
-    get_user_recommendations,
-    recommendation_diversity_metric,
-    get_user_ratings_with_details,
-    remove_user_rating,
-    upsert_feed_rating,
     get_feed_ratings_map,
-    get_test_runs_overview,
-    TEST_COMPANY_SEEDS,
-    seed_test_companies,
-    get_user_like_count,
-    get_analytics_data,
-    get_tender_note,
-    save_tender_note,
+    get_filter_options,
+    get_filtered_sample_projects,
+    get_market_pulse_data,
+    get_onboarding_filter_options,
+    get_project_by_id,
     get_project_by_simap_id,
-    create_team,
+    get_projects_paginated,
+    get_statistics,
+    get_team_favorites,
+    get_team_members,
+    get_team_members_data,
+    get_team_ratings,
+    get_tender_note,
+    get_test_runs_overview,
+    get_user_favorites_ids,
+    get_user_like_count,
+    get_user_profile,
+    get_user_ratings_with_details,
+    get_user_recommendations,
+    get_user_team,
+    init_supabase,
+    is_onboarding_complete,
     join_team,
     leave_team,
-    delete_team,
-    get_user_team,
-    get_team_members_data,
-    get_team_favorites,
-    get_team_ratings,
-    get_market_pulse_data,
+    login_user,
+    logout_user,
+    recommendation_diversity_metric,
+    register_user,
+    remove_favorite,
+    remove_user_rating,
+    save_tender_note,
+    save_user_profile,
+    save_user_ratings_v2,
+    save_user_simap_ids,
+    search_projects,
+    seed_test_companies,
+    update_admin_password,
+    update_content,
+    update_team_member,
+    upsert_feed_rating,
 )
-from security import hash_password, verify_password
 
 load_dotenv()
+setup_logging()
 
 logger = logging.getLogger(__name__)
 
@@ -83,16 +85,13 @@ if not _secret_key:
 app.secret_key = _secret_key
 
 # Supabase initialisieren
-print("=" * 60)
-print("🚀 SAJF Strategies - Tender Platform startet...")
-print("=" * 60)
-
+logger.info("=" * 60)
+logger.info("🚀 SAJF Strategies - Tender Platform startet...")
+logger.info("=" * 60)
 try:
     init_supabase()
 except Exception as e:
-    print(f"❌ Supabase Fehler: {e}")
-
-
+    logger.error(f"❌ Supabase Fehler: {e}")
 # ============================================
 # LOGIN DECORATORS
 # ============================================
@@ -273,8 +272,7 @@ def auth_register():
             session['user_email'] = user.get('email', email)
             session['user_company_name'] = user.get('company_name', company_name)
 
-            print(f"✅ Auto-Login nach Registrierung: {email}")
-
+            logger.info(f"✅ Auto-Login nach Registrierung: {email}")
             # Direkt zum Onboarding weiterleiten
             return jsonify({
                 'success': True,
@@ -285,7 +283,7 @@ def auth_register():
             return jsonify(result), 400
 
     except Exception as e:
-        print(f"❌ Register API Fehler: {e}")
+        logger.error(f"❌ Register API Fehler: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -328,7 +326,7 @@ def auth_login():
             return jsonify(result), 401
 
     except Exception as e:
-        print(f"❌ Login API Fehler: {e}")
+        logger.error(f"❌ Login API Fehler: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -884,7 +882,6 @@ def api_team_ratings():
 
 @app.route('/marktpuls')
 def marktpuls():
-    import json
     data = get_market_pulse_data()
     stats = get_statistics()
     return render_template(
@@ -949,8 +946,7 @@ def api_bob_chat():
                         line += f" | Einreichungsfrist: {str(p['deadline'])[:10]}"
                     tender_context += line + '\n'
         except Exception as e:
-            print(f'Bob tender search error: {e}')
-
+            logger.info(f'Bob tender search error: {e}')
     try:
         from groq import Groq
 
@@ -972,18 +968,17 @@ def api_bob_chat():
         )
         return jsonify({'reply': response.choices[0].message.content})
     except Exception as e:
-        print(f'Bob chat error: {e}')
+        logger.info(f'Bob chat error: {e}')
         return jsonify({'reply': 'Entschuldigung, ich kann gerade nicht antworten. Bitte versuchen Sie es später erneut.'})
 
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    print("\n" + "=" * 60)
-    print("🌐 SAJF Strategies - Tender Platform")
-    print("📊 Datenbank: Supabase")
-    print(f"🔗 URL: http://127.0.0.1:{port}")
-    print(f"🔐 Admin: http://127.0.0.1:{port}/admin")
-    print("=" * 60)
-
+    logger.info("\n" + "=" * 60)
+    logger.info("🌐 SAJF Strategies - Tender Platform")
+    logger.info("📊 Datenbank: Supabase")
+    logger.info(f"🔗 URL: http://127.0.0.1:{port}")
+    logger.info(f"🔐 Admin: http://127.0.0.1:{port}/admin")
+    logger.info("=" * 60)
     # Dev-Default: nur localhost. Deployment setzt HOST=0.0.0.0 explizit.
     app.run(debug=False, host=os.getenv('HOST', '127.0.0.1'), port=port)

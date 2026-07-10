@@ -4,15 +4,21 @@ SAJF Strategies - Schema: ui
 Alle Website-Tabellen liegen im 'ui' Schema.
 """
 
-from supabase import create_client, Client
-from typing import List, Dict, Optional, Tuple, Any
-import os
 import json
+import logging
 import math
+import os
 import re
-from datetime import datetime, timezone, timedelta
+import secrets
+import string
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import numpy as np
+
+from supabase import Client, create_client
+
+logger = logging.getLogger(__name__)
 
 # ============================================
 # GLOBAL CLIENT
@@ -48,7 +54,7 @@ def init_supabase():
 
     supabase = create_client(url, key)
     supabase_auth = create_client(url, key)
-    print("✅ Supabase verbunden! Clients initialisiert.")
+    logger.info("✅ Supabase verbunden! Clients initialisiert.")
     return supabase
 
 
@@ -99,7 +105,7 @@ def _sanitize_filter_value(value: str) -> str:
 # PROJECTS (Tenders)
 # ============================================
 
-def get_all_projects(limit: int = 50) -> List[Dict]:
+def get_all_projects(limit: int = 50) -> list[dict]:
     try:
         response = ui('projects_ui') \
             .select('*') \
@@ -108,13 +114,13 @@ def get_all_projects(limit: int = 50) -> List[Dict]:
             .execute()
         return [transform_project(row) for row in (response.data or [])]
     except Exception as e:
-        print(f"❌ get_all_projects Fehler: {e}")
+        logger.error(f"❌ get_all_projects Fehler: {e}")
         return []
 
 
 def get_projects_paginated(page=1, per_page=30, search='', canton='',
                            cantons=None, order_type='', process_type='',
-                           pub_type='', sort='newest', cpv='') -> Dict:
+                           pub_type='', sort='newest', cpv='') -> dict:
     try:
         count_q = ui('projects_ui').select('id', count='exact')
         data_q = ui('projects_ui').select('*')
@@ -176,7 +182,6 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
         data_result = data_q.execute()
         projects = [transform_project(row) for row in (data_result.data or [])]
 
-        import math
         pages = math.ceil(total / per_page) if per_page > 0 else 0
 
         return {
@@ -185,11 +190,11 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
         }
 
     except Exception as e:
-        print(f"❌ get_projects_paginated Fehler: {e}")
+        logger.error(f"❌ get_projects_paginated Fehler: {e}")
         return {'data': [], 'total': 0, 'page': page, 'per_page': per_page, 'pages': 0}
 
 
-def get_filter_options() -> Dict:
+def get_filter_options() -> dict:
     try:
         all_rows = []
         batch_size = 1000
@@ -211,28 +216,28 @@ def get_filter_options() -> Dict:
         process_types = sorted(set(r.get('process_type') for r in all_rows if r.get('process_type') and r.get('process_type').strip()))
         pub_types = sorted(set(r.get('pub_type') for r in all_rows if r.get('pub_type') and r.get('pub_type').strip()))
 
-        print(f"✅ Filter-Optionen: {len(cantons)} Kantone, {len(order_types)} Auftragsarten, {len(process_types)} Verfahren, {len(pub_types)} Pub-Typen")
+        logger.info(f"✅ Filter-Optionen: {len(cantons)} Kantone, {len(order_types)} Auftragsarten, {len(process_types)} Verfahren, {len(pub_types)} Pub-Typen")
         return {
             'cantons': cantons, 'order_types': order_types,
             'process_types': process_types, 'pub_types': pub_types
         }
     except Exception as e:
-        print(f"❌ get_filter_options Fehler: {e}")
+        logger.error(f"❌ get_filter_options Fehler: {e}")
         return {'cantons': [], 'order_types': [], 'process_types': [], 'pub_types': []}
 
 
-def get_project_by_id(project_id: str) -> Optional[Dict]:
+def get_project_by_id(project_id: str) -> dict | None:
     try:
         response = ui('projects_ui').select('*').eq('id', project_id).execute()
         if response.data and len(response.data) > 0:
             return transform_project(response.data[0], include_details=True)
         return None
     except Exception as e:
-        print(f"❌ get_project_by_id Fehler: {e}")
+        logger.error(f"❌ get_project_by_id Fehler: {e}")
         return None
 
 
-def search_projects(query: str, limit: int = 50) -> List[Dict]:
+def search_projects(query: str, limit: int = 50) -> list[dict]:
     query = _sanitize_filter_value(query)
     if not query:
         return []
@@ -245,11 +250,11 @@ def search_projects(query: str, limit: int = 50) -> List[Dict]:
             .execute()
         return [transform_project(row) for row in (response.data or [])]
     except Exception as e:
-        print(f"❌ search_projects Fehler: {e}")
+        logger.error(f"❌ search_projects Fehler: {e}")
         return []
 
 
-def filter_projects(canton=None, process_type=None, order_type=None, limit=50) -> List[Dict]:
+def filter_projects(canton=None, process_type=None, order_type=None, limit=50) -> list[dict]:
     try:
         query = ui('projects_ui').select('*')
         if canton:
@@ -261,11 +266,11 @@ def filter_projects(canton=None, process_type=None, order_type=None, limit=50) -
         response = query.order('publication_date', desc=True).limit(limit).execute()
         return [transform_project(row) for row in (response.data or [])]
     except Exception as e:
-        print(f"❌ filter_projects Fehler: {e}")
+        logger.error(f"❌ filter_projects Fehler: {e}")
         return []
 
 
-def get_cantons() -> List[str]:
+def get_cantons() -> list[str]:
     try:
         all_cantons = []
         batch_size = 1000
@@ -279,24 +284,24 @@ def get_cantons() -> List[str]:
                 break
             offset += batch_size
         cantons = sorted(set(row.get('canton') for row in all_cantons if row.get('canton')))
-        print(f"✅ {len(cantons)} Kantone geladen")
+        logger.info(f"✅ {len(cantons)} Kantone geladen")
         return cantons
     except Exception as e:
-        print(f"❌ get_cantons Fehler: {e}")
+        logger.error(f"❌ get_cantons Fehler: {e}")
         return []
 
 
-def get_statistics() -> Dict:
+def get_statistics() -> dict:
     try:
         total = ui('projects_ui').select('id', count='exact').execute()
-        today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        today = datetime.now(UTC).strftime('%Y-%m-%d')
         today_count = ui('projects_ui').select('id', count='exact').eq('publication_date', today).execute()
         return {
             'total': total.count if total.count else 0,
             'today': today_count.count if today_count.count else 0
         }
     except Exception as e:
-        print(f"❌ get_statistics Fehler: {e}")
+        logger.error(f"❌ get_statistics Fehler: {e}")
         return {'total': 0, 'today': 0}
 
 
@@ -304,7 +309,7 @@ def get_statistics() -> Dict:
 # TRANSFORM
 # ============================================
 
-def transform_project(row: Dict, include_details: bool = False) -> Dict:
+def transform_project(row: dict, include_details: bool = False) -> dict:
     pub_date = row.get('publication_date')
     project = {
         'id': row.get('id'),
@@ -338,7 +343,7 @@ def transform_project(row: Dict, include_details: bool = False) -> Dict:
     return project
 
 
-def generate_simap_url(row: Dict) -> str:
+def generate_simap_url(row: dict) -> str:
     if row.get('simap_link'):
         return row['simap_link']
     pid = row.get('simap_project_id')
@@ -348,7 +353,6 @@ def generate_simap_url(row: Dict) -> str:
 def clean_html(text: str) -> str:
     if not text:
         return ''
-    import re
     return re.sub(r'<[^>]+>', '', text).replace('&nbsp;', ' ').strip()
 
 
@@ -357,21 +361,27 @@ def calculate_time_ago(date_str: str) -> str:
         return ''
     try:
         pub_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if pub_date.tzinfo is None:
-            pub_date = pub_date.replace(tzinfo=timezone.utc)
+            pub_date = pub_date.replace(tzinfo=UTC)
         diff = now - pub_date
         minutes = int(diff.total_seconds() / 60)
         hours = int(diff.total_seconds() / 3600)
         days = diff.days
-        if minutes < 1: return 'Gerade eben'
-        if minutes < 60: return f'vor {minutes} Min.'
-        if hours < 24: return f'vor {hours} Std.'
-        if days == 1: return 'Gestern'
-        if days < 7: return f'vor {days} Tagen'
-        if days < 30: return f'vor {days // 7} Wo.'
+        if minutes < 1:
+            return 'Gerade eben'
+        if minutes < 60:
+            return f'vor {minutes} Min.'
+        if hours < 24:
+            return f'vor {hours} Std.'
+        if days == 1:
+            return 'Gestern'
+        if days < 7:
+            return f'vor {days} Tagen'
+        if days < 30:
+            return f'vor {days // 7} Wo.'
         return pub_date.strftime('%d.%m.%Y')
-    except:
+    except Exception:
         return ''
 
 
@@ -379,15 +389,15 @@ def calculate_time_ago(date_str: str) -> str:
 # CONTENT MANAGEMENT
 # ============================================
 
-def get_content(page: str) -> Dict:
+def get_content(page: str) -> dict:
     try:
         r = ui('site_content').select('*').eq('page', page).execute()
         return r.data[0].get('content', {}) if r.data else {}
-    except:
+    except Exception:
         return {}
 
 
-def update_content(page: str, content: Dict) -> bool:
+def update_content(page: str, content: dict) -> bool:
     try:
         existing = ui('site_content').select('id').eq('page', page).execute()
         if existing.data:
@@ -395,7 +405,7 @@ def update_content(page: str, content: Dict) -> bool:
         else:
             ui('site_content').insert({'page': page, 'content': content}).execute()
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -403,26 +413,26 @@ def update_content(page: str, content: Dict) -> bool:
 # TEAM MEMBERS
 # ============================================
 
-def get_team_members() -> List[Dict]:
+def get_team_members() -> list[dict]:
     try:
         r = ui('team_members').select('*').order('display_order').execute()
         return r.data or []
-    except:
+    except Exception:
         return []
 
 
-def add_team_member(data: Dict):
+def add_team_member(data: dict):
     try:
         return ui('team_members').insert({
             'name': data.get('name'), 'role': data.get('role'),
             'bio': data.get('bio'), 'photo_url': data.get('photo_url'),
             'display_order': data.get('order', 0)
         }).execute()
-    except:
+    except Exception:
         return None
 
 
-def update_team_member(member_id: str, data: Dict):
+def update_team_member(member_id: str, data: dict):
     try:
         ui('team_members').update({
             'name': data.get('name'), 'role': data.get('role'),
@@ -430,7 +440,7 @@ def update_team_member(member_id: str, data: Dict):
             'display_order': data.get('order', 0)
         }).eq('id', member_id).execute()
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -438,7 +448,7 @@ def delete_team_member(member_id: str):
     try:
         ui('team_members').delete().eq('id', member_id).execute()
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -450,7 +460,7 @@ def get_admin_by_email(email: str):
     try:
         r = ui('admins').select('*').eq('email', email).execute()
         return r.data[0] if r.data else None
-    except:
+    except Exception:
         return None
 
 
@@ -467,7 +477,7 @@ def get_pro_user_by_identifier(username: str):
         r = ui('pro_users').select('*') \
             .or_(f'email.eq.{safe},company_name.eq.{safe}').execute()
         return r.data[0] if r.data else None
-    except:
+    except Exception:
         return None
 
 
@@ -476,7 +486,7 @@ def update_admin_password(email: str, password_hash: str) -> bool:
     try:
         ui('admins').update({'password': password_hash}).eq('email', email).execute()
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -485,7 +495,7 @@ def update_pro_user_password(user_id, password_hash: str) -> bool:
     try:
         ui('pro_users').update({'password': password_hash}).eq('id', user_id).execute()
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -493,7 +503,7 @@ def update_pro_user_password(user_id, password_hash: str) -> bool:
 # ML / RECOMMENDED (alte Pro-User Logik)
 # ============================================
 
-def get_recommended_projects(table_name: str, limit: int = 50) -> List[Dict]:
+def get_recommended_projects(table_name: str, limit: int = 50) -> list[dict]:
     sb = get_client()
     if not sb or not table_name:
         return []
@@ -509,7 +519,7 @@ def get_recommended_projects(table_name: str, limit: int = 50) -> List[Dict]:
             'cpv_code': row.get('cpv_code'),
             'simap_url': f"https://www.simap.ch/de/project-detail/{row.get('project_id')}" if row.get('project_id') else "https://www.simap.ch"
         } for row in (r.data or [])]
-    except:
+    except Exception:
         return []
 
 
@@ -517,17 +527,17 @@ def get_recommended_projects(table_name: str, limit: int = 50) -> List[Dict]:
 # FAVORITES
 # ============================================
 
-def get_user_favorites(user_id: str) -> List[Dict]:
+def get_user_favorites(user_id: str) -> list[dict]:
     if not user_id:
         return []
     try:
         r = ui('favorites').select('*').eq('user_id', user_id).order('created_at', desc=True).execute()
         return r.data or []
-    except:
+    except Exception:
         return []
 
 
-def add_favorite(user_id: str, project: Dict) -> bool:
+def add_favorite(user_id: str, project: dict) -> bool:
     if not user_id:
         return False
     try:
@@ -538,7 +548,7 @@ def add_favorite(user_id: str, project: Dict) -> bool:
             'simap_url': project.get('simap_url')
         }).execute()
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -548,17 +558,17 @@ def remove_favorite(user_id: str, project_id: str) -> bool:
     try:
         ui('favorites').delete().eq('user_id', user_id).eq('project_id', project_id).execute()
         return True
-    except:
+    except Exception:
         return False
 
 
-def get_user_favorites_ids(user_id: str) -> List[str]:
+def get_user_favorites_ids(user_id: str) -> list[str]:
     if not user_id:
         return []
     try:
         r = ui('favorites').select('project_id').eq('user_id', user_id).execute()
         return [str(row.get('project_id')) for row in (r.data or [])]
-    except:
+    except Exception:
         return []
 
 
@@ -603,8 +613,7 @@ def get_user_ratings_with_details(user_id):
                     a['project_subtype'] = reverse_map.get(a.get('order_type'), a.get('order_type'))
                     archive_map[str(a['id'])] = a
             except Exception as e:
-                print(f"⚠️ get_user_ratings_with_details archive join: {e}")
-
+                logger.warning(f"⚠️ get_user_ratings_with_details archive join: {e}")
         result = []
         for r in ratings_res.data:
             tid = r.get('tender_id', '')
@@ -639,10 +648,10 @@ def get_user_ratings_with_details(user_id):
                     'award_decision_date': None,
                 })
 
-        print(f"✅ {len(result)} Likes geladen ({len(project_ids)} Projekte + {len(archive_ids)} Archiv)")
+        logger.info(f"✅ {len(result)} Likes geladen ({len(project_ids)} Projekte + {len(archive_ids)} Archiv)")
         return result
     except Exception as e:
-        print(f"❌ get_user_ratings_with_details Fehler: {e}")
+        logger.error(f"❌ get_user_ratings_with_details Fehler: {e}")
         return []
 
 
@@ -662,15 +671,15 @@ def remove_user_rating(user_id, tender_id, source='project'):
             .eq('tender_id', str(tender_id)) \
             .eq('source', source) \
             .execute()
-        print(f"✅ Like entfernt: {tender_id} ({source})")
+        logger.info(f"✅ Like entfernt: {tender_id} ({source})")
         return {'success': True}
     except Exception as e:
-        print(f"❌ remove_user_rating Fehler: {e}")
+        logger.error(f"❌ remove_user_rating Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
 # Vordefinierte Test-Firmen fuer lokale Empfehlungs-Tests (Domain @recommender.dev)
-TEST_COMPANY_SEEDS: List[Dict[str, Any]] = [
+TEST_COMPANY_SEEDS: list[dict[str, Any]] = [
     {
         "email": "test.bau.zh@recommender.dev",
         "password": "TestBauZH!2026",
@@ -729,7 +738,7 @@ TEST_COMPANY_SEEDS: List[Dict[str, Any]] = [
 ]
 
 
-def seed_test_companies(write_json_path: Optional[str] = None) -> Dict[str, Any]:
+def seed_test_companies(write_json_path: str | None = None) -> dict[str, Any]:
     """Legt TEST_COMPANY_SEEDS an (Auth + ui.user_profiles). Idempotent.
 
     Benoetigt SUPABASE_URL und SUPABASE_SERVICE_ROLE_KEY (Profil-Upsert).
@@ -747,7 +756,7 @@ def seed_test_companies(write_json_path: Optional[str] = None) -> Dict[str, Any]
         }
 
     admin = create_client(url, service)
-    results: List[Dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
 
     for c in TEST_COMPANY_SEEDS:
         email = c["email"]
@@ -821,7 +830,7 @@ def seed_test_companies(write_json_path: Optional[str] = None) -> Dict[str, Any]
     return {"success": ok, "results": results}
 
 
-def get_test_runs_overview(top_n: int = 10) -> List[Dict]:
+def get_test_runs_overview(top_n: int = 10) -> list[dict]:
     """Aggregierter Ueberblick fuer /admin/test-runs.
 
     Fuer jeden Nutzer mit Test-E-Mail (Domain @recommender.dev):
@@ -838,7 +847,7 @@ def get_test_runs_overview(top_n: int = 10) -> List[Dict]:
             .like('email', '%@recommender.dev') \
             .execute().data or []
     except Exception as e:
-        print(f"❌ get_test_runs_overview (users): {e}")
+        logger.error(f"❌ get_test_runs_overview (users): {e}")
         return []
 
     overview = []
@@ -871,8 +880,7 @@ def get_test_runs_overview(top_n: int = 10) -> List[Dict]:
                 row['canton'] = prof[0].get('canton')
                 row['project_subtype'] = prof[0].get('project_subtype')
         except Exception as e:
-            print(f"⚠️ test-runs profile: {e}")
-
+            logger.warning(f"⚠️ test-runs profile: {e}")
         try:
             tv = ui('user_taste_vectors') \
                 .select('n_likes') \
@@ -889,16 +897,14 @@ def get_test_runs_overview(top_n: int = 10) -> List[Dict]:
                     .execute().data or []
                 row['n_likes'] = len(ratings)
         except Exception as e:
-            print(f"⚠️ test-runs taste: {e}")
-
+            logger.warning(f"⚠️ test-runs taste: {e}")
         if row['has_taste_vector']:
             try:
                 m = recommendation_diversity_metric(uid, top_n)
                 row['avg_pairwise_cosine_baseline'] = m.get('avg_pairwise_cosine_baseline')
                 row['avg_pairwise_cosine_mmr'] = m.get('avg_pairwise_cosine_mmr')
             except Exception as e:
-                print(f"⚠️ test-runs metric: {e}")
-
+                logger.warning(f"⚠️ test-runs metric: {e}")
             try:
                 recs = get_user_recommendations(uid, top_n) or []
                 sims = [r.get('similarity') for r in recs if isinstance(r.get('similarity'), (int, float))]
@@ -910,8 +916,7 @@ def get_test_runs_overview(top_n: int = 10) -> List[Dict]:
                     'similarity': round(r.get('similarity', 0.0), 4),
                 } for r in recs[:5]]
             except Exception as e:
-                print(f"⚠️ test-runs recs: {e}")
-
+                logger.warning(f"⚠️ test-runs recs: {e}")
         overview.append(row)
     return overview
 
@@ -929,7 +934,7 @@ def get_feed_ratings_map(user_id, source='project'):
             .execute().data or []
         return {r['tender_id']: 1 for r in rows if r.get('tender_id')}
     except Exception as e:
-        print(f"❌ get_feed_ratings_map Fehler: {e}")
+        logger.error(f"❌ get_feed_ratings_map Fehler: {e}")
         return {}
 
 
@@ -971,7 +976,7 @@ def upsert_feed_rating(user_id, tender_id, rating, source='project'):
         ).execute()
         return {'success': True, 'action': 'upsert', 'rating': 1}
     except Exception as e:
-        print(f"❌ upsert_feed_rating Fehler: {e}")
+        logger.error(f"❌ upsert_feed_rating Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -980,13 +985,13 @@ def upsert_feed_rating(user_id, tender_id, rating, source='project'):
 # SUPABASE AUTH
 # ============================================
 
-def register_user(email: str, password: str, company_name: str) -> Dict:
+def register_user(email: str, password: str, company_name: str) -> dict:
     sb_auth = get_auth_client()
     if not sb_auth:
         return {'success': False, 'error': 'Datenbank nicht verbunden'}
 
     try:
-        print(f"📝 Registrierung: {email}")
+        logger.info(f"📝 Registrierung: {email}")
         auth_response = sb_auth.auth.sign_up({
             'email': email,
             'password': password,
@@ -999,12 +1004,11 @@ def register_user(email: str, password: str, company_name: str) -> Dict:
                     'id': auth_response.user.id,
                     'email': email,
                     'company_name': company_name,
-                    'created_at': datetime.utcnow().isoformat()
+                    'created_at': datetime.now(UTC).isoformat()
                 }).execute()
-                print(f"✅ User in ui.users gespeichert")
+                logger.info("✅ User in ui.users gespeichert")
             except Exception as e:
-                print(f"⚠️ ui.users: {e} (Auth war erfolgreich)")
-
+                logger.warning(f"⚠️ ui.users: {e} (Auth war erfolgreich)")
             return {
                 'success': True,
                 'user': {'id': auth_response.user.id, 'email': email, 'company_name': company_name}
@@ -1013,19 +1017,19 @@ def register_user(email: str, password: str, company_name: str) -> Dict:
 
     except Exception as e:
         msg = str(e)
-        print(f"❌ Register-Fehler: {msg}")
+        logger.error(f"❌ Register-Fehler: {msg}")
         if 'already' in msg.lower():
             return {'success': False, 'error': 'E-Mail bereits registriert'}
         return {'success': False, 'error': f'Fehler: {msg}'}
 
 
-def login_user(email: str, password: str) -> Dict:
+def login_user(email: str, password: str) -> dict:
     sb_auth = get_auth_client()
     if not sb_auth:
         return {'success': False, 'error': 'Datenbank nicht verbunden'}
 
     try:
-        print(f"🔐 Login-Versuch: {email}")
+        logger.info(f"🔐 Login-Versuch: {email}")
         auth_response = sb_auth.auth.sign_in_with_password({
             'email': email,
             'password': password
@@ -1037,13 +1041,13 @@ def login_user(email: str, password: str) -> Dict:
                 r = ui('users').select('company_name').eq('id', auth_response.user.id).execute()
                 if r.data:
                     company_name = r.data[0].get('company_name')
-            except:
+            except Exception:
                 pass
 
             if not company_name and auth_response.user.user_metadata:
                 company_name = auth_response.user.user_metadata.get('company_name')
 
-            print(f"✅ Login erfolgreich: {email}, Firma: {company_name}")
+            logger.info(f"✅ Login erfolgreich: {email}, Firma: {company_name}")
             return {
                 'success': True,
                 'user': {
@@ -1056,7 +1060,7 @@ def login_user(email: str, password: str) -> Dict:
 
     except Exception as e:
         msg = str(e)
-        print(f"❌ Login-Fehler: {msg}")
+        logger.error(f"❌ Login-Fehler: {msg}")
         if 'invalid' in msg.lower() or 'credentials' in msg.lower():
             return {'success': False, 'error': 'Ungültige E-Mail oder Passwort'}
         return {'success': False, 'error': f'Fehler: {msg}'}
@@ -1069,7 +1073,7 @@ def logout_user() -> bool:
     try:
         sb_auth.auth.sign_out()
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -1079,7 +1083,7 @@ def get_user_by_id(user_id: str):
     try:
         r = ui('users').select('*').eq('id', user_id).execute()
         return r.data[0] if r.data else None
-    except:
+    except Exception:
         return None
 
 
@@ -1108,7 +1112,7 @@ def get_user_profile(user_id):
             profile['preferred_cantons'] = [s for s in pc.strip('{}').split(',') if s]
         return profile
     except Exception as e:
-        print(f"❌ get_user_profile Fehler: {e}")
+        logger.error(f"❌ get_user_profile Fehler: {e}")
         return {}
 
 
@@ -1163,7 +1167,7 @@ def save_user_profile(user_id, data):
             'project_subtype': data.get('project_subtype'),
             'award_amount_min': data.get('award_amount_min'),
             'award_amount_max': data.get('award_amount_max'),
-            'updated_at': datetime.utcnow().isoformat()
+            'updated_at': datetime.now(UTC).isoformat()
         }
         if preferred_cantons_list is not None:
             profile['preferred_cantons'] = preferred_cantons_list
@@ -1180,14 +1184,14 @@ def save_user_profile(user_id, data):
         try:
             if data.get('company_name'):
                 ui('users').update({'company_name': data.get('company_name')}).eq('id', user_id).execute()
-        except:
+        except Exception:
             pass
 
-        print(f"✅ Profil gespeichert für User: {user_id}")
+        logger.info(f"✅ Profil gespeichert für User: {user_id}")
         return {'success': True}
 
     except Exception as e:
-        print(f"❌ Profil-Fehler: {e}")
+        logger.error(f"❌ Profil-Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -1220,14 +1224,13 @@ def save_user_simap_ids(user_id, ids):
                     rating_rows, on_conflict='user_id,tender_id,source'
                 ).execute()
                 matched_count = len(rating_rows)
-                print(f"✅ {matched_count}/{len(ids)} Simap-IDs als Likes gespeichert → Taste-Vector wird berechnet")
-
+                logger.info(f"✅ {matched_count}/{len(ids)} Simap-IDs als Likes gespeichert → Taste-Vector wird berechnet")
         mark_onboarding_complete(user_id)
-        print(f"✅ {len(ids)} Simap-IDs gespeichert für User: {user_id}")
+        logger.info(f"✅ {len(ids)} Simap-IDs gespeichert für User: {user_id}")
         return {'success': True, 'count': len(ids), 'matched': matched_count}
 
     except Exception as e:
-        print(f"❌ Simap-IDs-Fehler: {e}")
+        logger.error(f"❌ Simap-IDs-Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -1254,11 +1257,11 @@ def get_onboarding_filter_options():
             r['project_subtype'] for r in all_rows
             if r.get('project_subtype') and r['project_subtype'].strip()
         ))
-        print(f"✅ {len(subtypes)} project_subtypes geladen")
+        logger.info(f"✅ {len(subtypes)} project_subtypes geladen")
         return {'subtypes': subtypes}
 
     except Exception as e:
-        print(f"❌ get_onboarding_filter_options Fehler: {e}")
+        logger.error(f"❌ get_onboarding_filter_options Fehler: {e}")
         return {'subtypes': []}
 
 
@@ -1287,7 +1290,7 @@ MMR_POOL_SIZE = 50          # Kandidaten-Pool aus dem RPC
 # -> max_allowed_sim_to_selected = 1 - MMR_MIN_DIVERSITY
 
 
-def _parse_pgvector(raw) -> Optional[np.ndarray]:
+def _parse_pgvector(raw) -> np.ndarray | None:
     """pgvector kommt ueber PostgREST als JSON-Array-String ("[0.12,-0.03,...]")
     oder bereits als list/tuple zurueck. Diese Funktion parst beides."""
     if raw is None:
@@ -1305,11 +1308,11 @@ def _parse_pgvector(raw) -> Optional[np.ndarray]:
 
 
 def _mmr_rerank(
-    candidates: List[Dict],
+    candidates: list[dict],
     k: int,
     lambda_param: float = MMR_LAMBDA,
     min_diversity: float = MMR_MIN_DIVERSITY,
-) -> List[Dict]:
+) -> list[dict]:
     """Maximal Marginal Relevance.
 
     candidates: Liste von Dicts mit Keys 'similarity' (float) und
@@ -1332,8 +1335,8 @@ def _mmr_rerank(
 
     max_sim_to_selected = 1.0 - min_diversity  # = 0.7 bei Default
 
-    selected: List[Dict] = []
-    selected_mat: List[np.ndarray] = []
+    selected: list[dict] = []
+    selected_mat: list[np.ndarray] = []
     remaining = list(pool)
 
     while remaining and len(selected) < k:
@@ -1370,7 +1373,7 @@ def _mmr_rerank(
     return selected
 
 
-def _strip_embedding(rec: Dict) -> Dict:
+def _strip_embedding(rec: dict) -> dict:
     """Embedding entfernen bevor das Result ans Frontend geht."""
     out = {k: v for k, v in rec.items() if k != 'embedding'}
     return out
@@ -1389,7 +1392,7 @@ def get_user_recommendations(user_id, count: int = 20):
         }).execute()
         raw = result.data or []
 
-        candidates: List[Dict] = []
+        candidates: list[dict] = []
         for row in raw:
             vec = _parse_pgvector(row.get('embedding'))
             if vec is None:
@@ -1402,10 +1405,10 @@ def get_user_recommendations(user_id, count: int = 20):
         reranked = _mmr_rerank(candidates, k=count)
         clean = [_strip_embedding(c) for c in reranked]
 
-        print(f"✅ {len(clean)} recommendations (pool={len(candidates)}) für User: {user_id}")
+        logger.info(f"✅ {len(clean)} recommendations (pool={len(candidates)}) für User: {user_id}")
         return clean
     except Exception as e:
-        print(f"❌ get_user_recommendations Fehler: {e}")
+        logger.error(f"❌ get_user_recommendations Fehler: {e}")
         return []
 
 
@@ -1422,7 +1425,7 @@ def get_user_like_count(user_id) -> int:
         return 0
 
 
-def recommendation_diversity_metric(user_id, count: int = 10) -> Dict:
+def recommendation_diversity_metric(user_id, count: int = 10) -> dict:
     """Misst die Diversitaet der Top-N Empfehlungen eines Users:
     durchschnittliche pairwise-Cosine-Aehnlichkeit.
     Ziel (siehe Task 4): <= 0.75.
@@ -1472,7 +1475,7 @@ def recommendation_diversity_metric(user_id, count: int = 10) -> Dict:
             'target_max': 0.75,
         }
     except Exception as e:
-        print(f"❌ recommendation_diversity_metric Fehler: {e}")
+        logger.error(f"❌ recommendation_diversity_metric Fehler: {e}")
         return {'error': str(e)}
 
 
@@ -1522,8 +1525,7 @@ def get_filtered_sample_projects(user_id, sample_size=20):
                     a['award_decision_date'] = str(a['award_decision_date'])
                 arch_rows.append(a)
         except Exception as ef:
-            print(f"⚠️ Fallback archive sample fehlgeschlagen: {ef}")
-
+            logger.warning(f"⚠️ Fallback archive sample fehlgeschlagen: {ef}")
         return (proj_rows + arch_rows)[:sample_size]
 
     try:
@@ -1534,26 +1536,26 @@ def get_filtered_sample_projects(user_id, sample_size=20):
         projects = result.data or []
 
         if not projects:
-            print(f"⚠️ RPC lieferte 0 Ergebnisse — Fallback mit Subtype-Filter")
+            logger.warning("⚠️ RPC lieferte 0 Ergebnisse — Fallback mit Subtype-Filter")
             projects = _build_fallback(max(1, sample_size // 2))
 
         for p in projects:
             if p.get('award_decision_date'):
                 p['award_decision_date'] = str(p['award_decision_date'])
 
-        print(f"✅ {len(projects)} Sample-Projekte geladen für User: {user_id}")
+        logger.info(f"✅ {len(projects)} Sample-Projekte geladen für User: {user_id}")
         return projects
     except Exception as e:
-        print(f"❌ get_filtered_sample_projects Fehler: {e} — Fallback")
+        logger.error(f"❌ get_filtered_sample_projects Fehler: {e} — Fallback")
         try:
             out = _build_fallback(max(1, sample_size // 2))
             for p in out:
                 if p.get('award_decision_date'):
                     p['award_decision_date'] = str(p['award_decision_date'])
-            print(f"✅ Fallback Sample-Projekte: {len(out)}")
+            logger.info(f"✅ Fallback Sample-Projekte: {len(out)}")
             return out
         except Exception as e2:
-            print(f"❌ Fallback komplett fehlgeschlagen: {e2}")
+            logger.error(f"❌ Fallback komplett fehlgeschlagen: {e2}")
             return []
 
 
@@ -1598,10 +1600,10 @@ def save_user_ratings_v2(user_id, ratings_list):
 
         mark_onboarding_complete(user_id)
 
-        print(f"✅ {len(rows)} Likes gespeichert für User: {user_id}")
+        logger.info(f"✅ {len(rows)} Likes gespeichert für User: {user_id}")
         return {'success': True, 'count': len(rows)}
     except Exception as e:
-        print(f"❌ save_user_ratings_v2 Fehler: {e}")
+        logger.error(f"❌ save_user_ratings_v2 Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -1613,7 +1615,7 @@ def save_user_ratings_v2(user_id, ratings_list):
 # ANALYTICS
 # ============================================
 
-def get_analytics_data() -> Dict:
+def get_analytics_data() -> dict:
     """Kantone + Subtyp-Zählungen für das Marktübersicht-Dashboard."""
     try:
         all_rows = []
@@ -1631,9 +1633,9 @@ def get_analytics_data() -> Dict:
                 break
             offset += batch_size
 
-        canton_counts: Dict[str, int] = {}
-        subtype_counts: Dict[str, int] = {}
-        order_type_counts: Dict[str, int] = {}
+        canton_counts: dict[str, int] = {}
+        subtype_counts: dict[str, int] = {}
+        order_type_counts: dict[str, int] = {}
 
         for row in all_rows:
             c = (row.get('canton') or '').strip().upper()
@@ -1652,7 +1654,7 @@ def get_analytics_data() -> Dict:
             'order_type_counts': order_type_counts,
         }
     except Exception as e:
-        print(f"❌ get_analytics_data Fehler: {e}")
+        logger.error(f"❌ get_analytics_data Fehler: {e}")
         return {'canton_counts': {}, 'subtype_counts': {}, 'order_type_counts': {}}
 
 
@@ -1660,7 +1662,7 @@ def get_analytics_data() -> Dict:
 # MARKTPULS — public market statistics
 # ============================================
 
-def get_market_pulse_data() -> Dict:
+def get_market_pulse_data() -> dict:
     """All data needed for the public Marktpuls page."""
     try:
         batch_size = 1000
@@ -1677,8 +1679,8 @@ def get_market_pulse_data() -> Dict:
                 break
             offset += batch_size
 
-        canton_counts: Dict[str, int] = {}
-        order_type_counts: Dict[str, int] = {}
+        canton_counts: dict[str, int] = {}
+        order_type_counts: dict[str, int] = {}
         for row in all_meta:
             c = (row.get('canton') or '').strip().upper()
             if c:
@@ -1688,7 +1690,7 @@ def get_market_pulse_data() -> Dict:
                 order_type_counts[o] = order_type_counts.get(o, 0) + 1
 
         # ── Last-30-days: top organisations (all + by category) ──
-        since = (datetime.now(timezone.utc) - timedelta(days=30)).strftime('%Y-%m-%d')
+        since = (datetime.now(UTC) - timedelta(days=30)).strftime('%Y-%m-%d')
         recent: list = []
         offset = 0
         while True:
@@ -1714,10 +1716,10 @@ def get_market_pulse_data() -> Dict:
                 return 'service'
             return 'other'
 
-        org_all:          Dict[str, int] = {}
-        org_construction: Dict[str, int] = {}
-        org_service:      Dict[str, int] = {}
-        org_supply:       Dict[str, int] = {}
+        org_all:          dict[str, int] = {}
+        org_construction: dict[str, int] = {}
+        org_service:      dict[str, int] = {}
+        org_supply:       dict[str, int] = {}
         pub_count = 0
 
         for row in recent:
@@ -1734,7 +1736,7 @@ def get_market_pulse_data() -> Dict:
                 elif cat == 'supply':
                     org_supply[org] = org_supply.get(org, 0) + 1
 
-        def _top(d: Dict[str, int], n: int = 10):
+        def _top(d: dict[str, int], n: int = 10):
             return [{'name': k, 'count': v}
                     for k, v in sorted(d.items(), key=lambda x: x[1], reverse=True)[:n]]
 
@@ -1754,7 +1756,7 @@ def get_market_pulse_data() -> Dict:
             'avg_per_day': avg_per_day,
         }
     except Exception as e:
-        print(f"❌ get_market_pulse_data Fehler: {e}")
+        logger.error(f"❌ get_market_pulse_data Fehler: {e}")
         return {
             'canton_counts': {}, 'order_type_counts': {}, 'trend_30d': {},
             'top_orgs': [], 'total_all': 0, 'total_30d': 0, 'avg_per_day': 0,
@@ -1776,11 +1778,11 @@ def get_tender_note(user_id: str, simap_id: str) -> str:
             .execute()
         return (r.data[0].get('note') or '') if r.data else ''
     except Exception as e:
-        print(f"❌ get_tender_note Fehler: {e}")
+        logger.error(f"❌ get_tender_note Fehler: {e}")
         return ''
 
 
-def save_tender_note(user_id: str, simap_id: str, note: str) -> Dict:
+def save_tender_note(user_id: str, simap_id: str, note: str) -> dict:
     if not user_id or not simap_id:
         return {'success': False, 'error': 'Ungültige Parameter'}
     try:
@@ -1789,24 +1791,24 @@ def save_tender_note(user_id: str, simap_id: str, note: str) -> Dict:
                 'user_id': user_id,
                 'simap_id': str(simap_id),
                 'note': note,
-                'updated_at': datetime.utcnow().isoformat(),
+                'updated_at': datetime.now(UTC).isoformat(),
             },
             on_conflict='user_id,simap_id',
         ).execute()
         return {'success': True}
     except Exception as e:
-        print(f"❌ save_tender_note Fehler: {e}")
+        logger.error(f"❌ save_tender_note Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
-def get_project_by_simap_id(simap_id: str) -> Optional[Dict]:
+def get_project_by_simap_id(simap_id: str) -> dict | None:
     try:
         r = ui('projects_ui').select('*').eq('simap_project_id', str(simap_id)).limit(1).execute()
         if r.data:
             return transform_project(r.data[0], include_details=True)
         return None
     except Exception as e:
-        print(f"❌ get_project_by_simap_id Fehler: {e}")
+        logger.error(f"❌ get_project_by_simap_id Fehler: {e}")
         return None
 
 
@@ -1814,15 +1816,12 @@ def get_project_by_simap_id(simap_id: str) -> Optional[Dict]:
 # TEAM ACCOUNTS
 # ============================================
 
-import secrets
-import string
-
 def _generate_invite_code(length=8) -> str:
     alphabet = string.ascii_uppercase + string.digits
     return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 
-def create_team(owner_id: str, team_name: str) -> Dict:
+def create_team(owner_id: str, team_name: str) -> dict:
     if not owner_id or not team_name:
         return {'success': False, 'error': 'Name und User erforderlich'}
     try:
@@ -1847,11 +1846,11 @@ def create_team(owner_id: str, team_name: str) -> Dict:
 
         return {'success': True, 'team_id': team_id, 'invite_code': invite_code, 'name': team_name}
     except Exception as e:
-        print(f"❌ create_team Fehler: {e}")
+        logger.error(f"❌ create_team Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
-def join_team(user_id: str, invite_code: str) -> Dict:
+def join_team(user_id: str, invite_code: str) -> dict:
     if not user_id or not invite_code:
         return {'success': False, 'error': 'Einladungscode erforderlich'}
     try:
@@ -1868,11 +1867,11 @@ def join_team(user_id: str, invite_code: str) -> Dict:
 
         return {'success': True, 'team_id': team_id, 'name': team['name']}
     except Exception as e:
-        print(f"❌ join_team Fehler: {e}")
+        logger.error(f"❌ join_team Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
-def leave_team(user_id: str, team_id: str) -> Dict:
+def leave_team(user_id: str, team_id: str) -> dict:
     if not user_id or not team_id:
         return {'success': False, 'error': 'Ungültige Parameter'}
     try:
@@ -1885,11 +1884,11 @@ def leave_team(user_id: str, team_id: str) -> Dict:
         ui('org_team_members').delete().eq('team_id', team_id).eq('user_id', user_id).execute()
         return {'success': True}
     except Exception as e:
-        print(f"❌ leave_team Fehler: {e}")
+        logger.error(f"❌ leave_team Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
-def delete_team(owner_id: str, team_id: str) -> Dict:
+def delete_team(owner_id: str, team_id: str) -> dict:
     if not owner_id or not team_id:
         return {'success': False, 'error': 'Ungültige Parameter'}
     try:
@@ -1900,11 +1899,11 @@ def delete_team(owner_id: str, team_id: str) -> Dict:
         ui('org_teams').delete().eq('id', team_id).execute()
         return {'success': True}
     except Exception as e:
-        print(f"❌ delete_team Fehler: {e}")
+        logger.error(f"❌ delete_team Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
-def get_user_team(user_id: str) -> Optional[Dict]:
+def get_user_team(user_id: str) -> dict | None:
     if not user_id:
         return None
     try:
@@ -1921,11 +1920,11 @@ def get_user_team(user_id: str) -> Optional[Dict]:
         team['my_role'] = role
         return team
     except Exception as e:
-        print(f"❌ get_user_team Fehler: {e}")
+        logger.error(f"❌ get_user_team Fehler: {e}")
         return None
 
 
-def get_team_members_data(team_id: str) -> List[Dict]:
+def get_team_members_data(team_id: str) -> list[dict]:
     if not team_id:
         return []
     try:
@@ -1947,11 +1946,11 @@ def get_team_members_data(team_id: str) -> List[Dict]:
             })
         return result
     except Exception as e:
-        print(f"❌ get_team_members_data Fehler: {e}")
+        logger.error(f"❌ get_team_members_data Fehler: {e}")
         return []
 
 
-def get_team_favorites(team_id: str) -> List[Dict]:
+def get_team_favorites(team_id: str) -> list[dict]:
     """Alle Favoriten aller Team-Mitglieder (dedupliziert nach project_id)."""
     if not team_id:
         return []
@@ -1971,11 +1970,11 @@ def get_team_favorites(team_id: str) -> List[Dict]:
                 result.append(f)
         return result
     except Exception as e:
-        print(f"❌ get_team_favorites Fehler: {e}")
+        logger.error(f"❌ get_team_favorites Fehler: {e}")
         return []
 
 
-def get_team_ratings(team_id: str) -> List[Dict]:
+def get_team_ratings(team_id: str) -> list[dict]:
     """Alle Likes aller Team-Mitglieder (dedupliziert nach tender_id)."""
     if not team_id:
         return []
@@ -1995,7 +1994,7 @@ def get_team_ratings(team_id: str) -> List[Dict]:
                 result.append(r)
         return result
     except Exception as e:
-        print(f"❌ get_team_ratings Fehler: {e}")
+        logger.error(f"❌ get_team_ratings Fehler: {e}")
         return []
 
 
@@ -2003,14 +2002,12 @@ def mark_onboarding_complete(user_id):
     """Markiere Onboarding als abgeschlossen - KORRIGIERT auf 'onboarding_completed'"""
     try:
         ui('user_profiles') \
-            .update({'onboarding_completed': True, 'updated_at': datetime.utcnow().isoformat()}) \
+            .update({'onboarding_completed': True, 'updated_at': datetime.now(UTC).isoformat()}) \
             .eq('user_id', user_id) \
             .execute()
-        print(f"✅ Onboarding completed für User: {user_id}")
+        logger.info(f"✅ Onboarding completed für User: {user_id}")
     except Exception as e:
-        print(f"⚠️ mark_onboarding_complete Fehler: {e}")
-
-
+        logger.warning(f"⚠️ mark_onboarding_complete Fehler: {e}")
 def is_onboarding_complete(user_id):
     """Prüfe ob User Onboarding abgeschlossen hat - KORRIGIERT auf 'onboarding_completed'"""
     if not user_id:
@@ -2027,5 +2024,5 @@ def is_onboarding_complete(user_id):
         return False
 
     except Exception as e:
-        print(f"⚠️ is_onboarding_complete Fehler: {e}")
+        logger.warning(f"⚠️ is_onboarding_complete Fehler: {e}")
         return False

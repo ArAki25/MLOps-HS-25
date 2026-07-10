@@ -15,7 +15,6 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
 
 _HERE = Path(__file__).resolve().parent
 
@@ -48,7 +47,6 @@ _CPV_LEGACY_2003_TO_2008 = {
     "74740000": "90720000",
     "75000000": "75000000",  # unverändert
     "80420000": "80500000",  # Ausbildung
-    "80422100": "80500000",
     "02100000": "03400000",  # Forstwirtschaftliche Erzeugnisse
     "20200000": "03410000",  # Bauholz
     "21221000": "03445000",  # Verpackungsholz
@@ -134,7 +132,7 @@ def _load_cpv() -> dict:
         return json.load(f)
 
 
-def cpv_label(code: Optional[str], lang: str = "de") -> Optional[str]:
+def cpv_label(code: str | None, lang: str = "de") -> str | None:
     """
     Liefert ein menschenlesbares Label für einen 8-stelligen CPV-Code.
 
@@ -190,7 +188,7 @@ def _load_bkp() -> dict:
     return d
 
 
-def bkp_label(code: Optional[str]) -> Optional[str]:
+def bkp_label(code: str | None) -> str | None:
     """
     Liefert das BKP-Label. Kaskadiert rückwärts bis zur 1-stelligen Hauptgruppe.
     Freitext-BKP-Einträge (>4 Zeichen) werden 1:1 zurückgegeben.
@@ -233,7 +231,7 @@ CANTON_DE = {
 }
 
 
-def canton_label(code: Optional[str]) -> Optional[str]:
+def canton_label(code: str | None) -> str | None:
     if not code:
         return None
     return CANTON_DE.get(str(code).strip().upper())
@@ -286,14 +284,14 @@ PUB_TYPE_CATEGORY = {
 }
 
 
-def pub_type_label(code: Optional[str]) -> Optional[str]:
+def pub_type_label(code: str | None) -> str | None:
     if not code:
         return None
     key = str(code).strip()
     return PUB_TYPE_DE.get(key) or PUB_TYPE_DE.get(key.upper())
 
 
-def pub_type_category(code: Optional[str]) -> Optional[str]:
+def pub_type_category(code: str | None) -> str | None:
     if not code:
         return None
     key = str(code).strip()
@@ -407,7 +405,7 @@ LANGUAGE_DE = {
 }
 
 
-def _label_or(d: dict, code: Optional[str]) -> Optional[str]:
+def _label_or(d: dict, code: str | None) -> str | None:
     if not code:
         return None
     v = d.get(str(code).strip())

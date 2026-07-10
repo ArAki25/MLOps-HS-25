@@ -20,8 +20,8 @@ from __future__ import annotations
 import hashlib
 import html
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Iterable, Optional
 
 from .dicts import (
     bkp_label,
@@ -30,8 +30,8 @@ from .dicts import (
     construction_type_label,
     cpv_label,
     order_type_label,
-    procurer_type_label,
     process_type_label,
+    procurer_type_label,
     project_subtype_label,
     project_type_label,
     pub_type_category,
@@ -51,7 +51,7 @@ _WS_RE        = re.compile(r"[ \t\u00a0\u200b]+")
 _MULTI_NL_RE  = re.compile(r"\n{3,}")
 
 
-def _clean(text: Optional[str]) -> str:
+def _clean(text: str | None) -> str:
     if text is None:
         return ""
     if not isinstance(text, str):
@@ -64,7 +64,7 @@ def _clean(text: Optional[str]) -> str:
     return text.strip()
 
 
-def _nonempty(*values: Optional[str]) -> Optional[str]:
+def _nonempty(*values: str | None) -> str | None:
     """Erste nichtleere, bereinigte Zeichenkette (Spracheauswahl-Kaskade)."""
     for v in values:
         c = _clean(v)
@@ -73,7 +73,7 @@ def _nonempty(*values: Optional[str]) -> Optional[str]:
     return None
 
 
-def _join(parts: Iterable[Optional[str]], sep: str = ". ") -> str:
+def _join(parts: Iterable[str | None], sep: str = ". ") -> str:
     return sep.join(p for p in parts if p)
 
 
@@ -82,7 +82,7 @@ def _join(parts: Iterable[Optional[str]], sep: str = ". ") -> str:
 # ---------------------------------------------------------------------------
 
 
-def _block_type(row: dict) -> Optional[str]:
+def _block_type(row: dict) -> str | None:
     """Block A — Publikations-/Auftragstyp."""
     parts = [
         pub_type_label(row.get("pub_type")),
@@ -104,7 +104,7 @@ def _block_type(row: dict) -> Optional[str]:
     return f"Publikation: {text}."
 
 
-def _block_geo(row: dict) -> Optional[str]:
+def _block_geo(row: dict) -> str | None:
     canton = canton_label(row.get("canton"))
     city   = _clean(row.get("city"))
     country = _clean(row.get("country"))
@@ -120,7 +120,7 @@ def _block_geo(row: dict) -> Optional[str]:
     return "Standort: " + ", ".join(loc_parts) + "."
 
 
-def _block_procurement_office(row: dict) -> Optional[str]:
+def _block_procurement_office(row: dict) -> str | None:
     name = _nonempty(
         row.get("proc_office_name_de"),
         row.get("proc_office_name_fr"),
@@ -162,7 +162,7 @@ def _iter_bkp_codes(row: dict) -> Iterable[str]:
             yield code
 
 
-def _block_codes(row: dict) -> Optional[str]:
+def _block_codes(row: dict) -> str | None:
     cpv_labels = []
     for code in _iter_cpv_codes(row):
         lab = cpv_label(code)
@@ -183,7 +183,7 @@ def _block_codes(row: dict) -> Optional[str]:
     return " ".join(parts)
 
 
-def _block_content(row: dict) -> Optional[str]:
+def _block_content(row: dict) -> str | None:
     title = _nonempty(
         row.get("title_de"),
         row.get("title_fr"),
@@ -204,7 +204,7 @@ def _block_content(row: dict) -> Optional[str]:
     return " ".join(parts) if parts else None
 
 
-def _block_award(row: dict) -> Optional[str]:
+def _block_award(row: dict) -> str | None:
     if pub_type_category(row.get("pub_type")) not in _AWARD_CATEGORIES:
         return None
 
@@ -217,7 +217,7 @@ def _block_award(row: dict) -> Optional[str]:
         row.get("award_justification_fr"),
     )
 
-    all_winners_text: Optional[str] = None
+    all_winners_text: str | None = None
     all_winners = row.get("all_winners")
     if isinstance(all_winners, list) and len(all_winners) > 1:
         extra = []
@@ -253,9 +253,9 @@ def _detect_language(row: dict) -> str:
     if cl in {"de", "fr", "it", "en", "rm"}:
         return cl
     # 2) welcher title/description ist gesetzt?
-    for l in ("de", "fr", "it", "en"):
-        if _clean(row.get(f"title_{l}")) or _clean(row.get(f"description_{l}")):
-            return l
+    for lang in ("de", "fr", "it", "en"):
+        if _clean(row.get(f"title_{lang}")) or _clean(row.get(f"description_{lang}")):
+            return lang
     return "de"
 
 

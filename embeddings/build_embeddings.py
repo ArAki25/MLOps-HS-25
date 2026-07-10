@@ -36,7 +36,7 @@ import sys
 import threading
 import time
 from dataclasses import dataclass
-from typing import Any, Iterator, Optional
+from typing import Any
 
 import requests
 from dotenv import load_dotenv
@@ -151,7 +151,7 @@ def _request_with_retry(
     method: str,
     url: str,
     *,
-    max_retries: Optional[int] = None,
+    max_retries: int | None = None,
     **kwargs,
 ) -> requests.Response:
     """HTTP-Request mit Backoff. max_retries=None → REST_RETRIES (volle Retries).
@@ -194,7 +194,7 @@ def _request_with_retry(
     raise last_exc
 
 
-def _rest_headers(extra: Optional[dict] = None) -> dict:
+def _rest_headers(extra: dict | None = None) -> dict:
     if not SUPABASE_URL or not SUPABASE_KEY:
         raise RuntimeError(
             "SUPABASE_URL / SUPABASE_KEY nicht gesetzt. "
@@ -525,7 +525,7 @@ def _row_to_upsert(
 
 def process_source(
     source: str,
-    limit_total: Optional[int],
+    limit_total: int | None,
     dry_run: bool,
     force: bool,
 ) -> Stats:
@@ -709,7 +709,7 @@ def process_source(
             if not dry_run:
                 records = [
                     _row_to_upsert(r, source, bt, v, pk)
-                    for r, bt, v, pk in zip(chunk_r, chunk_bt, vecs, chunk_pk)
+                    for r, bt, v, pk in zip(chunk_r, chunk_bt, vecs, chunk_pk, strict=False)
                 ]
                 upsert_q.put(records)
 
@@ -732,7 +732,7 @@ def process_source(
                 pbar.update(batch.rows_in_page)
 
             # Filter: nur neue/geänderte Rows encoden
-            for row, bt in zip(batch.rows, batch.built):
+            for row, bt in zip(batch.rows, batch.built, strict=False):
                 existing_hash, pk_id = batch.existing_info.get(str(row["id"]), ("", None))
                 if not force and existing_hash == bt.text_hash:
                     stats.unchanged += 1
