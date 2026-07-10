@@ -936,7 +936,7 @@ def api_bob_chat():
     if any(kw in user_message.lower() for kw in tender_keywords):
         try:
             results = get_projects_paginated(page=1, per_page=5, search=user_message)
-            projects = results.get('projects', [])
+            projects = results.get('data', [])
             if projects:
                 tender_context = '\n\nAktuelle relevante Ausschreibungen aus der Datenbank:\n'
                 for p in projects:
