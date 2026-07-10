@@ -6,11 +6,28 @@ var bobHistory = [];
 var bobWaiting = false;
 
 function bobToggle() {
-    document.getElementById('bob-bubble').classList.toggle('open');
-    if (document.getElementById('bob-bubble').classList.contains('open')) {
+    var bubble = document.getElementById('bob-bubble');
+    var trigger = document.getElementById('bob-trigger');
+    bubble.classList.toggle('open');
+    var open = bubble.classList.contains('open');
+    trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    trigger.setAttribute('aria-label', open ? 'Chat mit Bob schließen' : 'Chat mit Bob öffnen');
+    if (open) {
         setTimeout(function() { document.getElementById('bob-input').focus(); }, 210);
     }
 }
+
+function bobClose() {
+    var bubble = document.getElementById('bob-bubble');
+    if (bubble.classList.contains('open')) {
+        bobToggle();
+        document.getElementById('bob-trigger').focus();
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') bobClose();
+});
 
 function bobKeydown(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); bobSend(); }
