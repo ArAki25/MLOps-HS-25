@@ -26,6 +26,7 @@ from supabase_client import (
     update_team_member,
     delete_team_member,
     get_admin_by_email,
+    update_admin_password,
     add_favorite,
     remove_favorite,
     get_user_favorites_ids,
@@ -66,6 +67,7 @@ from supabase_client import (
     get_team_ratings,
     get_market_pulse_data,
 )
+from security import hash_password, verify_password
 
 load_dotenv()
 
@@ -612,7 +614,13 @@ def admin_login():
         password = request.form.get('password')
 
         admin = get_admin_by_email(email)
-        if admin and admin.get('password') == password:
+        ok, needs_rehash = verify_password(password or '', (admin or {}).get('password') or '')
+        if admin and ok:
+            if needs_rehash:
+                # Legacy-Klartext transparent auf bcrypt migrieren;
+                # ein Fehler hier darf den Login nicht blockieren.
+                if not update_admin_password(email, hash_password(password)):
+                    logger.warning('Admin-Passwort-Rehash fehlgeschlagen für %s', email)
             session['admin_logged_in'] = True
             session['admin_email'] = email
             session['admin_name'] = admin.get('name', 'Admin')

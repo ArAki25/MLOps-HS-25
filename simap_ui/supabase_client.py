@@ -9,6 +9,7 @@ from typing import List, Dict, Optional, Tuple, Any
 import os
 import json
 import math
+import re
 from datetime import datetime, timezone, timedelta
 
 import numpy as np
@@ -81,6 +82,17 @@ def ui_rpc(function_name: str, params: dict):
     """Helper: Aufruf einer Postgres-Funktion im 'ui' Schema."""
     sb = get_client()
     return sb.schema(UI_SCHEMA).rpc(function_name, params)
+
+
+# Zeichen mit Sonderbedeutung in der PostgREST or=-Filtergrammatik.
+# Sie werden aus User-Input entfernt, bevor er in .or_()-Filter
+# interpoliert wird (verhindert Filter-Injection wie "x,id.eq.1").
+_OR_UNSAFE = re.compile(r'[,()."\\]')
+
+
+def _sanitize_filter_value(value: str) -> str:
+    """User-Input für die Verwendung in PostgREST-.or_()-Filtern entschärfen."""
+    return _OR_UNSAFE.sub(' ', value or '').strip()
 
 
 # ============================================
@@ -438,14 +450,39 @@ def get_admin_by_email(email: str):
         return None
 
 
-def get_pro_user(username: str, password: str):
+def get_pro_user_by_identifier(username: str):
+    """Pro-User per E-Mail oder Firmenname holen.
+
+    Passwort-Prüfung erfolgt in Python (security.verify_password),
+    nicht mehr per DB-Filter auf die Klartext-Spalte.
+    """
     try:
+        safe = _sanitize_filter_value(username)
+        if not safe:
+            return None
         r = ui('pro_users').select('*') \
-            .or_(f'email.eq.{username},company_name.eq.{username}') \
-            .eq('password', password).execute()
+            .or_(f'email.eq.{safe},company_name.eq.{safe}').execute()
         return r.data[0] if r.data else None
     except:
         return None
+
+
+def update_admin_password(email: str, password_hash: str) -> bool:
+    """Gespeichertes Admin-Passwort ersetzen (Klartext -> bcrypt-Hash)."""
+    try:
+        ui('admins').update({'password': password_hash}).eq('email', email).execute()
+        return True
+    except:
+        return False
+
+
+def update_pro_user_password(user_id, password_hash: str) -> bool:
+    """Gespeichertes Pro-User-Passwort ersetzen (Klartext -> bcrypt-Hash)."""
+    try:
+        ui('pro_users').update({'password': password_hash}).eq('id', user_id).execute()
+        return True
+    except:
+        return False
 
 
 # ============================================
