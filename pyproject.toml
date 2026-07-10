@@ -1,0 +1,32 @@
+[project]
+name = "mlops-hs-25"
+version = "0.1.0"
+description = "SAJF Strategies - SIMAP Tender-Plattform (FHNW MLOps HS25)"
+requires-python = ">=3.11"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+# Nur der aktive Code wird gelintet
+include = ["simap_ui/**/*.py", "embeddings/**/*.py", "scripts/**/*.py", "tests/**/*.py", "archive/**/*.py"]
+extend-exclude = ["legacy", ".venv", "venv"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "DTZ", # naive datetime
+]
+ignore = [
+    "E501", # Zeilenlänge: Bestandscode hat viele lange Zeilen
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# app.py nutzt flache Imports (from supabase_client import ...),
+# daher muss simap_ui auf dem sys.path liegen
+pythonpath = [".", "simap_ui"]

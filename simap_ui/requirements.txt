@@ -1,39 +1,24 @@
-# SIMAP Project - Dependencies
-# =============================
-
-# API & HTTP
-requests>=2.31.0
-
-# Umgebungsvariablen
-python-dotenv>=1.0.0
-
-# Datenbank (PostgreSQL/Supabase)
-psycopg2-binary>=2.9.9
-supabase>=2.0.0  # Supabase Python Client
-
-# Datenverarbeitung
-pandas>=2.0.0
-numpy>=1.24.0
-
-# Machine Learning (für ml/classifier.py und ml/algorithm/model.py)
-scikit-learn>=1.3.0
-sentence-transformers>=2.2.0  # Text Embeddings
-joblib>=1.3.0                 # Model Serialization
-torch>=2.0.0                  # PyTorch (benötigt für sentence-transformers)
+# SAJF Strategies - Web-App Runtime (simap_ui/)
+# ==============================================
 
 # Web UI (Flask)
 Flask>=3.0.0
 Werkzeug>=3.0.0
 
-# Optional: Für erweiterte Features
-# sqlalchemy>=2.0.0       # ORM für Datenbanken
-# Flask-Login>=0.6.3      # Benutzer-Session-Management
-# Flask-Bcrypt>=1.0.1     # Passwort-Hashing
-# Flask-CORS>=4.0.0       # CORS für API
-pydantic>=2.0.0
+# Umgebungsvariablen
+python-dotenv>=1.0.0
+
+# Datenbank (Supabase / PostgREST)
+supabase>=2.0.0
+
+# Recommender (MMR-Re-Ranking)
+numpy>=1.26.0
 
 # Chatbot "Bob" (Groq LLM API)
 groq>=0.13.0
 
 # Passwort-Hashing
 bcrypt>=4.1.0
+
+# WSGI Server (Deployment)
+gunicorn>=21.2.0
