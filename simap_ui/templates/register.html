@@ -119,39 +119,39 @@
     <div class="auth-card">
         <div class="auth-header">
             <div class="auth-logo">SAJF</div>
-            <h1>Konto erstellen</h1>
-            <p>Kostenlos registrieren und sofort loslegen</p>
+            <h1 data-i18n="auth_register_title">Konto erstellen</h1>
+            <p data-i18n="auth_register_sub">Kostenlos registrieren und sofort loslegen</p>
         </div>
 
         <div id="message-container"></div>
 
         <div>
             <div class="auth-form-group">
-                <label class="auth-label">Unternehmensname</label>
+                <label class="auth-label" for="company_name" data-i18n="auth_company">Unternehmensname</label>
                 <input type="text" id="company_name" class="auth-input" required
                        placeholder="Muster AG">
             </div>
 
             <div class="auth-form-group">
-                <label class="auth-label">E-Mail-Adresse</label>
+                <label class="auth-label" for="email" data-i18n="auth_email">E-Mail-Adresse</label>
                 <input type="email" id="email" class="auth-input" required
                        placeholder="name@unternehmen.ch" autocomplete="email">
             </div>
 
             <div class="auth-form-group">
-                <label class="auth-label">Passwort</label>
+                <label class="auth-label" for="password" data-i18n="auth_password">Passwort</label>
                 <input type="password" id="password" class="auth-input" required
-                       placeholder="Min. 6 Zeichen" autocomplete="new-password">
-                <div class="auth-hint">Mindestens 6 Zeichen</div>
+                       placeholder="Min. 6 Zeichen" data-i18n-placeholder="auth_password_min_ph" autocomplete="new-password">
+                <div class="auth-hint" data-i18n="auth_password_hint">Mindestens 6 Zeichen</div>
             </div>
 
-            <button type="button" class="btn btn-primary auth-submit" id="submit-btn" onclick="handleRegister()">
+            <button type="button" class="btn btn-primary auth-submit" id="submit-btn" onclick="handleRegister()" data-i18n="auth_register_btn">
                 Registrieren
             </button>
         </div>
 
         <div class="auth-footer">
-            <p>Bereits ein Konto? <a href="/login">Anmelden</a></p>
+            <p><span data-i18n="auth_has_account">Bereits ein Konto?</span> <a href="/login" data-i18n="auth_login_link">Anmelden</a></p>
         </div>
     </div>
 </div>

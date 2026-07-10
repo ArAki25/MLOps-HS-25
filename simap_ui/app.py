@@ -116,11 +116,16 @@ def admin_required(f):
 
 
 def api_login_required(f):
-    """Decorator für JSON-APIs: 401 statt Redirect wenn nicht eingeloggt."""
+    """Decorator für JSON-APIs: 401 statt Redirect wenn nicht eingeloggt.
+
+    'code' ist ein stabiler Maschinen-Key fürs Frontend (i18n),
+    'error' bleibt die deutsche Meldung (abwärtskompatibel).
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get('user_logged_in'):
-            return jsonify({'success': False, 'error': 'Nicht eingeloggt'}), 401
+            return jsonify({'success': False, 'code': 'not_logged_in',
+                            'error': 'Nicht eingeloggt'}), 401
         return f(*args, **kwargs)
     return decorated_function
 

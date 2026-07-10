@@ -113,32 +113,32 @@
     <div class="auth-card">
         <div class="auth-header">
             <div class="auth-logo">SAJF</div>
-            <h1>Willkommen zurück</h1>
-            <p>Melden Sie sich bei Ihrem Konto an</p>
+            <h1 data-i18n="auth_login_title">Willkommen zurück</h1>
+            <p data-i18n="auth_login_sub">Melden Sie sich bei Ihrem Konto an</p>
         </div>
 
         <div id="message-container"></div>
 
         <div>
             <div class="auth-form-group">
-                <label class="auth-label">E-Mail-Adresse</label>
+                <label class="auth-label" for="email" data-i18n="auth_email">E-Mail-Adresse</label>
                 <input type="email" id="email" class="auth-input" required
                        placeholder="name@unternehmen.ch" autocomplete="email">
             </div>
 
             <div class="auth-form-group">
-                <label class="auth-label">Passwort</label>
+                <label class="auth-label" for="password" data-i18n="auth_password">Passwort</label>
                 <input type="password" id="password" class="auth-input" required
-                       placeholder="Passwort eingeben" autocomplete="current-password">
+                       placeholder="Passwort eingeben" data-i18n-placeholder="auth_password_ph" autocomplete="current-password">
             </div>
 
-            <button type="button" class="btn btn-primary auth-submit" id="submit-btn" onclick="handleLogin()">
+            <button type="button" class="btn btn-primary auth-submit" id="submit-btn" onclick="handleLogin()" data-i18n="auth_login_btn">
                 Anmelden
             </button>
         </div>
 
         <div class="auth-footer">
-            <p>Noch kein Konto? <a href="/register">Jetzt registrieren</a></p>
+            <p><span data-i18n="auth_no_account">Noch kein Konto?</span> <a href="/register" data-i18n="auth_register_link">Jetzt registrieren</a></p>
         </div>
     </div>
 </div>
