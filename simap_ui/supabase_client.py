@@ -36,19 +36,18 @@ def init_supabase():
     )
 
     if not url:
-        url = 'https://rkfwuxocuojkjswigoss.supabase.co'
+        raise RuntimeError(
+            "SUPABASE_URL fehlt. Setze SUPABASE_URL in deiner lokalen .env Datei."
+        )
     if not key:
         raise RuntimeError(
             "SUPABASE Key fehlt. Setze SUPABASE_ANON_KEY (empfohlen) oder "
             "SUPABASE_SERVICE_ROLE_KEY in deiner lokalen .env Datei."
         )
 
-    print(f"🔗 URL: {url[:50]}...")
-    print(f"🔑 Key: {key[:20]}...{key[-10:]}")
-
     supabase = create_client(url, key)
     supabase_auth = create_client(url, key)
-    print(f"✅ Supabase verbunden! Clients initialisiert.")
+    print("✅ Supabase verbunden! Clients initialisiert.")
     return supabase
 
 

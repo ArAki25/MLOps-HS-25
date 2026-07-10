@@ -5,7 +5,9 @@ Mit Admin Panel für Content Management
 
 from flask import Flask, render_template, jsonify, request, session, redirect, url_for
 from functools import wraps
+import logging
 import os
+import secrets as _secrets
 from dotenv import load_dotenv
 from supabase_client import (
     init_supabase,
@@ -67,8 +69,18 @@ from supabase_client import (
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'sajf-strategies-secret-2025')
+
+_secret_key = os.getenv('SECRET_KEY')
+if not _secret_key:
+    if os.getenv('FLASK_ENV') == 'production':
+        raise RuntimeError('SECRET_KEY muss in Produktion gesetzt sein (siehe .env.example).')
+    # Ephemerer Dev-Key: Sessions verfallen bei jedem Neustart
+    _secret_key = _secrets.token_hex(32)
+    logger.warning('SECRET_KEY nicht gesetzt - ephemerer Dev-Key wird verwendet.')
+app.secret_key = _secret_key
 
 # Supabase initialisieren
 print("=" * 60)
@@ -990,4 +1002,5 @@ if __name__ == '__main__':
     print(f"🔐 Admin: http://127.0.0.1:{port}/admin")
     print("=" * 60)
 
-    app.run(debug=False, host='0.0.0.0', port=port)
+    # Dev-Default: nur localhost. Deployment setzt HOST=0.0.0.0 explizit.
+    app.run(debug=False, host=os.getenv('HOST', '127.0.0.1'), port=port)
