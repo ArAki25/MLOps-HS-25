@@ -31,7 +31,9 @@ Werkzeug>=3.0.0
 # Flask-Bcrypt>=1.0.1     # Passwort-Hashing
 # Flask-CORS>=4.0.0       # CORS für API
 pydantic>=2.0.0
-anthropic>=0.40.0
+
+# Chatbot "Bob" (Groq LLM API)
+groq>=0.13.0
 
 # Passwort-Hashing
 bcrypt>=4.1.0

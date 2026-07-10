@@ -18,6 +18,9 @@ Werkzeug>=3.0.0
 # Flask-CORS>=4.0.0       # CORS für API
 pydantic>=2.0.0
 
+# Chatbot "Bob" (Groq LLM API)
+groq>=0.13.0
+
 # Passwort-Hashing
 bcrypt>=4.1.0
 
@@ -41,6 +44,4 @@ torch>=2.3.0
 huggingface_hub>=0.24.0
 requests>=2.31.0
 tqdm>=4.66.0
-
-###test
 
