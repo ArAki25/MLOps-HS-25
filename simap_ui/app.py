@@ -38,8 +38,6 @@ from supabase_client import (
     save_user_profile,
     get_user_profile,
     save_user_simap_ids,
-    save_user_ratings,
-    get_random_archive_tenders,
     get_onboarding_filter_options,
     get_filtered_sample_projects,
     save_user_ratings_v2,
@@ -156,25 +154,6 @@ def api_onboarding_simap_ids():
     ids = data.get('ids', [])
     result = save_user_simap_ids(session.get('user_id'), ids)
     return jsonify(result)
-
-
-@app.route('/api/onboarding/ratings', methods=['POST'])
-@api_login_required
-def api_onboarding_ratings():
-    """Speichere Tender-Bewertungen"""
-    data = request.get_json()
-    ratings_list = data.get('ratings', [])
-    result = save_user_ratings(session.get('user_id'), ratings_list)
-    return jsonify(result)
-
-
-@app.route('/api/onboarding/random-tenders', methods=['GET'])
-@api_login_required
-def api_random_tenders():
-    """Zufällige Archiv-Ausschreibungen für Rating"""
-    count = request.args.get('count', 20, type=int)
-    tenders = get_random_archive_tenders(count)
-    return jsonify({'tenders': tenders})
 
 
 # ============================================

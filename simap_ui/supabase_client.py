@@ -1609,18 +1609,6 @@ def save_user_ratings_v2(user_id, ratings_list):
 # Deprecated Kompatibilitaets-Shims
 # ============================================
 
-def save_user_ratings(user_id, ratings_list):
-    """[DEPRECATED] bitte save_user_ratings_v2 verwenden."""
-    print("⚠️ save_user_ratings (alt) aufgerufen - leite auf save_user_ratings_v2 um")
-    return save_user_ratings_v2(user_id, ratings_list)
-
-
-def get_random_archive_tenders(count=20):
-    """[DEPRECATED] ersetzt durch get_filtered_sample_projects."""
-    print("⚠️ get_random_archive_tenders (alt) aufgerufen")
-    return []
-
-
 # ============================================
 # ANALYTICS
 # ============================================
