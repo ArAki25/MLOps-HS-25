@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Admin Dashboard – SAJF</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body { margin: 0; background: var(--background); color: var(--text-primary); font-family: 'Plus Jakarta Sans', sans-serif; }
+        .admin-layout { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 220px; background: var(--surface); border-right: 1px solid var(--border);
+            padding: var(--space-xl) var(--space-md); flex-shrink: 0;
+        }
+        .sidebar-logo {
+            font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1rem;
+            color: var(--text-primary); margin-bottom: var(--space-xl);
+        }
+        .sidebar-logo span { color: var(--accent); }
+        .sidebar a {
+            display: block; padding: 8px 10px; border-radius: var(--radius-sm);
+            color: var(--text-secondary); text-decoration: none; font-size: 0.85rem;
+            margin-bottom: 2px;
+        }
+        .sidebar a:hover, .sidebar a.active { background: var(--accent-subtle); color: var(--accent); }
+        .sidebar-bottom { margin-top: auto; padding-top: var(--space-xl); }
+        .main { flex: 1; padding: var(--space-2xl); }
+        .page-title {
+            font-family: 'JetBrains Mono', monospace; font-size: 1.2rem;
+            font-weight: 700; margin-bottom: var(--space-xl);
+        }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-2xl); }
+        .stat-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: var(--space-lg);
+        }
+        .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 700; color: var(--accent); }
+        .stat-label { font-size: 0.78rem; color: var(--text-secondary); margin-top: 4px; }
+        .section-title { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); margin-bottom: var(--space-md); }
+        .quick-links { display: flex; gap: var(--space-md); flex-wrap: wrap; }
+        .quick-link {
+            display: inline-block; padding: 10px 18px; background: var(--surface);
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            color: var(--text-primary); text-decoration: none; font-size: 0.85rem;
+        }
+        .quick-link:hover { border-color: var(--accent); color: var(--accent); }
+    </style>
+</head>
+<body>
+<div class="admin-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">SAJF <span>Admin</span></div>
+        <a href="/admin" class="active">Dashboard</a>
+        <a href="/admin/content/about">Inhalte</a>
+        <a href="/admin/team">Team</a>
+        <div class="sidebar-bottom">
+            <a href="/admin/logout" style="color:var(--danger)">Abmelden</a>
+        </div>
+    </aside>
+    <main class="main">
+        <div class="page-title">Dashboard</div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.get('total', '—') }}</div>
+                <div class="stat-label">Ausschreibungen gesamt</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.get('today', '—') }}</div>
+                <div class="stat-label">Heute neu</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.get('this_week', '—') }}</div>
+                <div class="stat-label">Diese Woche</div>
+            </div>
+        </div>
+
+        <div class="section-title">Schnellzugriff</div>
+        <div class="quick-links">
+            <a href="/admin/content/about" class="quick-link">Über uns bearbeiten</a>
+            <a href="/admin/content/pro" class="quick-link">Pro-Seite bearbeiten</a>
+            <a href="/admin/content/support" class="quick-link">Support bearbeiten</a>
+            <a href="/admin/team" class="quick-link">Team verwalten</a>
+            <a href="/publications" class="quick-link">→ Zur App</a>
+        </div>
+    </main>
+</div>
+</body>
+</html>

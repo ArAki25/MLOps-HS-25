@@ -9,7 +9,25 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <script>(function(){var t=localStorage.getItem('sajf-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+    <script>
+    // Patch fetch() to automatically send the CSRF token on every request
+    (function() {
+        var _csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        var _origFetch = window.fetch;
+        window.fetch = function(url, opts) {
+            opts = opts || {};
+            opts.headers = opts.headers || {};
+            if (typeof opts.headers.append !== 'function') {
+                opts.headers['X-CSRFToken'] = _csrfToken;
+            } else {
+                opts.headers.append('X-CSRFToken', _csrfToken);
+            }
+            return _origFetch(url, opts);
+        };
+    })();
+    </script>
     {% block extra_css %}{% endblock %}
 </head>
 <body>

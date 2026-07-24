@@ -3,10 +3,12 @@ app.py - SAJF Strategies Tender Platform
 Mit Admin Panel für Content Management
 """
 
-from flask import Flask, render_template, jsonify, request, session, redirect, url_for
+from flask import Flask, render_template, jsonify, request, session, redirect, url_for, abort
 from functools import wraps
 import os
+import secrets
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
 from supabase_client import (
     init_supabase,
     get_all_projects,
@@ -63,6 +65,10 @@ from supabase_client import (
     get_team_favorites,
     get_team_ratings,
     get_market_pulse_data,
+    change_user_password,
+    send_password_reset_email,
+    reset_password_with_code,
+    reset_password_with_tokens,
 )
 
 load_dotenv()
@@ -79,6 +85,46 @@ try:
     init_supabase()
 except Exception as e:
     print(f"[ERROR] Supabase Fehler: {e}")
+
+
+# ============================================
+# CSRF PROTECTION
+# ============================================
+
+def _get_csrf_token() -> str:
+    if '_csrf_token' not in session:
+        session['_csrf_token'] = secrets.token_hex(32)
+    return session['_csrf_token']
+
+# Make csrf_token() available in all Jinja2 templates
+app.jinja_env.globals['csrf_token'] = _get_csrf_token
+
+
+def _verify_admin_password(stored: str, candidate: str) -> bool:
+    """Support both legacy plaintext and new hashed passwords during migration."""
+    if stored.startswith('pbkdf2:') or stored.startswith('scrypt:'):
+        return check_password_hash(stored, candidate)
+    # Legacy plaintext — accept but log warning
+    print('[WARN] Admin password is stored as plaintext. Please update it with generate_password_hash().')
+    return stored == candidate
+
+
+def csrf_protect(f):
+    """Decorator: checks CSRF token for POST requests.
+    Accepts token from X-CSRFToken header (JSON fetch) or form field (HTML forms).
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if request.method == 'POST':
+            token = (
+                request.headers.get('X-CSRFToken')
+                or request.form.get('csrf_token')
+                or ''
+            )
+            if not token or token != session.get('_csrf_token'):
+                abort(403)
+        return f(*args, **kwargs)
+    return decorated
 
 
 # ============================================
@@ -241,6 +287,25 @@ def user_login_page():
     return render_template('login.html')
 
 
+@app.route('/change-password')
+@login_required
+def change_password_page():
+    """Passwort ändern (eingeloggte User)"""
+    return render_template('change_password.html')
+
+
+@app.route('/forgot-password')
+def forgot_password_page():
+    """Passwort vergessen – E-Mail eingeben"""
+    return render_template('forgot_password.html')
+
+
+@app.route('/reset-password')
+def reset_password_page():
+    """Neues Passwort setzen (via E-Mail-Link)"""
+    return render_template('reset_password.html')
+
+
 @app.route('/logout')
 def user_logout():
     """User Logout"""
@@ -253,7 +318,69 @@ def user_logout():
 # AUTHENTICATION API
 # ============================================
 
+@app.route('/auth/change-password', methods=['POST'])
+@login_required
+@csrf_protect
+def auth_change_password():
+    """API: Passwort ändern (eingeloggte User, verifiziert aktuelles PW)"""
+    data = request.get_json(silent=True) or {}
+    current_password = (data.get('current_password') or '').strip()
+    new_password = (data.get('new_password') or '').strip()
+
+    if not current_password or not new_password:
+        return jsonify({'success': False, 'error': 'Alle Felder sind erforderlich'}), 400
+    if len(new_password) < 6:
+        return jsonify({'success': False, 'error': 'Neues Passwort muss mindestens 6 Zeichen haben'}), 400
+
+    result = change_user_password(
+        session.get('user_id'),
+        session.get('user_email'),
+        current_password,
+        new_password,
+    )
+    return jsonify(result), (200 if result.get('success') else 400)
+
+
+@app.route('/auth/forgot-password', methods=['POST'])
+def auth_forgot_password():
+    """API: Passwort-Reset-E-Mail senden"""
+    data = request.get_json(silent=True) or {}
+    email = (data.get('email') or '').strip()
+    if not email:
+        return jsonify({'success': False, 'error': 'E-Mail erforderlich'}), 400
+
+    redirect_url = request.host_url.rstrip('/') + '/reset-password'
+    send_password_reset_email(email, redirect_url)
+    # Immer success zurückgeben – verhindert E-Mail-Enumeration
+    return jsonify({'success': True})
+
+
+@app.route('/auth/reset-password', methods=['POST'])
+def auth_reset_password():
+    """API: Neues Passwort setzen (aus E-Mail-Link)"""
+    data = request.get_json(silent=True) or {}
+    new_password = (data.get('new_password') or '').strip()
+    code = (data.get('code') or '').strip()
+    access_token = (data.get('access_token') or '').strip()
+    refresh_token = (data.get('refresh_token') or '').strip()
+
+    if not new_password:
+        return jsonify({'success': False, 'error': 'Neues Passwort erforderlich'}), 400
+    if len(new_password) < 6:
+        return jsonify({'success': False, 'error': 'Passwort muss mindestens 6 Zeichen haben'}), 400
+
+    if code:
+        result = reset_password_with_code(code, new_password)
+    elif access_token and refresh_token:
+        result = reset_password_with_tokens(access_token, refresh_token, new_password)
+    else:
+        return jsonify({'success': False, 'error': 'Ungültiger Reset-Link'}), 400
+
+    return jsonify(result), (200 if result.get('success') else 400)
+
+
 @app.route('/auth/register', methods=['POST'])
+@csrf_protect
 def auth_register():
     """API: Registrierung - registriert UND loggt direkt ein"""
     try:
@@ -292,6 +419,7 @@ def auth_register():
 
 
 @app.route('/auth/login', methods=['POST'])
+@csrf_protect
 def auth_login():
     """API: Login"""
     try:
@@ -366,6 +494,7 @@ def profile_page():
 
 
 @app.route('/api/profile/update', methods=['POST'])
+@csrf_protect
 def api_profile_update():
     """API: Firmenprofil aktualisieren (inkl. preferred_cantons)."""
     if not session.get('user_logged_in'):
@@ -470,6 +599,7 @@ def api_remove_rating():
 
 
 @app.route('/api/feed-rate', methods=['POST'])
+@csrf_protect
 def api_feed_rate():
     """Idempotentes Like aus dem Live-Feed (Tab 'Ausschreibungen').
     Body: {tender_id: uuid, rating: 0|1, source?: 'project'|'archive'}
@@ -551,6 +681,7 @@ def api_get_favorites():
 
 
 @app.route('/api/favorites/add', methods=['POST'])
+@csrf_protect
 def api_add_favorite():
     """API: Füge Favorit hinzu"""
     if not session.get('user_logged_in'):
@@ -573,6 +704,7 @@ def api_add_favorite():
 
 
 @app.route('/api/favorites/remove', methods=['POST'])
+@csrf_protect
 def api_remove_favorite():
     """API: Entferne Favorit"""
     if not session.get('user_logged_in'):
@@ -592,14 +724,15 @@ def api_remove_favorite():
 # ============================================
 
 @app.route('/admin/login', methods=['GET', 'POST'])
+@csrf_protect
 def admin_login():
     """Admin Login"""
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+        email = request.form.get('email', '')
+        password = request.form.get('password', '')
 
         admin = get_admin_by_email(email)
-        if admin and admin.get('password') == password:
+        if admin and _verify_admin_password(admin.get('password', ''), password):
             session['admin_logged_in'] = True
             session['admin_email'] = email
             session['admin_name'] = admin.get('name', 'Admin')
@@ -627,6 +760,7 @@ def admin_dashboard():
 
 @app.route('/admin/content/<page>', methods=['GET', 'POST'])
 @admin_required
+@csrf_protect
 def admin_content(page):
     """Content bearbeiten"""
     if request.method == 'POST':
@@ -648,6 +782,7 @@ def admin_team():
 
 @app.route('/admin/team/add', methods=['POST'])
 @admin_required
+@csrf_protect
 def admin_team_add():
     """Team-Mitglied hinzufügen"""
     data = {
@@ -663,6 +798,7 @@ def admin_team_add():
 
 @app.route('/admin/team/update/<member_id>', methods=['POST'])
 @admin_required
+@csrf_protect
 def admin_team_update(member_id):
     """Team-Mitglied aktualisieren"""
     data = {
@@ -678,6 +814,7 @@ def admin_team_update(member_id):
 
 @app.route('/admin/team/delete/<member_id>', methods=['POST'])
 @admin_required
+@csrf_protect
 def admin_team_delete(member_id):
     """Team-Mitglied löschen"""
     delete_team_member(member_id)

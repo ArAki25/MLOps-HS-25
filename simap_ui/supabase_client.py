@@ -1043,6 +1043,80 @@ def get_user_by_id(user_id: str):
         return None
 
 
+def change_user_password(user_id: str, current_email: str, current_password: str, new_password: str) -> Dict:
+    """Verify current password then update to new one."""
+    sb = get_auth_client()
+    if not sb:
+        return {'success': False, 'error': 'Datenbank nicht verbunden'}
+    try:
+        # Verify current password by re-authenticating
+        auth_response = sb.auth.sign_in_with_password({
+            'email': current_email,
+            'password': current_password
+        })
+        if not auth_response.user or not auth_response.session:
+            return {'success': False, 'error': 'Aktuelles Passwort ist falsch'}
+    except Exception:
+        return {'success': False, 'error': 'Aktuelles Passwort ist falsch'}
+
+    # Session is now active on this client — update password
+    try:
+        response = sb.auth.update_user({'password': new_password})
+        if response.user:
+            return {'success': True}
+        return {'success': False, 'error': 'Passwort konnte nicht geändert werden'}
+    except Exception as e:
+        print(f'[ERROR] change_user_password: {e}')
+        return {'success': False, 'error': str(e)}
+
+
+def send_password_reset_email(email: str, redirect_url: str) -> Dict:
+    """Send password reset email via Supabase Auth."""
+    sb = get_auth_client()
+    if not sb:
+        return {'success': False, 'error': 'Datenbank nicht verbunden'}
+    try:
+        sb.auth.reset_password_for_email(email, {'redirect_to': redirect_url})
+        return {'success': True}
+    except Exception as e:
+        print(f'[ERROR] send_password_reset_email: {e}')
+        return {'success': False, 'error': str(e)}
+
+
+def reset_password_with_code(code: str, new_password: str) -> Dict:
+    """Exchange PKCE code for session and update password (PKCE flow)."""
+    sb = get_auth_client()
+    if not sb:
+        return {'success': False, 'error': 'Datenbank nicht verbunden'}
+    try:
+        session_response = sb.auth.exchange_code_for_session(code)
+        if not session_response.session:
+            return {'success': False, 'error': 'Ungültiger oder abgelaufener Link'}
+        response = sb.auth.update_user({'password': new_password})
+        if response.user:
+            return {'success': True}
+        return {'success': False, 'error': 'Passwort konnte nicht geändert werden'}
+    except Exception as e:
+        print(f'[ERROR] reset_password_with_code: {e}')
+        return {'success': False, 'error': 'Ungültiger oder abgelaufener Link'}
+
+
+def reset_password_with_tokens(access_token: str, refresh_token: str, new_password: str) -> Dict:
+    """Set session from tokens (implicit/hash flow) and update password."""
+    sb = get_auth_client()
+    if not sb:
+        return {'success': False, 'error': 'Datenbank nicht verbunden'}
+    try:
+        sb.auth.set_session(access_token, refresh_token)
+        response = sb.auth.update_user({'password': new_password})
+        if response.user:
+            return {'success': True}
+        return {'success': False, 'error': 'Passwort konnte nicht geändert werden'}
+    except Exception as e:
+        print(f'[ERROR] reset_password_with_tokens: {e}')
+        return {'success': False, 'error': 'Ungültiger oder abgelaufener Link'}
+
+
 # ============================================
 # ONBOARDING - NEU mit Embedding-Support
 # ============================================

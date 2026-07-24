@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Inhalt bearbeiten – SAJF Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body { margin: 0; background: var(--background); color: var(--text-primary); font-family: 'Plus Jakarta Sans', sans-serif; }
+        .admin-layout { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 220px; background: var(--surface); border-right: 1px solid var(--border);
+            padding: var(--space-xl) var(--space-md); flex-shrink: 0;
+        }
+        .sidebar-logo { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1rem; color: var(--text-primary); margin-bottom: var(--space-xl); }
+        .sidebar-logo span { color: var(--accent); }
+        .sidebar a { display: block; padding: 8px 10px; border-radius: var(--radius-sm); color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; margin-bottom: 2px; }
+        .sidebar a:hover, .sidebar a.active { background: var(--accent-subtle); color: var(--accent); }
+        .sidebar-bottom { margin-top: auto; padding-top: var(--space-xl); }
+        .sidebar-group { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); padding: 8px 10px 4px; }
+        .main { flex: 1; padding: var(--space-2xl); }
+        .page-title { font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+        .page-sub { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--space-xl); }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-xl); }
+        label { display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; color: var(--text-secondary); }
+        input[type=text], textarea {
+            width: 100%; padding: 9px 11px; margin-bottom: var(--space-md);
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            font-size: 0.85rem; font-family: inherit;
+            background: var(--background); color: var(--text-primary); box-sizing: border-box;
+        }
+        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+        .btn-primary { padding: 9px 20px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 0.88rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .btn-primary:hover { opacity: 0.9; }
+        .saved-banner {
+            background: var(--success-light); color: var(--success);
+            border: 1px solid var(--success); border-radius: var(--radius-sm);
+            padding: 9px 12px; font-size: 0.84rem; margin-bottom: var(--space-lg);
+        }
+    </style>
+</head>
+<body>
+<div class="admin-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">SAJF <span>Admin</span></div>
+        <a href="/admin">Dashboard</a>
+        <div class="sidebar-group">Inhalte</div>
+        <a href="/admin/content/about" class="{% if page == 'about' %}active{% endif %}">Über uns</a>
+        <a href="/admin/content/pro" class="{% if page == 'pro' %}active{% endif %}">Pro-Seite</a>
+        <a href="/admin/content/support" class="{% if page == 'support' %}active{% endif %}">Support</a>
+        <a href="/admin/team">Team</a>
+        <div class="sidebar-bottom">
+            <a href="/admin/logout" style="color:var(--danger)">Abmelden</a>
+        </div>
+    </aside>
+    <main class="main">
+        <div class="page-title">Seite: {{ page }}</div>
+        <div class="page-sub">Änderungen werden sofort auf der Website übernommen.</div>
+
+        {% if request.args.get('saved') %}
+        <div class="saved-banner">Gespeichert.</div>
+        {% endif %}
+
+        <div class="card">
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% if content %}
+                    {% for key, value in content.items() %}
+                    <label>{{ key }}</label>
+                    {% if value and value|length > 80 %}
+                    <textarea name="{{ key }}" rows="4">{{ value }}</textarea>
+                    {% else %}
+                    <input type="text" name="{{ key }}" value="{{ value }}">
+                    {% endif %}
+                    {% endfor %}
+                {% else %}
+                <p style="color:var(--text-secondary);font-size:0.85rem;">
+                    Noch kein Inhalt für diese Seite. Felder werden nach dem ersten Speichern angelegt.
+                </p>
+                <label>Titel</label>
+                <input type="text" name="title" placeholder="Seitentitel">
+                <label>Beschreibung</label>
+                <textarea name="description" rows="4" placeholder="Beschreibungstext..."></textarea>
+                {% endif %}
+                <button type="submit" class="btn-primary">Speichern</button>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

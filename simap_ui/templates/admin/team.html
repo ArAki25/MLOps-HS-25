@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Team verwalten – SAJF Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body { margin: 0; background: var(--background); color: var(--text-primary); font-family: 'Plus Jakarta Sans', sans-serif; }
+        .admin-layout { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 220px; background: var(--surface); border-right: 1px solid var(--border);
+            padding: var(--space-xl) var(--space-md); flex-shrink: 0;
+        }
+        .sidebar-logo { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1rem; color: var(--text-primary); margin-bottom: var(--space-xl); }
+        .sidebar-logo span { color: var(--accent); }
+        .sidebar a { display: block; padding: 8px 10px; border-radius: var(--radius-sm); color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; margin-bottom: 2px; }
+        .sidebar a:hover, .sidebar a.active { background: var(--accent-subtle); color: var(--accent); }
+        .sidebar-bottom { margin-top: auto; padding-top: var(--space-xl); }
+        .main { flex: 1; padding: var(--space-2xl); }
+        .page-title { font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 700; margin-bottom: var(--space-xl); }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-xl); margin-bottom: var(--space-xl); }
+        .card-title { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); margin-bottom: var(--space-lg); }
+        label { display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; color: var(--text-secondary); }
+        input[type=text], input[type=number], textarea {
+            width: 100%; padding: 9px 11px; margin-bottom: var(--space-md);
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            font-size: 0.85rem; font-family: inherit;
+            background: var(--background); color: var(--text-primary); box-sizing: border-box;
+        }
+        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--space-lg); }
+        .btn { padding: 8px 16px; border-radius: var(--radius-sm); border: none; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+        .btn:hover { opacity: 0.85; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+        td { padding: 10px; border-bottom: 1px solid var(--border); color: var(--text-primary); vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+        .actions { display: flex; gap: 8px; }
+    </style>
+</head>
+<body>
+<div class="admin-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">SAJF <span>Admin</span></div>
+        <a href="/admin">Dashboard</a>
+        <a href="/admin/content/about">Inhalte</a>
+        <a href="/admin/team" class="active">Team</a>
+        <div class="sidebar-bottom">
+            <a href="/admin/logout" style="color:var(--danger)">Abmelden</a>
+        </div>
+    </aside>
+    <main class="main">
+        <div class="page-title">Team verwalten</div>
+
+        <div class="card">
+            <div class="card-title">Neues Mitglied hinzufügen</div>
+            <form method="POST" action="/admin/team/add">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-grid">
+                    <div>
+                        <label>Name</label>
+                        <input type="text" name="name" required placeholder="Vorname Nachname">
+                    </div>
+                    <div>
+                        <label>Rolle</label>
+                        <input type="text" name="role" required placeholder="z.B. Co-Founder & CEO">
+                    </div>
+                    <div>
+                        <label>Foto URL</label>
+                        <input type="text" name="photo_url" placeholder="https://...">
+                    </div>
+                    <div>
+                        <label>Reihenfolge</label>
+                        <input type="number" name="order" value="0" min="0">
+                    </div>
+                </div>
+                <label>Bio</label>
+                <textarea name="bio" rows="3" placeholder="Kurze Beschreibung..."></textarea>
+                <button type="submit" class="btn btn-primary">Hinzufügen</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Aktuelle Mitglieder ({{ team|length }})</div>
+            {% if team %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Rolle</th>
+                        <th>Bio</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for m in team %}
+                <tr>
+                    <td>{{ m.get('display_order', '—') }}</td>
+                    <td><strong>{{ m.get('name', '—') }}</strong></td>
+                    <td>{{ m.get('role', '—') }}</td>
+                    <td style="max-width:260px;color:var(--text-secondary);">{{ (m.get('bio') or '')[:80] }}{% if m.get('bio') and m['bio']|length > 80 %}…{% endif %}</td>
+                    <td>
+                        <div class="actions">
+                            <form method="POST" action="/admin/team/delete/{{ m['id'] }}" onsubmit="return confirm('Wirklich löschen?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-danger">Löschen</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color:var(--text-secondary);font-size:0.85rem;">Noch keine Mitglieder.</p>
+            {% endif %}
+        </div>
+    </main>
+</div>
+</body>
+</html>
