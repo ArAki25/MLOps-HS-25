@@ -1,281 +1,147 @@
 {% extends "base.html" %}
 
-{% block title %}Merkliste - SAJF Strategies Pro{% endblock %}
+{% block title %}Merkliste – SAJF Strategies Pro{% endblock %}
 
 {% block extra_css %}
 <style>
-    .disclaimer-top {
-        background: #2a2a1a;
-        border-bottom: 1px solid #f59e0b;
-        padding: 0.75rem 2rem;
-        font-size: 0.875rem;
-        color: #fbbf24;
-        text-align: center;
-    }
+    .pro-wrap { min-height: calc(100vh - 56px); padding: var(--space-xl) var(--space-lg) var(--space-3xl); }
+    .pro-container { max-width: 900px; margin: 0 auto; }
 
-    .disclaimer-top a {
-        color: #fbbf24;
-        font-weight: 600;
+    .pro-head { margin-bottom: var(--space-lg); }
+    .pro-head h1 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.25rem; font-weight: 700;
+        color: var(--text-primary); letter-spacing: -0.02em;
+        margin: 0 0 4px;
     }
+    .pro-head p { color: var(--text-secondary); font-size: 0.84rem; margin: 0; }
 
-    .pro-header {
-        background: linear-gradient(135deg, #1e3a5f, #3b82f6);
-        color: white;
-        padding: 1.5rem 2rem;
-        margin: 0 -2rem 2rem -2rem;
-    }
-
-    .pro-header-content {
-        max-width: 1400px;
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    .pro-header h1 {
-        font-size: 1.5rem;
-    }
-
-    .pro-nav {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
+    .pro-nav { display: flex; gap: 4px; margin-bottom: var(--space-lg); border-bottom: 1px solid var(--border); }
     .pro-nav a {
-        color: rgba(255,255,255,0.8);
-        text-decoration: none;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        transition: all 0.2s;
+        padding: 0.5rem 0.875rem; font-size: 0.8rem; font-weight: 500;
+        color: var(--text-muted); text-decoration: none;
+        border-bottom: 2px solid transparent; transition: color 0.15s;
     }
-
-    .pro-nav a:hover, .pro-nav a.active {
-        background: rgba(255,255,255,0.2);
-        color: white;
-    }
+    .pro-nav a:hover { color: var(--text-primary); }
+    .pro-nav a.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 
     .stats-bar {
-        display: flex;
-        justify-content: center;
-        gap: 4rem;
-        margin-bottom: 2rem;
-        padding: 1.5rem 2rem;
-        background: var(--surface);
-        border-radius: 16px;
-        border: 1px solid var(--border);
+        display: flex; gap: var(--space-2xl); justify-content: center;
+        margin-bottom: var(--space-lg); padding: var(--space-md) var(--space-lg);
+        background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     }
-
-    .stat-item {
-        text-align: center;
-    }
-
-    .stat-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #e94560;
-        line-height: 1;
-    }
-
-    .stat-label {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        margin-top: 0.5rem;
-    }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--accent); line-height: 1; text-align: center; }
+    .stat-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; text-align: center; }
 
     .favorite-card {
-        background: var(--surface);
-        border-radius: 12px;
-        padding: 1.25rem;
-        margin-bottom: 1rem;
-        border: 1px solid var(--border);
-        border-left: 4px solid #e94560;
-        transition: all 0.2s;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: var(--space-md);
+        margin-bottom: var(--space-sm); border-left: 3px solid var(--warning);
+        transition: opacity 0.3s, transform 0.3s;
     }
-
-    .favorite-card:hover {
-        box-shadow: var(--shadow-lg);
-        transform: translateY(-2px);
-    }
-
-    .favorite-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1rem;
-        margin-bottom: 0.75rem;
-    }
-
-    .favorite-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        line-height: 1.4;
-    }
-
-    .favorite-description {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        margin: 0.5rem 0;
-        line-height: 1.5;
-    }
-
+    .favorite-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.4rem; }
+    .favorite-title { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); line-height: 1.4; }
+    .favorite-description { font-size: 0.78rem; color: var(--text-muted); margin: 4px 0 0; line-height: 1.5; }
     .favorite-meta {
-        display: flex;
-        gap: 1.5rem;
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-        margin-top: 0.75rem;
+        display: flex; gap: 1rem; color: var(--text-muted); font-size: 0.7rem;
+        margin-top: 0.5rem; font-family: 'JetBrains Mono', monospace;
     }
-
-    .favorite-actions {
-        display: flex;
-        gap: 0.5rem;
-        flex-shrink: 0;
-    }
-
-    .btn-remove {
-        background: transparent;
-        border: 1px solid #e94560;
-        color: #e94560;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.875rem;
-        transition: all 0.2s;
-    }
-
-    .btn-remove:hover {
-        background: #e94560;
-        color: white;
-    }
-
+    .favorite-actions { display: flex; gap: 6px; flex-shrink: 0; }
     .btn-view {
-        background: var(--accent);
-        border: none;
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.875rem;
-        text-decoration: none;
-        transition: all 0.2s;
+        padding: 0.35rem 0.75rem; background: var(--accent); color: white;
+        border: none; border-radius: var(--radius-sm); font-size: 0.72rem;
+        font-weight: 600; text-decoration: none; transition: background 0.15s;
     }
+    .btn-view:hover { background: var(--accent-hover); }
+    .btn-remove {
+        padding: 0.35rem 0.75rem; background: transparent;
+        border: 1px solid var(--danger); color: var(--danger);
+        border-radius: var(--radius-sm); font-size: 0.72rem; font-weight: 600;
+        cursor: pointer; transition: all 0.15s;
+    }
+    .btn-remove:hover { background: var(--danger); color: white; }
 
-    .btn-view:hover {
-        background: #2563eb;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        color: var(--text-secondary);
-    }
-
-    .empty-state-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-    }
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+    .empty-state h3 { font-family: 'JetBrains Mono', monospace; font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-primary); }
 
     @media (max-width: 768px) {
-        .favorite-header {
-            flex-direction: column;
-        }
-        .favorite-actions {
-            width: 100%;
-            justify-content: flex-end;
-        }
+        .favorite-header { flex-direction: column; }
+        .favorite-actions { width: 100%; justify-content: flex-end; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="disclaimer-top">
-    ⚠️ Dies ist keine amtliche Veröffentlichung. Massgebend sind die auf der Plattform
-    <a href="https://www.simap.ch" target="_blank" rel="noopener">www.simap.ch</a> veröffentlichten Daten.
-</div>
+<div class="pro-wrap">
+    <div class="pro-container">
+        <div class="pro-head">
+            <div class="section-label">Pro</div>
+            <h1>Merkliste</h1>
+            <p>Ihre gespeicherten Ausschreibungen</p>
+        </div>
 
-<div class="pro-header">
-    <div class="pro-header-content">
-        <h1>❤️ Merkliste</h1>
         <nav class="pro-nav">
             <a href="/pro/dashboard">Dashboard</a>
-            <a href="/pro/tenders">Alle Aufträge</a>
+            <a href="/pro/tenders">Aufträge</a>
             <a href="/pro/favorites" class="active">Merkliste</a>
             <a href="/pro/bkp-calculator">BKP-Rechner</a>
-            <a href="/logout">Logout</a>
         </nav>
-    </div>
-</div>
 
-<div class="container">
-    <div class="stats-bar">
-        <div class="stat-item">
-            <div class="stat-value">{{ favorites|length }}</div>
-            <div class="stat-label">Gespeicherte Aufträge</div>
-        </div>
-    </div>
-
-    {% if favorites and favorites|length > 0 %}
-        {% for fav in favorites %}
-        <div class="favorite-card" data-id="{{ fav.project_id }}">
-            <div class="favorite-header">
-                <div>
-                    <div class="favorite-title">{{ fav.project_title or 'Ohne Titel' }}</div>
-                    <div class="favorite-description">{{ (fav.project_description or '')[:200] }}{% if fav.project_description and fav.project_description|length > 200 %}...{% endif %}</div>
-                </div>
-                <div class="favorite-actions">
-                    <a href="{{ fav.simap_url }}" target="_blank" rel="noopener noreferrer" class="btn-view">Auf simap.ch</a>
-                    <button class="btn-remove" onclick="removeFavorite('{{ fav.project_id }}', this)">
-                        ✕ Entfernen
-                    </button>
-                </div>
-            </div>
-            <div class="favorite-meta">
-                <span>📍 {{ fav.project_canton or '-' }}</span>
-                <span>📅 Gespeichert: {{ fav.created_at[:10] if fav.created_at else '-' }}</span>
+        <div class="stats-bar">
+            <div>
+                <div class="stat-value">{{ favorites|length }}</div>
+                <div class="stat-label">Gespeicherte Aufträge</div>
             </div>
         </div>
-        {% endfor %}
-    {% else %}
-        <div class="empty-state">
-            <div class="empty-state-icon">❤️</div>
-            <h3>Keine gespeicherten Aufträge</h3>
-            <p>Klicken Sie auf das Herz-Symbol bei einem Auftrag, um ihn hier zu speichern.</p>
-            <br>
-            <a href="/pro/tenders" class="btn-view">Aufträge durchsuchen →</a>
-        </div>
-    {% endif %}
-</div>
 
+        {% if favorites and favorites|length > 0 %}
+            {% for fav in favorites %}
+            <div class="favorite-card" data-id="{{ fav.project_id }}">
+                <div class="favorite-header">
+                    <div style="min-width:0;flex:1;">
+                        <div class="favorite-title">{{ fav.project_title or 'Ohne Titel' }}</div>
+                        <div class="favorite-description">{{ (fav.project_description or '')[:180] }}{% if fav.project_description and fav.project_description|length > 180 %}…{% endif %}</div>
+                    </div>
+                    <div class="favorite-actions">
+                        <a href="{{ fav.simap_url }}" target="_blank" rel="noopener noreferrer" class="btn-view">simap.ch</a>
+                        <button class="btn-remove" onclick="removeFavorite('{{ fav.project_id }}', this)">Entfernen</button>
+                    </div>
+                </div>
+                <div class="favorite-meta">
+                    <span>{{ fav.project_canton or '–' }}</span>
+                    <span>Gespeichert: {{ fav.created_at[:10] if fav.created_at else '–' }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <h3>Keine gespeicherten Aufträge</h3>
+                <p style="font-size:0.84rem;">Klicken Sie auf das Stern-Symbol bei einem Auftrag, um ihn hier zu speichern.</p>
+                <br><a href="/pro/tenders" class="btn-view" style="display:inline-flex;">Aufträge durchsuchen →</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-async function removeFavorite(projectId, button) {
+function removeFavorite(projectId, button) {
     if (!confirm('Auftrag aus Merkliste entfernen?')) return;
-
-    try {
-        const response = await fetch('/api/favorites/remove', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project_id: projectId })
-        });
-
-        const data = await response.json();
-
+    fetch('/api/favorites/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id: projectId })
+    }).then(function(r) { return r.json(); }).then(function(data) {
         if (data.success) {
-            const card = button.closest('.favorite-card');
+            var card = button.closest('.favorite-card');
             card.style.opacity = '0';
-            card.style.transform = 'translateX(100px)';
-            setTimeout(() => card.remove(), 300);
-
-            const counter = document.querySelector('.stat-value');
+            card.style.transform = 'translateX(50px)';
+            setTimeout(function() { card.remove(); }, 250);
+            var counter = document.querySelector('.stat-value');
             counter.textContent = parseInt(counter.textContent) - 1;
         }
-    } catch (error) {
-        console.error('Fehler:', error);
-    }
+    }).catch(function(e) { console.error(e); });
 }
 </script>
 {% endblock %}

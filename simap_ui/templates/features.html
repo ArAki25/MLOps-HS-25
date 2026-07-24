@@ -1,487 +1,289 @@
 {% extends "base.html" %}
-
 {% block title %}Features - SAJF Strategies{% endblock %}
-
 {% block extra_css %}
 <style>
-    /* ── Hero ── */
     .feat-hero {
         text-align: center;
-        padding: 5rem 2rem 4rem;
+        padding: var(--space-3xl) var(--space-lg) var(--space-2xl);
     }
-
-    .feat-badge {
-        display: inline-block;
-        background: rgba(6, 182, 212, 0.1);
-        border: 1px solid rgba(6, 182, 212, 0.3);
-        color: var(--accent);
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        padding: 0.4rem 1rem;
-        border-radius: 999px;
-        margin-bottom: 1.5rem;
-    }
-
     .feat-hero h1 {
-        font-size: clamp(2.2rem, 5vw, 3.5rem);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 2rem;
         font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: 1rem;
+        margin-bottom: var(--space-sm);
         letter-spacing: -0.02em;
     }
-
     .feat-hero p {
-        font-size: 1.125rem;
+        font-size: 0.95rem;
         color: var(--text-secondary);
-        max-width: 520px;
+        max-width: 480px;
         margin: 0 auto;
-        line-height: 1.7;
+        line-height: 1.6;
     }
-
-    /* ── Grid ── */
     .feat-grid-wrapper {
         max-width: 1060px;
         margin: 0 auto;
-        padding: 0 2rem 3rem;
+        padding: 0 var(--space-lg) var(--space-xl);
     }
-
     .feat-section-label {
-        font-size: 0.7rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68rem;
         font-weight: 600;
-        letter-spacing: 0.15em;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
         color: var(--text-muted);
-        margin-bottom: 1rem;
+        margin-bottom: var(--space-md);
     }
-
     .feat-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.25rem;
-        margin-bottom: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: var(--space-md);
+        margin-bottom: var(--space-md);
     }
-
     .feat-card {
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: 1.75rem;
+        border-radius: var(--radius);
+        padding: var(--space-lg);
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
-        opacity: 0;
-        transform: translateY(24px);
-        transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
-                    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
-                    border-color 0.25s ease,
-                    box-shadow 0.25s ease;
+        gap: 6px;
+        transition: border-color 150ms ease;
     }
-
-    .feat-card.visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    .feat-card:nth-child(1) { transition-delay: 0.0s; }
-    .feat-card:nth-child(2) { transition-delay: 0.08s; }
-    .feat-card:nth-child(3) { transition-delay: 0.16s; }
-    .feat-card:nth-child(4) { transition-delay: 0.24s; }
-
-    .feat-card:hover {
-        border-color: rgba(6, 182, 212, 0.4);
-        box-shadow: 0 0 24px rgba(6, 182, 212, 0.07), var(--shadow-md);
-        transform: translateY(-3px);
-    }
-
-    .feat-card.visible:hover {
-        transform: translateY(-3px);
-    }
-
+    .feat-card:hover { border-color: var(--text-muted); }
     .feat-card-top {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 0.5rem;
+        gap: 8px;
+        margin-bottom: 4px;
     }
-
     .feat-icon {
-        width: 42px;
-        height: 42px;
-        background: rgba(6, 182, 212, 0.08);
-        border: 1px solid rgba(6, 182, 212, 0.18);
-        border-radius: 10px;
+        width: 36px; height: 36px;
+        background: var(--accent-light);
+        border-radius: var(--radius-sm);
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        transition: background 0.25s, border-color 0.25s;
     }
-
-    .feat-card:hover .feat-icon {
-        background: rgba(6, 182, 212, 0.13);
-        border-color: rgba(6, 182, 212, 0.35);
-    }
-
     .feat-icon svg {
-        width: 20px;
-        height: 20px;
+        width: 18px; height: 18px;
         stroke: var(--accent);
         fill: none;
         stroke-width: 1.8;
         stroke-linecap: round;
         stroke-linejoin: round;
     }
-
     .feat-tag {
-        font-size: 0.7rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.62rem;
         font-weight: 600;
-        padding: 0.25rem 0.65rem;
-        border-radius: 999px;
-        white-space: nowrap;
-        flex-shrink: 0;
+        padding: 2px 8px;
+        border-radius: var(--radius-sm);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
     }
-
-    .feat-tag.free {
-        background: rgba(16, 185, 129, 0.12);
-        color: #10b981;
-        border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-
-    .feat-tag.pro {
-        background: rgba(59, 130, 246, 0.12);
-        color: #60a5fa;
-        border: 1px solid rgba(59, 130, 246, 0.2);
-    }
-
+    .feat-tag.free { background: var(--success-light); color: var(--success); }
+    .feat-tag.pro { background: var(--accent-light); color: var(--accent); }
     .feat-card h3 {
-        font-size: 1rem;
+        font-size: 0.9rem;
         font-weight: 600;
         color: var(--text-primary);
-        letter-spacing: -0.01em;
-        margin: 0;
     }
-
     .feat-card p {
-        font-size: 0.875rem;
+        font-size: 0.82rem;
         color: var(--text-secondary);
-        line-height: 1.7;
-        margin: 0;
+        line-height: 1.6;
     }
-
-    /* ── Divider ── */
     .feat-divider {
         max-width: 1060px;
-        margin: 1rem auto 3rem;
-        padding: 0 2rem;
+        margin: var(--space-md) auto var(--space-xl);
+        padding: 0 var(--space-lg);
         border: none;
         border-top: 1px solid var(--border);
     }
 
     /* ── Comparison Table ── */
     .feat-compare-wrapper {
-        max-width: 780px;
+        max-width: 700px;
         margin: 0 auto;
-        padding: 0 2rem 5rem;
+        padding: 0 var(--space-lg) var(--space-3xl);
     }
-
     .feat-compare-header {
         text-align: center;
-        margin-bottom: 2.5rem;
+        margin-bottom: var(--space-xl);
     }
-
     .feat-compare-header h2 {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
         font-weight: 700;
-        color: var(--text-primary);
-        letter-spacing: -0.02em;
-        margin-bottom: 0.5rem;
+        margin-bottom: 4px;
     }
-
     .feat-compare-header p {
         color: var(--text-secondary);
-        font-size: 0.95rem;
+        font-size: 0.88rem;
     }
-
     .feat-table {
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
+        border-radius: var(--radius);
         overflow: hidden;
     }
-
     .feat-table-head {
         display: grid;
-        grid-template-columns: 1fr 100px 100px;
-        padding: 1rem 1.5rem;
-        background: rgba(255,255,255,0.02);
+        grid-template-columns: 1fr 90px 90px;
+        padding: 10px 16px;
         border-bottom: 1px solid var(--border);
     }
-
     .feat-table-head span {
-        font-size: 0.8rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68rem;
         font-weight: 600;
         color: var(--text-muted);
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.06em;
         text-align: center;
     }
-
-    .feat-table-head span:first-child {
-        text-align: left;
-    }
-
+    .feat-table-head span:first-child { text-align: left; }
     .feat-table-row {
         display: grid;
-        grid-template-columns: 1fr 100px 100px;
-        padding: 0.9rem 1.5rem;
+        grid-template-columns: 1fr 90px 90px;
+        padding: 10px 16px;
         border-bottom: 1px solid var(--border-light);
         align-items: center;
-        transition: background 0.15s;
+        transition: background 150ms ease;
     }
-
-    .feat-table-row:last-child {
-        border-bottom: none;
-    }
-
-    .feat-table-row:hover {
-        background: rgba(255,255,255,0.02);
-    }
-
-    .feat-table-row .feat-row-label {
-        font-size: 0.9rem;
-        color: var(--text-secondary);
-    }
-
-    .feat-table-row .feat-check,
-    .feat-table-row .feat-cross {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .feat-check svg {
-        width: 18px;
-        height: 18px;
-        stroke: #10b981;
-        fill: none;
-        stroke-width: 2.5;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-    }
-
-    .feat-cross svg {
-        width: 16px;
-        height: 16px;
-        stroke: var(--text-muted);
-        fill: none;
-        stroke-width: 2;
-        stroke-linecap: round;
-    }
+    .feat-table-row:last-child { border-bottom: none; }
+    .feat-table-row:hover { background: var(--surface-hover); }
+    .feat-row-label { font-size: 0.84rem; color: var(--text-secondary); }
+    .feat-check, .feat-cross { display: flex; align-items: center; justify-content: center; }
+    .feat-check svg { width: 16px; height: 16px; stroke: var(--success); fill: none; stroke-width: 2.5; stroke-linecap: round; }
+    .feat-cross svg { width: 14px; height: 14px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; }
 
     /* ── CTA ── */
     .feat-cta {
-        max-width: 640px;
-        margin: 0 auto 5rem;
+        max-width: 500px;
+        margin: 0 auto var(--space-3xl);
         text-align: center;
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: var(--radius-xl);
-        padding: 3rem 2rem;
-        position: relative;
-        overflow: hidden;
+        border-radius: var(--radius);
+        padding: var(--space-2xl) var(--space-lg);
     }
-
-    .feat-cta::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(ellipse at 50% 0%, rgba(6, 182, 212, 0.07) 0%, transparent 70%);
-        pointer-events: none;
-    }
-
-    .feat-cta h2 {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.75rem;
-        letter-spacing: -0.02em;
-    }
-
-    .feat-cta p {
-        color: var(--text-secondary);
-        margin-bottom: 1.75rem;
-    }
-
-    .feat-cta-btn {
-        display: inline-block;
-        background: var(--accent);
-        color: #000;
-        padding: 0.85rem 2rem;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 0.95rem;
-        transition: all var(--transition-smooth);
-    }
-
-    .feat-cta-btn:hover {
-        background: var(--accent-hover);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 20px rgba(6, 182, 212, 0.35);
-    }
+    .feat-cta h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: var(--space-sm); }
+    .feat-cta p { color: var(--text-secondary); margin-bottom: var(--space-lg); font-size: 0.9rem; }
 
     @media (max-width: 640px) {
-        .feat-table-head,
-        .feat-table-row {
-            grid-template-columns: 1fr 70px 70px;
-            padding: 0.8rem 1rem;
-        }
+        .feat-table-head, .feat-table-row { grid-template-columns: 1fr 70px 70px; padding: 8px 12px; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-
-<!-- Hero -->
 <div class="feat-hero">
-    <div class="feat-badge">Features</div>
+    <div class="section-label">Features</div>
     <h1>Alles was Sie brauchen</h1>
     <p>Von der einfachen Suche bis zur KI-gestützten Empfehlung — für jede Anforderung die richtige Lösung.</p>
 </div>
 
-<!-- Free Features -->
 <div class="feat-grid-wrapper">
     <div class="feat-section-label">Kostenlos verfügbar</div>
-    <div class="feat-grid" id="free-grid">
-
+    <div class="feat-grid">
         <div class="feat-card">
             <div class="feat-card-top">
-                <div class="feat-icon">
-                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                </div>
-                <span class="feat-tag free">Kostenlos</span>
+                <div class="feat-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
+                <span class="feat-tag free">Free</span>
             </div>
             <h3>Intelligente Suche</h3>
             <p>Durchsuchen Sie alle Ausschreibungen nach Keywords, Projektnummern oder Simap-IDs.</p>
         </div>
-
         <div class="feat-card">
             <div class="feat-card-top">
-                <div class="feat-icon">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-                </div>
-                <span class="feat-tag free">Kostenlos</span>
+                <div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
+                <span class="feat-tag free">Free</span>
             </div>
             <h3>Kanton-Filter</h3>
             <p>Filtern Sie nach allen 26 Schweizer Kantonen und finden Sie lokale Aufträge.</p>
         </div>
-
         <div class="feat-card">
             <div class="feat-card-top">
-                <div class="feat-icon">
-                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7M17.5 14v7"/></svg>
-                </div>
-                <span class="feat-tag free">Kostenlos</span>
+                <div class="feat-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7M17.5 14v7"/></svg></div>
+                <span class="feat-tag free">Free</span>
             </div>
             <h3>Verfahrens- &amp; Auftragstyp</h3>
             <p>Unterscheiden Sie zwischen offenen, selektiven Verfahren und nach Dienstleistung, Bau oder Lieferung.</p>
         </div>
-
         <div class="feat-card">
             <div class="feat-card-top">
-                <div class="feat-icon">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                </div>
-                <span class="feat-tag free">Kostenlos</span>
+                <div class="feat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+                <span class="feat-tag free">Free</span>
             </div>
             <h3>Stündliche Updates</h3>
             <p>Alle Daten werden stündlich von simap.ch synchronisiert. Sie verpassen nichts.</p>
         </div>
-
         <div class="feat-card">
             <div class="feat-card-top">
-                <div class="feat-icon">
-                    <svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-                </div>
-                <span class="feat-tag free">Kostenlos</span>
+                <div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg></div>
+                <span class="feat-tag free">Free</span>
             </div>
             <h3>Personalisierte Empfehlungen</h3>
             <p>Erhalten Sie Aufträge, die speziell zu Ihrem Unternehmensprofil passen — ab dem ersten Login.</p>
         </div>
-
         <div class="feat-card">
             <div class="feat-card-top">
-                <div class="feat-icon">
-                    <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                </div>
-                <span class="feat-tag free">Kostenlos</span>
+                <div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+                <span class="feat-tag free">Free</span>
             </div>
             <h3>Favoriten &amp; Merklisten</h3>
             <p>Speichern Sie interessante Aufträge und behalten Sie den Überblick über alle Termine.</p>
         </div>
-
     </div>
 </div>
 
 <hr class="feat-divider">
 
-<!-- Pro Features -->
 <div class="feat-grid-wrapper">
     <div class="feat-section-label">Pro — erweiterte Funktionen</div>
-    <div class="feat-grid" id="pro-grid">
-
+    <div class="feat-grid">
         <div class="feat-card">
             <div class="feat-card-top">
-                <div class="feat-icon">
-                    <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                </div>
+                <div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
                 <span class="feat-tag pro">Pro</span>
             </div>
             <h3>E-Mail Benachrichtigungen</h3>
             <p>Tägliche Updates über neue relevante Ausschreibungen direkt in Ihr Postfach.</p>
         </div>
-
         <div class="feat-card">
             <div class="feat-card-top">
-                <div class="feat-icon">
-                    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21.17 8H12V2.83A10 10 0 0 1 21.17 8z"/></svg>
-                </div>
+                <div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21.17 8H12V2.83A10 10 0 0 1 21.17 8z"/></svg></div>
                 <span class="feat-tag pro">Pro</span>
             </div>
             <h3>KI-Analyse</h3>
             <p>Unsere KI bewertet Ihre Gewinnchancen basierend auf historischen Vergabedaten.</p>
         </div>
-
         <div class="feat-card">
             <div class="feat-card-top">
-                <div class="feat-icon">
-                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </div>
+                <div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
                 <span class="feat-tag pro">Pro</span>
             </div>
             <h3>Priority Support</h3>
             <p>Direkte Antworten von unserem Team — priorisiert und ohne Wartezeit.</p>
         </div>
-
     </div>
 </div>
 
-<!-- Comparison Table -->
 <div class="feat-compare-wrapper">
     <div class="feat-compare-header">
         <h2>Kostenlos vs. Pro</h2>
         <p>Ein klarer Überblick, was in welchem Plan enthalten ist.</p>
     </div>
-
     <div class="feat-table">
         <div class="feat-table-head">
             <span>Feature</span>
-            <span>Kostenlos</span>
+            <span>Free</span>
             <span>Pro</span>
         </div>
-
         {% set rows = [
             ("Alle Ausschreibungen durchsuchen", true, true),
             ("Filter nach Kanton, Typ, Verfahren", true, true),
@@ -492,48 +294,25 @@
             ("KI-Gewinnwahrscheinlichkeit", false, true),
             ("Priority Support", false, true),
         ] %}
-
         {% for label, free, pro in rows %}
         <div class="feat-table-row">
             <span class="feat-row-label">{{ label }}</span>
             <span class="{% if free %}feat-check{% else %}feat-cross{% endif %}">
-                {% if free %}
-                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                {% else %}
-                <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                {% endif %}
+                {% if free %}<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                {% else %}<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>{% endif %}
             </span>
             <span class="{% if pro %}feat-check{% else %}feat-cross{% endif %}">
-                {% if pro %}
-                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                {% else %}
-                <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                {% endif %}
+                {% if pro %}<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                {% else %}<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>{% endif %}
             </span>
         </div>
         {% endfor %}
     </div>
 </div>
 
-<!-- CTA -->
 <div class="feat-cta">
     <h2>Alle Kernfunktionen. Kostenlos.</h2>
     <p>Starten Sie noch heute — ohne Kreditkarte, ohne versteckte Kosten.</p>
-    <a href="/register" class="feat-cta-btn">Jetzt kostenlos starten →</a>
+    <a href="/register" class="btn btn-primary btn-lg">Jetzt kostenlos starten</a>
 </div>
-
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-            }
-        });
-    }, { threshold: 0.1 });
-
-    document.querySelectorAll('.feat-card').forEach(el => observer.observe(el));
-</script>
 {% endblock %}

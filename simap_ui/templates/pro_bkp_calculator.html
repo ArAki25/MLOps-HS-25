@@ -1,541 +1,341 @@
 {% extends "base.html" %}
 
-{% block title %}BKP-Rechner - SAJF Strategies Pro{% endblock %}
+{% block title %}BKP-Rechner – SAJF Strategies Pro{% endblock %}
 
 {% block extra_css %}
 <style>
-    .disclaimer-top {
-        background: #2a2a1a;
-        border-bottom: 1px solid #f59e0b;
-        padding: 0.75rem 2rem;
-        font-size: 0.875rem;
-        color: #fbbf24;
-        text-align: center;
-    }
+    .pro-wrap { min-height: calc(100vh - 56px); padding: var(--space-xl) var(--space-lg) var(--space-3xl); }
+    .pro-container { max-width: 1000px; margin: 0 auto; }
 
-    .disclaimer-top a {
-        color: #fbbf24;
-        font-weight: 600;
+    .pro-head { margin-bottom: var(--space-lg); }
+    .pro-head h1 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.25rem; font-weight: 700;
+        color: var(--text-primary); letter-spacing: -0.02em;
+        margin: 0 0 4px;
     }
+    .pro-head p { color: var(--text-secondary); font-size: 0.84rem; margin: 0; }
 
-    .pro-header {
-        background: linear-gradient(135deg, #1e3a5f, #3b82f6);
-        color: white;
-        padding: 1.5rem 2rem;
-        margin: 0 -2rem 2rem -2rem;
-    }
-
-    .pro-header-content {
-        max-width: 1400px;
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    .pro-header h1 {
-        font-size: 1.5rem;
-    }
-
-    .pro-nav {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
+    .pro-nav { display: flex; gap: 4px; margin-bottom: var(--space-lg); border-bottom: 1px solid var(--border); }
     .pro-nav a {
-        color: rgba(255,255,255,0.8);
-        text-decoration: none;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        transition: all 0.2s;
+        padding: 0.5rem 0.875rem; font-size: 0.8rem; font-weight: 500;
+        color: var(--text-muted); text-decoration: none;
+        border-bottom: 2px solid transparent; transition: color 0.15s;
+    }
+    .pro-nav a:hover { color: var(--text-primary); }
+    .pro-nav a.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+    .disclaimer-bar {
+        background: var(--surface); border: 1px solid var(--warning);
+        border-radius: var(--radius); padding: 0.6rem 1rem;
+        font-size: 0.78rem; color: var(--warning);
+        margin-bottom: var(--space-lg); text-align: center;
+        font-family: 'JetBrains Mono', monospace;
     }
 
-    .pro-nav a:hover, .pro-nav a.active {
-        background: rgba(255,255,255,0.2);
-        color: white;
+    .calculator-grid {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: var(--space-lg);
+    }
+    @media (max-width: 900px) { .calculator-grid { grid-template-columns: 1fr; } }
+
+    .calc-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: var(--space-lg);
+    }
+    .calc-card h2 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem; font-weight: 600;
+        color: var(--text-primary); margin: 0 0 var(--space-md);
     }
 
-    .calculator-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2rem;
-        margin-top: 2rem;
-    }
-
-    @media (max-width: 900px) {
-        .calculator-container {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    .calculator-card {
-        background: var(--surface);
-        border-radius: 16px;
-        padding: 2rem;
-        border: 1px solid var(--border);
-    }
-
-    .calculator-card h2 {
-        font-size: 1.25rem;
-        margin-bottom: 1.5rem;
-        color: var(--text-primary);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-
+    .form-group { margin-bottom: var(--space-md); }
     .form-group label {
-        display: block;
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--text-secondary);
-        margin-bottom: 0.5rem;
+        display: block; font-size: 0.75rem; font-weight: 500;
+        color: var(--text-secondary); margin-bottom: 4px;
+        font-family: 'JetBrains Mono', monospace;
+        text-transform: uppercase; letter-spacing: 0.04em;
     }
-
     .form-group input,
     .form-group select {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        background: var(--background);
-        color: var(--text-primary);
-        font-size: 1rem;
-        transition: border-color 0.2s;
+        width: 100%; padding: 0.6rem 0.75rem;
+        border: 1px solid var(--border); border-radius: var(--radius-sm);
+        background: var(--background); color: var(--text-primary);
+        font-size: 0.875rem; transition: border-color 0.15s;
     }
-
     .form-group input:focus,
-    .form-group select:focus {
-        outline: none;
-        border-color: var(--accent);
-    }
+    .form-group select:focus { outline: none; border-color: var(--accent); }
 
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); }
 
     .btn-calculate {
-        width: 100%;
-        padding: 1rem;
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
+        width: 100%; padding: 0.7rem;
+        background: var(--accent); color: white; border: none;
+        border-radius: var(--radius-sm); font-size: 0.8rem;
+        font-weight: 600; cursor: pointer; transition: background 0.15s;
+        font-family: 'JetBrains Mono', monospace;
     }
-
-    .btn-calculate:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-    }
-
-    .results-card {
-        background: var(--surface);
-        border-radius: 16px;
-        padding: 2rem;
-        border: 1px solid var(--border);
-    }
-
-    .results-card h2 {
-        font-size: 1.25rem;
-        margin-bottom: 1.5rem;
-        color: var(--text-primary);
-    }
+    .btn-calculate:hover { background: var(--accent-hover); }
 
     .result-total {
-        background: linear-gradient(135deg, #1e3a5f, #3b82f6);
-        border-radius: 12px;
-        padding: 1.5rem;
-        text-align: center;
-        margin-bottom: 1.5rem;
+        background: var(--background); border: 1px solid var(--accent);
+        border-radius: var(--radius); padding: var(--space-md);
+        text-align: center; margin-bottom: var(--space-md);
     }
-
-    .result-total-label {
-        font-size: 0.875rem;
-        color: rgba(255,255,255,0.8);
-        margin-bottom: 0.5rem;
-    }
-
-    .result-total-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: white;
-    }
-
-    .result-total-sub {
-        font-size: 0.875rem;
-        color: rgba(255,255,255,0.7);
-        margin-top: 0.5rem;
-    }
-
-    .bkp-breakdown {
-        margin-top: 1.5rem;
-    }
+    .result-total-label { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.04em; }
+    .result-total-value { font-family: 'JetBrains Mono', monospace; font-size: 1.75rem; font-weight: 700; color: var(--accent); }
+    .result-total-sub { font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
 
     .bkp-breakdown h3 {
-        font-size: 1rem;
-        color: var(--text-secondary);
-        margin-bottom: 1rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem; font-weight: 600;
+        color: var(--text-secondary); margin-bottom: var(--space-sm);
+        text-transform: uppercase; letter-spacing: 0.04em;
     }
 
     .bkp-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid var(--border);
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 0.5rem 0; border-bottom: 1px solid var(--border);
     }
-
-    .bkp-item:last-child {
-        border-bottom: none;
-    }
-
-    .bkp-item-left {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
+    .bkp-item:last-child { border-bottom: none; }
+    .bkp-item-left { display: flex; align-items: center; gap: 0.6rem; }
     .bkp-code {
-        background: var(--accent);
-        color: white;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        min-width: 45px;
-        text-align: center;
+        font-family: 'JetBrains Mono', monospace;
+        background: var(--background); border: 1px solid var(--border);
+        padding: 2px 6px; border-radius: var(--radius-sm);
+        font-size: 0.7rem; font-weight: 600; color: var(--accent);
+        min-width: 36px; text-align: center;
     }
+    .bkp-name { font-size: 0.8rem; color: var(--text-primary); }
+    .bkp-item-right { text-align: right; }
+    .bkp-amount { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; color: var(--text-primary); }
+    .bkp-percent { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted); }
 
-    .bkp-name {
-        font-size: 0.9rem;
-        color: var(--text-primary);
-    }
+    .bkp-bar { height: 3px; background: var(--border); border-radius: 1px; margin-top: 2px; margin-bottom: 4px; overflow: hidden; }
+    .bkp-bar-fill { height: 100%; background: var(--accent); border-radius: 1px; transition: width 0.4s; }
 
-    .bkp-item-right {
-        text-align: right;
-    }
+    .empty-results { text-align: center; padding: 2.5rem 1rem; color: var(--text-muted); }
+    .empty-results p { font-size: 0.8rem; }
 
-    .bkp-amount {
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-
-    .bkp-percent {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-    }
-
-    .bkp-bar {
-        height: 4px;
-        background: var(--border);
-        border-radius: 2px;
-        margin-top: 0.5rem;
-        overflow: hidden;
-    }
-
-    .bkp-bar-fill {
-        height: 100%;
-        background: var(--accent);
-        border-radius: 2px;
-        transition: width 0.5s ease;
-    }
-
-    .empty-results {
-        text-align: center;
-        padding: 3rem;
-        color: var(--text-secondary);
-    }
-
-    .empty-results-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-    }
-
-    /* BKP Info Section */
-    .bkp-info {
-        margin-top: 2rem;
-        padding: 1.5rem;
-        background: var(--background);
-        border-radius: 12px;
-        border: 1px solid var(--border);
-    }
-
-    .bkp-info h3 {
-        font-size: 1rem;
-        color: var(--text-primary);
-        margin-bottom: 1rem;
-    }
-
-    .bkp-info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 0.75rem;
-    }
-
-    .bkp-info-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-    }
-
-    .bkp-info-item code {
-        background: var(--surface);
-        padding: 0.15rem 0.4rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
-    }
-
-    /* Tender BKP Lookup */
-    .lookup-section {
-        margin-top: 2rem;
-        padding-top: 2rem;
-        border-top: 1px solid var(--border);
-    }
-
+    .lookup-section { margin-top: var(--space-lg); padding-top: var(--space-md); border-top: 1px solid var(--border); }
     .lookup-section h3 {
-        font-size: 1rem;
-        color: var(--text-primary);
-        margin-bottom: 1rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem; font-weight: 600;
+        color: var(--text-primary); margin-bottom: var(--space-sm);
     }
-
-    .lookup-input-group {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .lookup-input-group input {
-        flex: 1;
-    }
-
+    .lookup-input-group { display: flex; gap: 6px; }
+    .lookup-input-group input { flex: 1; }
     .btn-lookup {
-        padding: 0.75rem 1.5rem;
-        background: var(--accent);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 500;
-        white-space: nowrap;
+        padding: 0.6rem 1rem; background: var(--accent); color: white;
+        border: none; border-radius: var(--radius-sm); cursor: pointer;
+        font-size: 0.75rem; font-weight: 600; white-space: nowrap;
+        font-family: 'JetBrains Mono', monospace;
     }
-
-    .btn-lookup:hover {
-        background: #2563eb;
-    }
+    .btn-lookup:hover { background: var(--accent-hover); }
 
     .lookup-result {
-        margin-top: 1rem;
-        padding: 1rem;
-        background: var(--background);
-        border-radius: 8px;
-        border-left: 4px solid var(--accent);
-        display: none;
+        margin-top: var(--space-sm); padding: 0.75rem;
+        background: var(--background); border-radius: var(--radius-sm);
+        border-left: 3px solid var(--accent); display: none;
     }
+    .lookup-result.show { display: block; }
+    .lookup-result-title { font-size: 0.78rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .lookup-result-bkp { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; color: var(--text-secondary); }
 
-    .lookup-result.show {
-        display: block;
+    .bkp-ref {
+        margin-top: var(--space-lg); padding: var(--space-md);
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius);
     }
-
-    .lookup-result-title {
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
+    .bkp-ref h3 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem; font-weight: 600;
+        color: var(--text-primary); margin-bottom: var(--space-sm);
+        text-transform: uppercase; letter-spacing: 0.04em;
     }
-
-    .lookup-result-bkp {
-        display: flex;
-        align-items: center;
+    .bkp-ref-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 0.5rem;
-        color: var(--text-secondary);
+    }
+    .bkp-ref-item {
+        display: flex; align-items: center; gap: 0.4rem;
+        font-size: 0.75rem; color: var(--text-secondary);
+    }
+    .bkp-ref-item code {
+        font-family: 'JetBrains Mono', monospace;
+        background: var(--background); border: 1px solid var(--border);
+        padding: 1px 5px; border-radius: 3px; font-size: 0.7rem;
+        color: var(--accent);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="disclaimer-top">
-    ⚠️ Die Berechnungen dienen als Richtwerte. Für verbindliche Kostenschätzungen kontaktieren Sie einen Fachexperten.
-</div>
+<div class="pro-wrap">
+    <div class="pro-container">
+        <div class="pro-head">
+            <div class="section-label">Pro</div>
+            <h1>BKP-Rechner</h1>
+            <p>Baukosten nach BKP-Kategorien berechnen</p>
+        </div>
 
-<div class="pro-header">
-    <div class="pro-header-content">
-        <h1>🧮 BKP-Rechner</h1>
         <nav class="pro-nav">
             <a href="/pro/dashboard">Dashboard</a>
-            <a href="/pro/tenders">Alle Aufträge</a>
+            <a href="/pro/tenders">Aufträge</a>
             <a href="/pro/favorites">Merkliste</a>
             <a href="/pro/bkp-calculator" class="active">BKP-Rechner</a>
-            <a href="/logout">Logout</a>
         </nav>
-    </div>
-</div>
 
-<div class="container">
-    <div class="calculator-container">
-        <!-- Eingabe-Formular -->
-        <div class="calculator-card">
-            <h2>📝 Projektdaten eingeben</h2>
+        <div class="disclaimer-bar">
+            Richtwerte – für verbindliche Kostenschätzungen einen Fachexperten beiziehen.
+        </div>
 
-            <form id="bkpForm">
-                <div class="form-group">
-                    <label>Gebäudetyp</label>
-                    <select id="buildingType" required>
-                        <option value="">-- Bitte wählen --</option>
-                        <option value="wohnen_efh">Einfamilienhaus</option>
-                        <option value="wohnen_mfh">Mehrfamilienhaus</option>
-                        <option value="buero">Bürogebäude</option>
-                        <option value="gewerbe">Gewerbe / Industrie</option>
-                        <option value="schule">Schule / Bildung</option>
-                        <option value="gesundheit">Gesundheitswesen</option>
-                        <option value="hotel">Hotel / Gastro</option>
-                        <option value="lager">Lager / Logistik</option>
-                    </select>
-                </div>
-
-                <div class="form-row">
+        <div class="calculator-grid">
+            <div class="calc-card">
+                <h2>Projektdaten</h2>
+                <form id="bkpForm">
                     <div class="form-group">
-                        <label>Geschossfläche (m²)</label>
-                        <input type="number" id="area" placeholder="z.B. 500" min="1" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Anzahl Geschosse</label>
-                        <input type="number" id="floors" placeholder="z.B. 3" min="1" max="50" value="1">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Baustandard</label>
-                    <select id="standard" required>
-                        <option value="einfach">Einfach (Budget)</option>
-                        <option value="mittel" selected>Mittel (Standard)</option>
-                        <option value="gehoben">Gehoben (Premium)</option>
-                        <option value="luxus">Luxus (High-End)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Kanton</label>
-                    <select id="canton">
-                        <option value="CH">Schweizer Durchschnitt</option>
-                        <option value="ZH">Zürich (+10%)</option>
-                        <option value="GE">Genf (+15%)</option>
-                        <option value="BS">Basel-Stadt (+8%)</option>
-                        <option value="ZG">Zug (+12%)</option>
-                        <option value="VD">Waadt (+5%)</option>
-                        <option value="BE">Bern (±0%)</option>
-                        <option value="LU">Luzern (±0%)</option>
-                        <option value="SG">St. Gallen (-3%)</option>
-                        <option value="AG">Aargau (-2%)</option>
-                        <option value="TI">Tessin (-5%)</option>
-                        <option value="VS">Wallis (-8%)</option>
-                        <option value="GR">Graubünden (-5%)</option>
-                        <option value="JU">Jura (-10%)</option>
-                    </select>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Unterkellerung</label>
-                        <select id="basement">
-                            <option value="keine">Keine</option>
-                            <option value="teil">Teilweise</option>
-                            <option value="voll">Vollständig</option>
+                        <label>Gebäudetyp</label>
+                        <select id="buildingType" required>
+                            <option value="">-- Bitte wählen --</option>
+                            <option value="wohnen_efh">Einfamilienhaus</option>
+                            <option value="wohnen_mfh">Mehrfamilienhaus</option>
+                            <option value="buero">Bürogebäude</option>
+                            <option value="gewerbe">Gewerbe / Industrie</option>
+                            <option value="schule">Schule / Bildung</option>
+                            <option value="gesundheit">Gesundheitswesen</option>
+                            <option value="hotel">Hotel / Gastro</option>
+                            <option value="lager">Lager / Logistik</option>
                         </select>
                     </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Geschossfläche (m²)</label>
+                            <input type="number" id="area" placeholder="z.B. 500" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Anzahl Geschosse</label>
+                            <input type="number" id="floors" placeholder="z.B. 3" min="1" max="50" value="1">
+                        </div>
+                    </div>
+
                     <div class="form-group">
-                        <label>Tiefgarage</label>
-                        <select id="parking">
-                            <option value="keine">Keine</option>
-                            <option value="klein">Klein (< 10 Plätze)</option>
-                            <option value="gross">Gross (10+ Plätze)</option>
+                        <label>Baustandard</label>
+                        <select id="standard" required>
+                            <option value="einfach">Einfach (Budget)</option>
+                            <option value="mittel" selected>Mittel (Standard)</option>
+                            <option value="gehoben">Gehoben (Premium)</option>
+                            <option value="luxus">Luxus (High-End)</option>
                         </select>
                     </div>
+
+                    <div class="form-group">
+                        <label>Kanton</label>
+                        <select id="canton">
+                            <option value="CH">Schweizer Durchschnitt</option>
+                            <option value="ZH">Zürich (+10%)</option>
+                            <option value="GE">Genf (+15%)</option>
+                            <option value="BS">Basel-Stadt (+8%)</option>
+                            <option value="ZG">Zug (+12%)</option>
+                            <option value="VD">Waadt (+5%)</option>
+                            <option value="BE">Bern (±0%)</option>
+                            <option value="LU">Luzern (±0%)</option>
+                            <option value="SG">St. Gallen (-3%)</option>
+                            <option value="AG">Aargau (-2%)</option>
+                            <option value="TI">Tessin (-5%)</option>
+                            <option value="VS">Wallis (-8%)</option>
+                            <option value="GR">Graubünden (-5%)</option>
+                            <option value="JU">Jura (-10%)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Unterkellerung</label>
+                            <select id="basement">
+                                <option value="keine">Keine</option>
+                                <option value="teil">Teilweise</option>
+                                <option value="voll">Vollständig</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Tiefgarage</label>
+                            <select id="parking">
+                                <option value="keine">Keine</option>
+                                <option value="klein">Klein (< 10 Plätze)</option>
+                                <option value="gross">Gross (10+ Plätze)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-calculate">Kosten berechnen</button>
+                </form>
+
+                <div class="lookup-section">
+                    <h3>BKP-Code aus Ausschreibung erkennen</h3>
+                    <div class="lookup-input-group">
+                        <input type="text" id="lookupInput" placeholder="Titel oder Beschreibung eingeben...">
+                        <button type="button" class="btn-lookup" onclick="lookupBKP()">Erkennen</button>
+                    </div>
+                    <div class="lookup-result" id="lookupResult">
+                        <div class="lookup-result-title" id="lookupTitle"></div>
+                        <div class="lookup-result-bkp">
+                            <span class="bkp-code" id="lookupCode"></span>
+                            <span id="lookupName"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="calc-card">
+                <h2>Kostenschätzung</h2>
+
+                <div id="resultsEmpty" class="empty-results">
+                    <p>Projektdaten eingeben, um eine Kostenschätzung zu erhalten.</p>
                 </div>
 
-                <button type="submit" class="btn-calculate">
-                    🧮 Kosten berechnen
-                </button>
-            </form>
+                <div id="resultsContent" style="display: none;">
+                    <div class="result-total">
+                        <div class="result-total-label">Geschätzte Gesamtkosten (BKP 1-9)</div>
+                        <div class="result-total-value" id="totalCost">CHF 0</div>
+                        <div class="result-total-sub" id="costPerSqm">CHF 0 / m²</div>
+                    </div>
 
-            <!-- BKP-Code Lookup -->
-            <div class="lookup-section">
-                <h3>🔍 BKP-Code aus Ausschreibung erkennen</h3>
-                <div class="lookup-input-group">
-                    <input type="text" id="lookupInput" placeholder="Titel oder Beschreibung eingeben...">
-                    <button type="button" class="btn-lookup" onclick="lookupBKP()">Erkennen</button>
-                </div>
-                <div class="lookup-result" id="lookupResult">
-                    <div class="lookup-result-title" id="lookupTitle"></div>
-                    <div class="lookup-result-bkp">
-                        <span class="bkp-code" id="lookupCode"></span>
-                        <span id="lookupName"></span>
+                    <div class="bkp-breakdown">
+                        <h3>Aufschlüsselung nach BKP</h3>
+                        <div id="bkpBreakdown"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Ergebnisse -->
-        <div class="results-card">
-            <h2>📊 Kostenschätzung</h2>
-
-            <div id="resultsEmpty" class="empty-results">
-                <div class="empty-results-icon">🏗️</div>
-                <p>Geben Sie die Projektdaten ein, um eine Kostenschätzung zu erhalten.</p>
+        <div class="bkp-ref">
+            <h3>BKP-Codes Referenz</h3>
+            <div class="bkp-ref-grid">
+                <div class="bkp-ref-item"><code>1</code> Vorbereitungsarbeiten</div>
+                <div class="bkp-ref-item"><code>21</code> Rohbau 1 (Baugrube)</div>
+                <div class="bkp-ref-item"><code>22</code> Rohbau 2 (Fenster, Fassade)</div>
+                <div class="bkp-ref-item"><code>23</code> Elektroanlagen</div>
+                <div class="bkp-ref-item"><code>24</code> HLK-Anlagen</div>
+                <div class="bkp-ref-item"><code>25</code> Sanitäranlagen</div>
+                <div class="bkp-ref-item"><code>26</code> Transportanlagen</div>
+                <div class="bkp-ref-item"><code>27</code> Ausbau 1 (Gipser, Maler)</div>
+                <div class="bkp-ref-item"><code>28</code> Ausbau 2 (Böden, Decken)</div>
+                <div class="bkp-ref-item"><code>29</code> Honorare</div>
+                <div class="bkp-ref-item"><code>4</code> Umgebung</div>
+                <div class="bkp-ref-item"><code>5</code> Baunebenkosten</div>
             </div>
-
-            <div id="resultsContent" style="display: none;">
-                <div class="result-total">
-                    <div class="result-total-label">Geschätzte Gesamtkosten (BKP 1-9)</div>
-                    <div class="result-total-value" id="totalCost">CHF 0</div>
-                    <div class="result-total-sub" id="costPerSqm">CHF 0 / m²</div>
-                </div>
-
-                <div class="bkp-breakdown">
-                    <h3>Kostenaufschlüsselung nach BKP</h3>
-                    <div id="bkpBreakdown"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- BKP Info -->
-    <div class="bkp-info">
-        <h3>📖 BKP-Codes Referenz</h3>
-        <div class="bkp-info-grid">
-            <div class="bkp-info-item"><code>1</code> Vorbereitungsarbeiten</div>
-            <div class="bkp-info-item"><code>21</code> Rohbau 1 (Baugrube)</div>
-            <div class="bkp-info-item"><code>22</code> Rohbau 2 (Fenster, Fassade)</div>
-            <div class="bkp-info-item"><code>23</code> Elektroanlagen</div>
-            <div class="bkp-info-item"><code>24</code> HLK-Anlagen</div>
-            <div class="bkp-info-item"><code>25</code> Sanitäranlagen</div>
-            <div class="bkp-info-item"><code>26</code> Transportanlagen</div>
-            <div class="bkp-info-item"><code>27</code> Ausbau 1 (Gipser, Maler)</div>
-            <div class="bkp-info-item"><code>28</code> Ausbau 2 (Böden, Decken)</div>
-            <div class="bkp-info-item"><code>29</code> Honorare</div>
-            <div class="bkp-info-item"><code>4</code> Umgebung</div>
-            <div class="bkp-info-item"><code>5</code> Baunebenkosten</div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-// BKP-Kategorien mit Prozentanteilen nach Gebäudetyp
-const bkpCategories = {
+var bkpCategories = {
     wohnen_efh: {
-        basePrice: 3200, // CHF/m²
+        basePrice: 3200,
         breakdown: [
             { code: '1', name: 'Vorbereitungsarbeiten', percent: 3 },
             { code: '21', name: 'Rohbau 1 (Baugrube, Fundament)', percent: 12 },
@@ -672,34 +472,14 @@ const bkpCategories = {
     }
 };
 
-// Standard-Faktoren
-const standardFactors = {
-    einfach: 0.75,
-    mittel: 1.0,
-    gehoben: 1.35,
-    luxus: 1.8
+var standardFactors = { einfach: 0.75, mittel: 1.0, gehoben: 1.35, luxus: 1.8 };
+
+var cantonFactors = {
+    CH: 1.0, ZH: 1.10, GE: 1.15, BS: 1.08, ZG: 1.12, VD: 1.05,
+    BE: 1.0, LU: 1.0, SG: 0.97, AG: 0.98, TI: 0.95, VS: 0.92, GR: 0.95, JU: 0.90
 };
 
-// Kantons-Faktoren
-const cantonFactors = {
-    CH: 1.0,
-    ZH: 1.10,
-    GE: 1.15,
-    BS: 1.08,
-    ZG: 1.12,
-    VD: 1.05,
-    BE: 1.0,
-    LU: 1.0,
-    SG: 0.97,
-    AG: 0.98,
-    TI: 0.95,
-    VS: 0.92,
-    GR: 0.95,
-    JU: 0.90
-};
-
-// BKP-Keyword Mapping für Erkennung
-const bkpKeywords = {
+var bkpKeywords = {
     '211': ['baumeister', 'maurer', 'betonarbeiten', 'fundament', 'rohbau'],
     '212': ['montagebau', 'fertigteile', 'betonelemente', 'elementbau'],
     '214': ['gerüst', 'gerüstbau', 'fassadengerüst'],
@@ -732,76 +512,59 @@ const bkpKeywords = {
     '423': ['zaun', 'einfriedung', 'tor', 'sichtschutz']
 };
 
-// Formular absenden
 document.getElementById('bkpForm').addEventListener('submit', function(e) {
     e.preventDefault();
     calculateBKP();
 });
 
 function calculateBKP() {
-    const buildingType = document.getElementById('buildingType').value;
-    const area = parseFloat(document.getElementById('area').value) || 0;
-    const floors = parseInt(document.getElementById('floors').value) || 1;
-    const standard = document.getElementById('standard').value;
-    const canton = document.getElementById('canton').value;
-    const basement = document.getElementById('basement').value;
-    const parking = document.getElementById('parking').value;
+    var buildingType = document.getElementById('buildingType').value;
+    var area = parseFloat(document.getElementById('area').value) || 0;
+    var floors = parseInt(document.getElementById('floors').value) || 1;
+    var standard = document.getElementById('standard').value;
+    var canton = document.getElementById('canton').value;
+    var basement = document.getElementById('basement').value;
+    var parking = document.getElementById('parking').value;
 
     if (!buildingType || area <= 0) {
         alert('Bitte füllen Sie alle Pflichtfelder aus.');
         return;
     }
 
-    const config = bkpCategories[buildingType];
-    const totalArea = area * floors;
+    var config = bkpCategories[buildingType];
+    var totalArea = area * floors;
+    var pricePerSqm = config.basePrice;
 
-    // Basis-Preis berechnen
-    let pricePerSqm = config.basePrice;
-
-    // Standard-Faktor
     pricePerSqm *= standardFactors[standard];
-
-    // Kantons-Faktor
     pricePerSqm *= cantonFactors[canton];
 
-    // Unterkellerung
     if (basement === 'teil') pricePerSqm *= 1.05;
     if (basement === 'voll') pricePerSqm *= 1.10;
-
-    // Tiefgarage
     if (parking === 'klein') pricePerSqm *= 1.08;
     if (parking === 'gross') pricePerSqm *= 1.15;
 
-    // Gesamtkosten
-    const totalCost = totalArea * pricePerSqm;
+    var totalCost = totalArea * pricePerSqm;
 
-    // Ergebnisse anzeigen
     document.getElementById('resultsEmpty').style.display = 'none';
     document.getElementById('resultsContent').style.display = 'block';
-
     document.getElementById('totalCost').textContent = formatCurrency(totalCost);
-    document.getElementById('costPerSqm').textContent = `${formatCurrency(pricePerSqm)} / m² (${totalArea.toLocaleString('de-CH')} m² Gesamtfläche)`;
+    document.getElementById('costPerSqm').textContent = formatCurrency(pricePerSqm) + ' / m² (' + totalArea.toLocaleString('de-CH') + ' m² Gesamtfläche)';
 
-    // Breakdown generieren
-    const breakdownHtml = config.breakdown
-        .filter(item => item.percent > 0)
-        .map(item => {
-            const amount = totalCost * (item.percent / 100);
-            return `
-                <div class="bkp-item">
-                    <div class="bkp-item-left">
-                        <span class="bkp-code">${item.code}</span>
-                        <span class="bkp-name">${item.name}</span>
-                    </div>
-                    <div class="bkp-item-right">
-                        <div class="bkp-amount">${formatCurrency(amount)}</div>
-                        <div class="bkp-percent">${item.percent}%</div>
-                    </div>
-                </div>
-                <div class="bkp-bar">
-                    <div class="bkp-bar-fill" style="width: ${item.percent * 2}%"></div>
-                </div>
-            `;
+    var breakdownHtml = config.breakdown
+        .filter(function(item) { return item.percent > 0; })
+        .map(function(item) {
+            var amount = totalCost * (item.percent / 100);
+            return '<div class="bkp-item">' +
+                '<div class="bkp-item-left">' +
+                    '<span class="bkp-code">' + item.code + '</span>' +
+                    '<span class="bkp-name">' + item.name + '</span>' +
+                '</div>' +
+                '<div class="bkp-item-right">' +
+                    '<div class="bkp-amount">' + formatCurrency(amount) + '</div>' +
+                    '<div class="bkp-percent">' + item.percent + '%</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="bkp-bar"><div class="bkp-bar-fill" style="width:' + (item.percent * 2) + '%"></div></div>';
         }).join('');
 
     document.getElementById('bkpBreakdown').innerHTML = breakdownHtml;
@@ -811,31 +574,36 @@ function formatCurrency(value) {
     return 'CHF ' + Math.round(value).toLocaleString('de-CH');
 }
 
-// BKP-Code Lookup
 function lookupBKP() {
-    const input = document.getElementById('lookupInput').value.toLowerCase();
-    const resultDiv = document.getElementById('lookupResult');
+    var input = document.getElementById('lookupInput').value.toLowerCase();
+    var resultDiv = document.getElementById('lookupResult');
 
     if (!input) {
         resultDiv.classList.remove('show');
         return;
     }
 
-    let foundCode = null;
-    let foundName = '';
+    var foundCode = null;
+    var foundName = '';
+    var codes = Object.keys(bkpKeywords);
 
-    // Suche nach Keywords
-    for (const [code, keywords] of Object.entries(bkpKeywords)) {
-        for (const keyword of keywords) {
-            if (input.includes(keyword)) {
+    for (var i = 0; i < codes.length; i++) {
+        var code = codes[i];
+        var keywords = bkpKeywords[code];
+        for (var j = 0; j < keywords.length; j++) {
+            if (input.indexOf(keywords[j]) !== -1) {
                 foundCode = code;
-                // Name aus bkpCategories holen
-                for (const type of Object.values(bkpCategories)) {
-                    const category = type.breakdown.find(b => b.code === code.substring(0, 2) || b.code === code.substring(0, 1));
-                    if (category) {
-                        foundName = category.name;
-                        break;
+                var types = Object.keys(bkpCategories);
+                for (var t = 0; t < types.length; t++) {
+                    var breakdown = bkpCategories[types[t]].breakdown;
+                    var category = null;
+                    for (var b = 0; b < breakdown.length; b++) {
+                        if (breakdown[b].code === code.substring(0, 2) || breakdown[b].code === code.substring(0, 1)) {
+                            category = breakdown[b];
+                            break;
+                        }
                     }
+                    if (category) { foundName = category.name; break; }
                 }
                 break;
             }
@@ -857,37 +625,17 @@ function lookupBKP() {
 }
 
 function getBkpName(code) {
-    const names = {
-        '211': 'Baumeisterarbeiten',
-        '212': 'Montagebau',
-        '214': 'Gerüstarbeiten',
-        '221': 'Fenster, Aussentüren',
-        '222': 'Fassadenbekleidung',
-        '223': 'Bedachungsarbeiten',
-        '224': 'Spenglerarbeiten',
-        '225': 'Schlosserarbeiten',
-        '226': 'Storenarbeiten',
-        '227': 'Schreinerarbeiten',
-        '231': 'Starkstromanlagen',
-        '232': 'Schwachstromanlagen',
-        '233': 'Leuchten',
-        '234': 'Photovoltaik',
-        '241': 'Lüftungsanlagen',
-        '242': 'Heizungsanlagen',
-        '243': 'Kälteanlagen',
-        '244': 'Lufttechnische Anlagen',
-        '251': 'Sanitärinstallationen',
-        '252': 'Sanitärapparate',
-        '253': 'Kücheneinrichtungen',
-        '261': 'Aufzüge',
-        '271': 'Gipserarbeiten',
-        '273': 'Schliessanlagen',
-        '281': 'Bodenbeläge',
-        '283': 'Deckenbekleidungen',
-        '285': 'Malerarbeiten',
-        '421': 'Gärtnerarbeiten',
-        '422': 'Pflästerungen',
-        '423': 'Einfriedungen'
+    var names = {
+        '211': 'Baumeisterarbeiten', '212': 'Montagebau', '214': 'Gerüstarbeiten',
+        '221': 'Fenster, Aussentüren', '222': 'Fassadenbekleidung', '223': 'Bedachungsarbeiten',
+        '224': 'Spenglerarbeiten', '225': 'Schlosserarbeiten', '226': 'Storenarbeiten',
+        '227': 'Schreinerarbeiten', '231': 'Starkstromanlagen', '232': 'Schwachstromanlagen',
+        '233': 'Leuchten', '234': 'Photovoltaik', '241': 'Lüftungsanlagen',
+        '242': 'Heizungsanlagen', '243': 'Kälteanlagen', '244': 'Lufttechnische Anlagen',
+        '251': 'Sanitärinstallationen', '252': 'Sanitärapparate', '253': 'Kücheneinrichtungen',
+        '261': 'Aufzüge', '271': 'Gipserarbeiten', '273': 'Schliessanlagen',
+        '281': 'Bodenbeläge', '283': 'Deckenbekleidungen', '285': 'Malerarbeiten',
+        '421': 'Gärtnerarbeiten', '422': 'Pflästerungen', '423': 'Einfriedungen'
     };
     return names[code] || 'Unbekannt';
 }

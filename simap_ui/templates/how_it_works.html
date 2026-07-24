@@ -1,429 +1,151 @@
 {% extends "base.html" %}
-
 {% block title %}So funktioniert's - SAJF Strategies{% endblock %}
-
 {% block extra_css %}
 <style>
-    /* ── Page Hero ── */
     .hiw-hero {
         text-align: center;
-        padding: 5rem 2rem 4rem;
+        padding: var(--space-3xl) var(--space-lg) var(--space-2xl);
     }
-
-    .hiw-badge {
-        display: inline-block;
-        background: rgba(6, 182, 212, 0.1);
-        border: 1px solid rgba(6, 182, 212, 0.3);
-        color: var(--accent);
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        padding: 0.4rem 1rem;
-        border-radius: 999px;
-        margin-bottom: 1.5rem;
-    }
-
     .hiw-hero h1 {
-        font-size: clamp(2.2rem, 5vw, 3.5rem);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 2rem;
         font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: 1rem;
+        margin-bottom: var(--space-sm);
         letter-spacing: -0.02em;
     }
-
     .hiw-hero p {
-        font-size: 1.125rem;
+        font-size: 0.95rem;
         color: var(--text-secondary);
-        max-width: 520px;
+        max-width: 480px;
         margin: 0 auto;
-        line-height: 1.7;
+        line-height: 1.6;
     }
-
-    /* ── Steps Section ── */
     .hiw-steps-wrapper {
         max-width: 1000px;
         margin: 0 auto;
-        padding: 0 2rem 5rem;
+        padding: 0 var(--space-lg) var(--space-3xl);
     }
-
-    /* Connector line + icons row */
-    .hiw-icons-row {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0;
-        margin-bottom: 1.5rem;
-        position: relative;
-    }
-
-    .hiw-icon-col {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        position: relative;
-        z-index: 1;
-    }
-
-    .hiw-connector {
-        flex: 1;
-        height: 2px;
-        border-top: 2px dashed var(--border);
-        margin-top: 0;
-        position: relative;
-        top: -2px;
-    }
-
-    .hiw-icon-wrap {
-        position: relative;
-        width: 72px;
-        height: 72px;
-    }
-
-    .hiw-icon-bg {
-        width: 72px;
-        height: 72px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all var(--transition-smooth);
-    }
-
-    .hiw-icon-bg svg {
-        width: 30px;
-        height: 30px;
-        color: var(--accent);
-        stroke: var(--accent);
-    }
-
-    .hiw-badge-num {
-        position: absolute;
-        top: -8px;
-        right: -8px;
-        width: 22px;
-        height: 22px;
-        background: var(--accent);
-        color: #000;
-        border-radius: 50%;
-        font-size: 0.7rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* Cards row */
     .hiw-cards-row {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 1.5rem;
+        gap: var(--space-md);
+        position: relative;
     }
-
+    .hiw-cards-row::before {
+        content: '';
+        position: absolute;
+        top: 28px;
+        left: 16%;
+        right: 16%;
+        height: 1px;
+        background: var(--border);
+        z-index: 0;
+    }
     .hiw-card {
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: 1.75rem;
-        transition: all var(--transition-smooth);
+        border-radius: var(--radius);
+        padding: var(--space-lg);
+        text-align: center;
+        position: relative;
+        z-index: 1;
+        transition: border-color 150ms ease;
     }
-
-    .hiw-card:hover {
-        border-color: rgba(6, 182, 212, 0.4);
-        box-shadow: 0 0 24px rgba(6, 182, 212, 0.08), var(--shadow-md);
-        transform: translateY(-3px);
+    .hiw-card:hover { border-color: var(--text-muted); }
+    .hiw-step-num {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.25rem;
+        font-weight: 700;
+        width: 48px; height: 48px;
+        border-radius: var(--radius-sm);
+        background: var(--background);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto var(--space-md);
+        color: var(--text-primary);
+        transition: border-color 150ms ease, color 150ms ease;
     }
-
-    .hiw-card:hover .hiw-icon-bg {
-        border-color: rgba(6, 182, 212, 0.4);
-        background: rgba(6, 182, 212, 0.06);
-        box-shadow: 0 0 16px rgba(6, 182, 212, 0.12);
+    .hiw-card:hover .hiw-step-num {
+        border-color: var(--accent);
+        color: var(--accent);
     }
-
     .hiw-card h3 {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: var(--text-primary);
-        margin-bottom: 0.6rem;
-        letter-spacing: -0.01em;
+        margin-bottom: 6px;
     }
-
     .hiw-card p {
-        font-size: 0.9rem;
+        font-size: 0.84rem;
         color: var(--text-secondary);
-        line-height: 1.7;
+        line-height: 1.6;
     }
-
-    /* ── CTA Section ── */
+    .hiw-icon {
+        width: 36px; height: 36px;
+        margin: 0 auto var(--space-sm);
+        color: var(--accent);
+    }
     .hiw-cta {
-        max-width: 640px;
-        margin: 0 auto 5rem;
+        max-width: 500px;
+        margin: 0 auto var(--space-3xl);
         text-align: center;
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: var(--radius-xl);
-        padding: 3rem 2rem;
-        position: relative;
-        overflow: hidden;
+        border-radius: var(--radius);
+        padding: var(--space-2xl) var(--space-lg);
     }
-
-    .hiw-cta::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(ellipse at 50% 0%, rgba(6, 182, 212, 0.07) 0%, transparent 70%);
-        pointer-events: none;
-    }
-
     .hiw-cta h2 {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
         font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.75rem;
-        letter-spacing: -0.02em;
+        margin-bottom: var(--space-sm);
     }
-
     .hiw-cta p {
         color: var(--text-secondary);
-        margin-bottom: 1.75rem;
-        font-size: 1rem;
+        margin-bottom: var(--space-lg);
+        font-size: 0.9rem;
     }
-
-    .hiw-cta-btn {
-        display: inline-block;
-        background: var(--accent);
-        color: #000;
-        padding: 0.85rem 2rem;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 0.95rem;
-        transition: all var(--transition-smooth);
-        box-shadow: 0 0 0 rgba(6, 182, 212, 0);
-    }
-
-    .hiw-cta-btn:hover {
-        background: var(--accent-hover);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 20px rgba(6, 182, 212, 0.35);
-    }
-
-    /* ── Scroll Animations ── */
-    .hiw-card {
-        opacity: 0;
-        transform: translateX(-40px);
-        transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-                    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-                    border-color var(--transition-smooth),
-                    box-shadow var(--transition-smooth);
-    }
-
-    .hiw-card.visible {
-        opacity: 1;
-        transform: translateX(0);
-    }
-
-    .hiw-card:nth-child(1) { transition-delay: 0s; }
-    .hiw-card:nth-child(2) { transition-delay: 0.15s; }
-    .hiw-card:nth-child(3) { transition-delay: 0.3s; }
-
-    .hiw-icons-row .hiw-icon-col {
-        opacity: 0;
-        transform: translateY(16px);
-        transition: opacity 0.5s ease, transform 0.5s ease;
-    }
-    .hiw-icons-row .hiw-icon-col.visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    .hiw-icons-row .hiw-icon-col:nth-child(1) { transition-delay: 0s; }
-    .hiw-icons-row .hiw-icon-col:nth-child(3) { transition-delay: 0.15s; }
-    .hiw-icons-row .hiw-icon-col:nth-child(5) { transition-delay: 0.3s; }
-
-    /* ── Mobile ── */
     @media (max-width: 768px) {
-        .hiw-icons-row {
-            display: none;
-        }
-
-        .hiw-cards-row {
-            grid-template-columns: 1fr;
-        }
-
-        .hiw-card {
-            display: flex;
-            gap: 1rem;
-            align-items: flex-start;
-        }
-
-        .hiw-card-mobile-icon {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.35rem;
-            flex-shrink: 0;
-        }
-
-        .hiw-card-mobile-num {
-            width: 20px;
-            height: 20px;
-            background: var(--accent);
-            color: #000;
-            border-radius: 50%;
-            font-size: 0.65rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .hiw-card-icon-sm {
-            width: 48px;
-            height: 48px;
-            background: rgba(6, 182, 212, 0.08);
-            border: 1px solid rgba(6, 182, 212, 0.2);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .hiw-card-icon-sm svg {
-            width: 22px;
-            height: 22px;
-            stroke: var(--accent);
-        }
-
-        .hiw-card-body {
-            flex: 1;
-        }
-    }
-
-    @media (min-width: 769px) {
-        .hiw-card-mobile-icon { display: none; }
-        .hiw-card-body { flex: 1; }
+        .hiw-cards-row { grid-template-columns: 1fr; }
+        .hiw-cards-row::before { display: none; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-
-<!-- Hero -->
 <div class="hiw-hero">
     <h1>So funktioniert's</h1>
     <p>In 3 einfachen Schritten zu den passenden Ausschreibungen für Ihr Unternehmen</p>
 </div>
 
-<!-- Steps -->
 <div class="hiw-steps-wrapper">
-
-    <!-- Icons + Connectors (Desktop only) -->
-    <div class="hiw-icons-row">
-        <div class="hiw-icon-col">
-            <div class="hiw-icon-wrap">
-                <div class="hiw-icon-bg">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-        <div class="hiw-connector"></div>
-        <div class="hiw-icon-col">
-            <div class="hiw-icon-wrap">
-                <div class="hiw-icon-bg">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21.17 8H12V2.83A10 10 0 0 1 21.17 8z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-        <div class="hiw-connector"></div>
-        <div class="hiw-icon-col">
-            <div class="hiw-icon-wrap">
-                <div class="hiw-icon-bg">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Cards -->
     <div class="hiw-cards-row">
-
-        <!-- Step 1 -->
         <div class="hiw-card">
-            <div class="hiw-card-mobile-icon">
-                <div class="hiw-card-icon-sm">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="hiw-card-body">
-                <h3>Profil erstellen</h3>
-                <p>Registrieren Sie sich kostenlos und hinterlegen Sie Ihr Unternehmensprofil — Branche, Kanton, Auftragstypen.</p>
-            </div>
+            <div class="hiw-step-num">01</div>
+            <svg class="hiw-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            <h3>Profil erstellen</h3>
+            <p>Registrieren Sie sich kostenlos und hinterlegen Sie Ihr Unternehmensprofil — Branche, Kanton, Auftragstypen.</p>
         </div>
-
-        <!-- Step 2 -->
         <div class="hiw-card">
-            <div class="hiw-card-mobile-icon">
-                <div class="hiw-card-icon-sm">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21.17 8H12V2.83A10 10 0 0 1 21.17 8z"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="hiw-card-body">
-                <h3>KI findet passende Ausschreibungen</h3>
-                <p>Unser ML-Modell analysiert Ihr Profil und liefert automatisch die relevantesten Aufträge — ohne manuelles Suchen.</p>
-            </div>
+            <div class="hiw-step-num">02</div>
+            <svg class="hiw-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21.17 8H12V2.83A10 10 0 0 1 21.17 8z"/></svg>
+            <h3>KI findet passende Ausschreibungen</h3>
+            <p>Unser ML-Modell analysiert Ihr Profil und liefert automatisch die relevantesten Aufträge — ohne manuelles Suchen.</p>
         </div>
-
-        <!-- Step 3 -->
         <div class="hiw-card">
-            <div class="hiw-card-mobile-icon">
-                <div class="hiw-card-icon-sm">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="hiw-card-body">
-                <h3>Direkt bewerben</h3>
-                <p>Mit einem Klick zur offiziellen Ausschreibung auf simap.ch — Unterlagen herunterladen und Offerte einreichen.</p>
-            </div>
+            <div class="hiw-step-num">03</div>
+            <svg class="hiw-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <h3>Direkt bewerben</h3>
+            <p>Mit einem Klick zur offiziellen Ausschreibung auf simap.ch — Unterlagen herunterladen und Offerte einreichen.</p>
         </div>
-
     </div>
 </div>
 
-<!-- CTA -->
 <div class="hiw-cta">
     <h2>Bereit loszulegen?</h2>
     <p>Kostenlos starten – keine Kreditkarte nötig.</p>
-    <a href="/register" class="hiw-cta-btn">Ausschreibungen durchsuchen →</a>
+    <a href="/register" class="btn btn-primary btn-lg">Ausschreibungen durchsuchen</a>
 </div>
-
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-            }
-        });
-    }, { threshold: 0.15 });
-
-    document.querySelectorAll('.hiw-card, .hiw-icons-row .hiw-icon-col').forEach(el => {
-        observer.observe(el);
-    });
-</script>
 {% endblock %}

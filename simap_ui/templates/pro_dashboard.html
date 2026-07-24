@@ -1,252 +1,160 @@
 {% extends "base.html" %}
 
-{% block title %}Pro Dashboard - SAJF Strategies{% endblock %}
+{% block title %}Pro Dashboard – SAJF Strategies{% endblock %}
 
 {% block extra_css %}
 <style>
-    .pro-header {
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        color: white;
-        padding: 2rem;
-        margin: -2rem -2rem 2rem -2rem;
-    }
+    .pro-wrap { min-height: calc(100vh - 56px); padding: var(--space-xl) var(--space-lg) var(--space-3xl); }
+    .pro-container { max-width: 1000px; margin: 0 auto; }
 
-    .pro-header-content {
-        max-width: 1400px;
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
+    .pro-head { margin-bottom: var(--space-xl); }
+    .pro-head h1 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.35rem; font-weight: 700;
+        color: var(--text-primary); letter-spacing: -0.02em;
+        margin: 0 0 4px;
     }
+    .pro-head p { color: var(--text-secondary); font-size: 0.84rem; margin: 0; }
 
-    .pro-welcome h1 {
-        font-size: 1.75rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .pro-welcome p {
-        opacity: 0.9;
-    }
-
-    .pro-nav {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
+    .pro-nav { display: flex; gap: 4px; margin-bottom: var(--space-xl); border-bottom: 1px solid var(--border); padding-bottom: 0; }
     .pro-nav a {
-        color: rgba(255,255,255,0.8);
-        text-decoration: none;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        transition: all 0.2s;
+        padding: 0.5rem 0.875rem;
+        font-size: 0.8rem; font-weight: 500;
+        color: var(--text-muted); text-decoration: none;
+        border-bottom: 2px solid transparent;
+        transition: color 0.15s;
     }
-
-    .pro-nav a:hover, .pro-nav a.active {
-        background: rgba(255,255,255,0.2);
-        color: white;
-    }
-
-    .pro-badge-large {
-        background: rgba(255,255,255,0.2);
-        padding: 0.5rem 1rem;
-        border-radius: 50px;
-        font-size: 0.875rem;
-        font-weight: 600;
-    }
+    .pro-nav a:hover { color: var(--text-primary); }
+    .pro-nav a.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 
     .dashboard-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-bottom: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: var(--space-md);
     }
 
     .dashboard-card {
         background: var(--surface);
-        border-radius: 16px;
-        padding: 2rem;
-        box-shadow: var(--shadow);
-        transition: transform 0.2s, box-shadow 0.2s;
-        cursor: pointer;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-lg);
         text-decoration: none;
         color: inherit;
         display: block;
-        border: 1px solid var(--border);
+        transition: border-color 0.15s;
     }
-
-    .dashboard-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-lg);
-        border-color: var(--accent);
-    }
+    .dashboard-card:hover { border-color: var(--accent); }
 
     .card-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        margin-bottom: var(--space-sm);
     }
-
     .card-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem; font-weight: 600;
         color: var(--text-primary);
+        margin-bottom: 6px;
     }
-
     .card-description {
         color: var(--text-secondary);
-        font-size: 0.95rem;
-        line-height: 1.6;
+        font-size: 0.8rem;
+        line-height: 1.5;
     }
-
     .card-stats {
-        display: flex;
-        gap: 2rem;
-        margin-top: 1rem;
-        padding-top: 1rem;
+        display: flex; gap: var(--space-lg);
+        margin-top: var(--space-md);
+        padding-top: var(--space-sm);
         border-top: 1px solid var(--border);
     }
-
-    .card-stat {
-        text-align: center;
-    }
-
     .card-stat-value {
-        font-size: 1.5rem;
-        font-weight: 700;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.25rem; font-weight: 700;
         color: var(--accent);
     }
-
     .card-stat-label {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
+        font-size: 0.65rem; color: var(--text-muted);
+        text-transform: uppercase; letter-spacing: 0.06em;
+        font-family: 'JetBrains Mono', monospace;
     }
 
-    .coming-soon {
-        opacity: 0.6;
-        pointer-events: none;
-    }
-
+    .coming-soon { opacity: 0.5; pointer-events: none; }
     .badge-beta {
         display: inline-block;
-        background: #f59e0b;
-        color: white;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        margin-left: 0.5rem;
-        vertical-align: middle;
+        background: var(--warning); color: #000;
+        padding: 1px 6px; border-radius: 3px;
+        font-size: 0.55rem; font-weight: 700;
+        font-family: 'JetBrains Mono', monospace;
+        text-transform: uppercase; letter-spacing: 0.05em;
+        vertical-align: middle; margin-left: 4px;
     }
-
     .badge-coming {
         display: inline-block;
-        background: var(--text-secondary);
-        color: white;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        margin-left: 0.5rem;
-        vertical-align: middle;
+        background: var(--text-muted); color: var(--bg);
+        padding: 1px 6px; border-radius: 3px;
+        font-size: 0.55rem; font-weight: 700;
+        font-family: 'JetBrains Mono', monospace;
+        text-transform: uppercase; letter-spacing: 0.05em;
+        vertical-align: middle; margin-left: 4px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="pro-header">
-    <div class="pro-header-content">
-        <div class="pro-welcome">
-            <h1>Willkommen, {{ company_name }}</h1>
-            <p>Ihr personalisiertes Pro-Dashboard</p>
+<div class="pro-wrap">
+    <div class="pro-container">
+        <div class="pro-head">
+            <div class="section-label">Pro</div>
+            <h1>Dashboard</h1>
+            <p>Willkommen, {{ company_name }}</p>
         </div>
+
         <nav class="pro-nav">
             <a href="/pro/dashboard" class="active">Dashboard</a>
-            <a href="/pro/tenders">Alle Aufträge</a>
+            <a href="/pro/tenders">Aufträge</a>
             <a href="/pro/favorites">Merkliste</a>
             <a href="/pro/bkp-calculator">BKP-Rechner</a>
-            <a href="/logout">Logout</a>
         </nav>
-    </div>
-</div>
 
-<div class="container">
-    <div class="dashboard-grid">
-        <!-- Alle Aufträge -->
-        <a href="/pro/tenders" class="dashboard-card">
-            <div class="card-icon">📋</div>
-            <div class="card-title">Alle Aufträge</div>
-            <div class="card-description">
-                Durchsuchen Sie alle aktuellen öffentlichen Ausschreibungen.
-                Neueste Aufträge zuerst, mit erweiterten Filteroptionen.
-            </div>
-            <div class="card-stats">
-                <div class="card-stat">
-                    <div class="card-stat-value">{{ stats.total }}</div>
-                    <div class="card-stat-label">Total</div>
+        <div class="dashboard-grid">
+            <a href="/pro/tenders" class="dashboard-card">
+                <div class="card-icon">📋</div>
+                <div class="card-title">Alle Aufträge</div>
+                <div class="card-description">Aktuelle öffentliche Ausschreibungen durchsuchen mit erweiterten Filtern.</div>
+                <div class="card-stats">
+                    <div><div class="card-stat-value">{{ stats.total }}</div><div class="card-stat-label">Total</div></div>
+                    <div><div class="card-stat-value">{{ stats.today }}</div><div class="card-stat-label">Heute neu</div></div>
                 </div>
-                <div class="card-stat">
-                    <div class="card-stat-value">{{ stats.today }}</div>
-                    <div class="card-stat-label">Heute neu</div>
-                </div>
-            </div>
-        </a>
+            </a>
 
-        <!-- Empfohlene Aufträge (ML) -->
-        <a href="/pro/recommended" class="dashboard-card">
-            <div class="card-icon">🎯</div>
-            <div class="card-title">Empfohlene Aufträge <span class="badge-beta">BETA</span></div>
-            <div class="card-description">
-                Aufträge, die speziell für {{ company_name }} ausgewählt wurden.
-                Basierend auf Ihrem Firmenprofil und historischen Daten.
-            </div>
-            <div class="card-stats">
-                <div class="card-stat">
-                    <div class="card-stat-value">{{ recommended_count }}</div>
-                    <div class="card-stat-label">Empfohlen</div>
+            <a href="/pro/recommended" class="dashboard-card">
+                <div class="card-icon">🎯</div>
+                <div class="card-title">Empfehlungen <span class="badge-beta">Beta</span></div>
+                <div class="card-description">Aufträge passend zu {{ company_name }}, basierend auf Ihrem Profil.</div>
+                <div class="card-stats">
+                    <div><div class="card-stat-value">{{ recommended_count }}</div><div class="card-stat-label">Empfohlen</div></div>
+                    <div><div class="card-stat-value">{{ match_rate }}%</div><div class="card-stat-label">Match-Rate</div></div>
                 </div>
-                <div class="card-stat">
-                    <div class="card-stat-value">{{ match_rate }}%</div>
-                    <div class="card-stat-label">Match-Rate</div>
+            </a>
+
+            <a href="/pro/favorites" class="dashboard-card">
+                <div class="card-icon">⭐</div>
+                <div class="card-title">Merkliste</div>
+                <div class="card-description">Gespeicherte Ausschreibungen jederzeit einsehen.</div>
+                <div class="card-stats">
+                    <div><div class="card-stat-value">{{ favorites_count }}</div><div class="card-stat-label">Gespeichert</div></div>
                 </div>
-            </div>
-        </a>
+            </a>
 
-        <!-- Merkliste -->
-        <a href="/pro/favorites" class="dashboard-card">
-            <div class="card-icon">❤️</div>
-            <div class="card-title">Merkliste</div>
-            <div class="card-description">
-                Ihre gespeicherten Aufträge. Markieren Sie interessante
-                Ausschreibungen und greifen Sie jederzeit darauf zu.
-            </div>
-            <div class="card-stats">
-                <div class="card-stat">
-                    <div class="card-stat-value">{{ favorites_count }}</div>
-                    <div class="card-stat-label">Gespeichert</div>
-                </div>
-            </div>
-        </a>
+            <a href="/pro/bkp-calculator" class="dashboard-card">
+                <div class="card-icon">🧮</div>
+                <div class="card-title">BKP-Rechner <span class="badge-beta">Beta</span></div>
+                <div class="card-description">Baukosten nach BKP-Kategorien berechnen.</div>
+            </a>
 
-        <!-- BKP-Rechner -->
-        <a href="/pro/bkp-calculator" class="dashboard-card">
-            <div class="card-icon">🧮</div>
-            <div class="card-title">BKP-Rechner <span class="badge-beta">BETA</span></div>
-            <div class="card-description">
-                Berechnen Sie Baukosten nach BKP-Kategorien.
-                Kostenschätzung für verschiedene Gebäudetypen und Baustandards.
-            </div>
-        </a>
-
-        <!-- E-Mail Benachrichtigungen -->
-        <div class="dashboard-card coming-soon">
-            <div class="card-icon">📧</div>
-            <div class="card-title">E-Mail Alerts <span class="badge-coming">COMING SOON</span></div>
-            <div class="card-description">
-                Tägliche Benachrichtigungen über neue Aufträge,
-                die zu Ihrem Profil passen.
+            <div class="dashboard-card coming-soon">
+                <div class="card-icon">📧</div>
+                <div class="card-title">E-Mail Alerts <span class="badge-coming">Soon</span></div>
+                <div class="card-description">Tägliche Benachrichtigungen über neue passende Aufträge.</div>
             </div>
         </div>
     </div>

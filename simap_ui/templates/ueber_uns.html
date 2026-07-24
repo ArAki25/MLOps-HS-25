@@ -3,406 +3,314 @@
 
 {% block extra_css %}
 <style>
-    /* ── Hero ── */
-    .about-hero {
-        background: #000;
-        padding: 5.5rem 2rem 5rem;
+    .au-hero {
         text-align: center;
+        padding: var(--space-3xl) var(--space-lg) var(--space-2xl);
     }
-    .about-hero-eyebrow {
-        font-size: 0.78rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.16em;
-        color: var(--accent);
-        margin-bottom: 1rem;
-    }
-    .about-hero h1 {
-        font-size: 3rem;
-        font-weight: 700;
-        letter-spacing: -0.03em;
-        color: #fff;
-        margin-bottom: 1.25rem;
-        line-height: 1.15;
-    }
-    .about-hero p {
-        font-size: 1.1rem;
-        color: rgba(255,255,255,0.58);
-        max-width: 580px;
-        margin: 0 auto 2.25rem;
-        line-height: 1.7;
-    }
-    .about-hero-cta {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.875rem 2rem;
-        background: var(--accent);
-        color: #000;
-        font-weight: 700;
-        font-size: 0.9375rem;
-        border-radius: 10px;
-        text-decoration: none;
-        transition: filter 0.15s;
-    }
-    .about-hero-cta:hover { filter: brightness(1.1); }
-    html[data-theme="light"] .about-hero {
-        background: var(--surface);
-        border-bottom: 1px solid var(--border);
-    }
-    html[data-theme="light"] .about-hero h1 { color: var(--text-primary); }
-    html[data-theme="light"] .about-hero p  { color: var(--text-secondary); }
-
-    /* ── Shared ── */
-    .about-container { max-width: 960px; margin: 0 auto; padding: 0 2rem; }
-
-    /* ── Proposition ── */
-    .about-prop {
-        padding: 5.5rem 2rem;
-        border-bottom: 1px solid var(--border);
-    }
-    .about-prop-inner {
-        max-width: 960px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 4rem;
-        align-items: center;
-    }
-    .about-prop-label {
-        font-size: 0.78rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        color: var(--accent);
-        margin-bottom: 0.75rem;
-    }
-    .about-prop h2 {
+    .au-hero h1 {
+        font-family: 'JetBrains Mono', monospace;
         font-size: 2rem;
         font-weight: 700;
-        letter-spacing: -0.025em;
-        line-height: 1.25;
         color: var(--text-primary);
-        margin-bottom: 1.25rem;
+        margin-bottom: var(--space-sm);
+        letter-spacing: -0.02em;
     }
-    .about-prop p {
-        font-size: 0.975rem;
-        color: var(--text-secondary);
-        line-height: 1.8;
-        margin-bottom: 1rem;
-    }
-    .about-prop p:last-child { margin-bottom: 0; }
-
-    /* stat pillars */
-    .about-pillars {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
-    .about-pillar {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 1.5rem 1.25rem;
-        text-align: center;
-    }
-    .about-pillar-val {
-        font-size: 2rem;
-        font-weight: 700;
-        font-family: 'Space Mono', monospace;
-        background: linear-gradient(135deg, var(--accent), #3b82f6);
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        line-height: 1.1;
-        margin-bottom: 0.35rem;
-    }
-    .about-pillar-lbl {
-        font-size: 0.78rem;
-        color: var(--text-muted);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-    }
-
-    /* ── Why choose us ── */
-    .about-why {
-        padding: 5.5rem 2rem;
-        border-bottom: 1px solid var(--border);
-    }
-    .about-section-header {
-        text-align: center;
-        margin-bottom: 3.5rem;
-    }
-    .about-section-header .label {
-        font-size: 0.78rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        color: var(--accent);
-        margin-bottom: 0.75rem;
-    }
-    .about-section-header h2 {
-        font-size: 2rem;
-        font-weight: 700;
-        letter-spacing: -0.025em;
-        color: var(--text-primary);
-        margin-bottom: 0.75rem;
-    }
-    .about-section-header p {
-        font-size: 1rem;
+    .au-hero p {
+        font-size: 0.95rem;
         color: var(--text-secondary);
         max-width: 520px;
         margin: 0 auto;
-        line-height: 1.65;
+        line-height: 1.6;
     }
 
-    .why-grid {
-        max-width: 960px;
+    .au-wrapper {
+        max-width: 1060px;
         margin: 0 auto;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.25rem;
+        padding: 0 var(--space-lg);
     }
-    .why-card {
+
+    /* ── Proposition ── */
+    .au-prop {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-2xl);
+        align-items: start;
+        padding-bottom: var(--space-2xl);
+        margin-bottom: var(--space-2xl);
+        border-bottom: 1px solid var(--border);
+    }
+    .au-prop-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: var(--space-sm);
+    }
+    .au-prop h2 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: var(--space-md);
+        line-height: 1.3;
+    }
+    .au-prop p {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        line-height: 1.7;
+        margin-bottom: var(--space-sm);
+    }
+    .au-prop p:last-child { margin-bottom: 0; }
+
+    .au-pillars {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-sm);
+    }
+    .au-pillar {
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 1.75rem 1.5rem;
-        transition: border-color 0.2s, box-shadow 0.2s;
+        border-radius: var(--radius);
+        padding: var(--space-lg) var(--space-md);
+        text-align: center;
     }
-    .why-card:hover {
-        border-color: rgba(6,182,212,0.35);
-        box-shadow: 0 4px 20px rgba(6,182,212,0.07);
+    .au-pillar-val {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.1;
+        margin-bottom: 4px;
     }
-    .why-icon {
-        width: 44px;
-        height: 44px;
-        background: linear-gradient(135deg, rgba(6,182,212,0.1), rgba(59,130,246,0.1));
-        border: 1px solid rgba(6,182,212,0.2);
-        border-radius: 12px;
+    .au-pillar-lbl {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.62rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    /* ── Why cards ── */
+    .au-why-header {
+        text-align: center;
+        margin-bottom: var(--space-xl);
+    }
+    .au-why-header h2 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+    .au-why-header p {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+    }
+    .au-why-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-md);
+        margin-bottom: var(--space-2xl);
+    }
+    .au-why-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-lg);
+        transition: border-color 150ms ease;
+    }
+    .au-why-card:hover { border-color: var(--text-muted); }
+    .au-why-icon {
+        width: 36px; height: 36px;
+        background: var(--accent-light);
+        border-radius: var(--radius-sm);
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 1rem;
-        color: var(--accent);
+        margin-bottom: var(--space-sm);
     }
-    .why-card h3 {
-        font-size: 1rem;
-        font-weight: 700;
+    .au-why-icon svg {
+        width: 18px; height: 18px;
+        stroke: var(--accent);
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .au-why-card h3 {
+        font-size: 0.9rem;
+        font-weight: 600;
         color: var(--text-primary);
-        margin-bottom: 0.5rem;
+        margin-bottom: 4px;
     }
-    .why-card p {
-        font-size: 0.875rem;
+    .au-why-card p {
+        font-size: 0.82rem;
         color: var(--text-secondary);
-        line-height: 1.65;
+        line-height: 1.6;
     }
 
-    /* ── Trust strip ── */
-    .about-trust {
-        padding: 4rem 2rem;
-        border-bottom: 1px solid var(--border);
-        background: var(--surface);
-    }
-    .trust-strip {
-        max-width: 860px;
-        margin: 0 auto;
+    /* ── Trust ── */
+    .au-trust {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 2rem;
-        text-align: center;
+        gap: var(--space-md);
+        padding: var(--space-xl) 0;
+        border-top: 1px solid var(--border);
+        margin-bottom: var(--space-2xl);
     }
-    .trust-item-v {
+    .au-trust-item {
+        text-align: center;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.625rem;
+        gap: 6px;
     }
-    .trust-icon-v {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, rgba(6,182,212,0.1), rgba(59,130,246,0.1));
-        border: 1px solid rgba(6,182,212,0.2);
+    .au-trust-icon {
+        width: 36px; height: 36px;
+        background: var(--accent-light);
+        border-radius: var(--radius-sm);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--accent);
     }
-    .trust-item-v strong {
-        font-size: 0.9375rem;
-        font-weight: 700;
+    .au-trust-icon svg {
+        width: 18px; height: 18px;
+        stroke: var(--accent);
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .au-trust-item strong {
+        font-size: 0.84rem;
+        font-weight: 600;
         color: var(--text-primary);
     }
-    .trust-item-v span {
-        font-size: 0.8125rem;
+    .au-trust-item span {
+        font-size: 0.78rem;
         color: var(--text-muted);
         line-height: 1.5;
+        max-width: 240px;
     }
 
     /* ── CTA ── */
-    .about-cta {
-        padding: 5.5rem 2rem;
+    .au-cta {
+        max-width: 500px;
+        margin: 0 auto var(--space-3xl);
         text-align: center;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-2xl) var(--space-lg);
     }
-    .about-cta h2 {
-        font-size: 2rem;
-        font-weight: 700;
-        letter-spacing: -0.025em;
-        color: var(--text-primary);
-        margin-bottom: 0.75rem;
-    }
-    .about-cta p {
-        font-size: 1rem;
-        color: var(--text-secondary);
-        max-width: 480px;
-        margin: 0 auto 2rem;
-        line-height: 1.65;
-    }
-    .about-cta-btns {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
+    .au-cta h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: var(--space-sm); }
+    .au-cta p { color: var(--text-secondary); margin-bottom: var(--space-lg); font-size: 0.9rem; }
 
     @media (max-width: 768px) {
-        .about-hero h1 { font-size: 2.2rem; }
-        .about-prop-inner { grid-template-columns: 1fr; gap: 2.5rem; }
-        .why-grid { grid-template-columns: 1fr 1fr; }
-        .trust-strip { grid-template-columns: 1fr; gap: 1.5rem; }
-        .about-hero { padding: 3.5rem 1.5rem 3rem; }
-    }
-    @media (max-width: 520px) {
-        .why-grid { grid-template-columns: 1fr; }
-        .about-pillars { grid-template-columns: 1fr 1fr; }
+        .au-prop { grid-template-columns: 1fr; }
+        .au-why-grid { grid-template-columns: 1fr; }
+        .au-trust { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- Hero -->
-<section class="about-hero">
-    <div class="about-hero-eyebrow">Über SAJF Strategies</div>
-    <h1>Öffentliche Aufträge.<br>Einfach. Intelligent. Sicher.</h1>
+<div class="au-hero">
+    <div class="section-label">Über uns</div>
+    <h1>Öffentliche Aufträge. Einfach. Intelligent.</h1>
     <p>Wir bringen Transparenz in den öffentlichen Beschaffungsmarkt der Schweiz — damit Unternehmen die richtigen Ausschreibungen zur richtigen Zeit finden.</p>
-    <a href="/register" class="about-hero-cta">
-        Kostenlos starten
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-    </a>
-</section>
+</div>
 
-<!-- Core proposition -->
-<section class="about-prop">
-    <div class="about-prop-inner">
+<div class="au-wrapper">
+    <div class="au-prop">
         <div>
-            <div class="about-prop-label">Was wir tun</div>
+            <div class="au-prop-label">Was wir tun</div>
             <h2>Der smarte Zugang zum Schweizer Beschaffungsmarkt</h2>
-            <p>Der öffentliche Beschaffungsmarkt der Schweiz bewegt jährlich Milliarden von Franken — doch der Zugang ist komplex, zeitaufwändig und fragmentiert. Relevante Ausschreibungen gehen unter, Fristen werden verpasst, Chancen bleiben ungenutzt.</p>
-            <p>SAJF Strategies aggregiert alle öffentlichen Ausschreibungen aus simap.ch, strukturiert sie intelligent und macht sie mit modernster KI für Ihr Unternehmen nutzbar. Statt Stunden zu suchen, erhalten Sie in Sekunden die Ausschreibungen, die wirklich zu Ihnen passen.</p>
+            <p>Der öffentliche Beschaffungsmarkt der Schweiz bewegt jährlich Milliarden von Franken — doch der Zugang ist komplex, zeitaufwändig und fragmentiert.</p>
+            <p>SAJF Strategies aggregiert alle öffentlichen Ausschreibungen aus simap.ch, strukturiert sie intelligent und macht sie mit modernster KI für Ihr Unternehmen nutzbar.</p>
             <p>Basiert in Zürich. Gebaut für den Schweizer Markt.</p>
         </div>
-        <div class="about-pillars">
-            <div class="about-pillar">
-                <div class="about-pillar-val" id="au-total">–</div>
-                <div class="about-pillar-lbl">Ausschreibungen</div>
+        <div class="au-pillars">
+            <div class="au-pillar">
+                <div class="au-pillar-val" id="au-total">–</div>
+                <div class="au-pillar-lbl">Ausschreibungen</div>
             </div>
-            <div class="about-pillar">
-                <div class="about-pillar-val">26</div>
-                <div class="about-pillar-lbl">Kantone</div>
+            <div class="au-pillar">
+                <div class="au-pillar-val">26</div>
+                <div class="au-pillar-lbl">Kantone</div>
             </div>
-            <div class="about-pillar">
-                <div class="about-pillar-val">täglich</div>
-                <div class="about-pillar-lbl">Updates</div>
+            <div class="au-pillar">
+                <div class="au-pillar-val">täglich</div>
+                <div class="au-pillar-lbl">Updates</div>
             </div>
-            <div class="about-pillar">
-                <div class="about-pillar-val">100%</div>
-                <div class="about-pillar-lbl">Transparent</div>
+            <div class="au-pillar">
+                <div class="au-pillar-val">100%</div>
+                <div class="au-pillar-lbl">Transparent</div>
             </div>
         </div>
     </div>
-</section>
 
-<!-- Why choose us -->
-<section class="about-why">
-    <div class="about-section-header">
-        <div class="label">Ihr Vorteil</div>
+    <div class="au-why-header">
+        <div class="section-label">Ihr Vorteil</div>
         <h2>Warum Unternehmen auf SAJF Strategies setzen</h2>
-        <p>Drei Eigenschaften, die den Unterschied machen — für Unternehmen jeder Grösse.</p>
+        <p>Drei Eigenschaften, die den Unterschied machen.</p>
     </div>
-    <div class="why-grid">
-        <div class="why-card">
-            <div class="why-icon">
-                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
+    <div class="au-why-grid">
+        <div class="au-why-card">
+            <div class="au-why-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
             <h3>Verlässliche Datenqualität</h3>
-            <p>Alle Daten stammen direkt aus dem offiziellen Schweizer Beschaffungsportal simap.ch — vollständig, aktuell und ohne redaktionelle Filterung. Was ausgeschrieben ist, sehen Sie.</p>
+            <p>Alle Daten stammen direkt aus dem offiziellen Schweizer Beschaffungsportal simap.ch — vollständig, aktuell und ohne redaktionelle Filterung.</p>
         </div>
-        <div class="why-card">
-            <div class="why-icon">
-                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                </svg>
+        <div class="au-why-card">
+            <div class="au-why-icon">
+                <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             </div>
             <h3>KI-gestützte Relevanz</h3>
-            <p>Unser Empfehlungssystem lernt aus Ihrem Unternehmensprofil und Ihren Bewertungen. Je mehr Sie nutzen, desto präziser die Treffer — ohne manuelle Konfiguration.</p>
+            <p>Unser Empfehlungssystem lernt aus Ihrem Unternehmensprofil und Ihren Bewertungen. Je mehr Sie nutzen, desto präziser die Treffer.</p>
         </div>
-        <div class="why-card">
-            <div class="why-icon">
-                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                    <rect x="2" y="3" width="20" height="14" rx="2"/>
-                    <path d="M8 21h8M12 17v4"/>
-                </svg>
+        <div class="au-why-card">
+            <div class="au-why-icon">
+                <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
             </div>
             <h3>Einfach von Tag eins</h3>
-            <p>Kein aufwändiges Onboarding, keine IT-Integration. Profil anlegen, Präferenzen hinterlegen — und sofort mit personalisierten Ausschreibungen starten.</p>
+            <p>Kein aufwändiges Onboarding, keine IT-Integration. Profil anlegen, Präferenzen hinterlegen — sofort starten.</p>
         </div>
     </div>
-</section>
 
-<!-- Trust strip -->
-<section class="about-trust">
-    <div class="trust-strip">
-        <div class="trust-item-v">
-            <div class="trust-icon-v">
-                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <div class="au-trust">
+        <div class="au-trust-item">
+            <div class="au-trust-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
             <strong>Offizielle Quellen</strong>
             <span>Daten ausschliesslich von simap.ch — dem offiziellen Beschaffungsportal der Schweiz</span>
         </div>
-        <div class="trust-item-v">
-            <div class="trust-icon-v">
-                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <div class="au-trust-item">
+            <div class="au-trust-icon">
+                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
             <strong>Datenschutz &amp; Sicherheit</strong>
             <span>Schweizer Infrastruktur, DSGVO-konformes Hosting, keine Weitergabe an Dritte</span>
         </div>
-        <div class="trust-item-v">
-            <div class="trust-icon-v">
-                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <div class="au-trust-item">
+            <div class="au-trust-icon">
+                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
             </div>
             <strong>Standort Zürich</strong>
             <span>Entwickelt und betrieben in der Schweiz — mit vollem Verständnis für den lokalen Markt</span>
         </div>
     </div>
-</section>
+</div>
 
-<!-- CTA -->
-<section class="about-cta">
-    <h2>Bereit, keine Ausschreibung mehr zu verpassen?</h2>
+<div class="au-cta">
+    <h2>Bereit loszulegen?</h2>
     <p>Kostenlos registrieren und ab sofort passende öffentliche Aufträge automatisch entdecken.</p>
-    <div class="about-cta-btns">
-        <a href="/register" class="btn btn-primary" style="font-size:0.95rem;padding:0.875rem 2rem;">
-            Kostenlos starten
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-        </a>
-        <a href="/support" class="btn btn-ghost" style="font-size:0.95rem;padding:0.875rem 2rem;">Fragen? Kontakt aufnehmen</a>
-    </div>
-</section>
+    <a href="/register" class="btn btn-primary btn-lg">Kostenlos starten</a>
+</div>
 
 {% endblock %}
 
