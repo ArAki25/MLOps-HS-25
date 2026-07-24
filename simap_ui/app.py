@@ -72,13 +72,13 @@ app.secret_key = os.getenv('SECRET_KEY', 'sajf-strategies-secret-2025')
 
 # Supabase initialisieren
 print("=" * 60)
-print("🚀 SAJF Strategies - Tender Platform startet...")
+print("SAJF Strategies - Tender Platform startet...")
 print("=" * 60)
 
 try:
     init_supabase()
 except Exception as e:
-    print(f"❌ Supabase Fehler: {e}")
+    print(f"[ERROR] Supabase Fehler: {e}")
 
 
 # ============================================
@@ -287,7 +287,7 @@ def auth_register():
             return jsonify(result), 400
 
     except Exception as e:
-        print(f"❌ Register API Fehler: {e}")
+        print(f"[ERROR] Register API Fehler: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -330,7 +330,7 @@ def auth_login():
             return jsonify(result), 401
 
     except Exception as e:
-        print(f"❌ Login API Fehler: {e}")
+        print(f"[ERROR] Login API Fehler: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -983,10 +983,10 @@ def api_bob_chat():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print("\n" + "=" * 60)
-    print("🌐 SAJF Strategies - Tender Platform")
-    print("📊 Datenbank: Supabase")
-    print(f"🔗 URL: http://127.0.0.1:{port}")
-    print(f"🔐 Admin: http://127.0.0.1:{port}/admin")
+    print("SAJF Strategies - Tender Platform")
+    print("Datenbank: Supabase")
+    print(f"URL: http://127.0.0.1:{port}")
+    print(f"Admin: http://127.0.0.1:{port}/admin")
     print("=" * 60)
 
-    app.run(debug=False, host='0.0.0.0', port=port)
+    app.run(debug=True, host='0.0.0.0', port=port)

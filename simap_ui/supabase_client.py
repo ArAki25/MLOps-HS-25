@@ -1,4 +1,4 @@
-"""
+﻿"""
 supabase_client.py - Supabase Datenbank Client
 SAJF Strategies - Schema: ui
 Alle Website-Tabellen liegen im 'ui' Schema.
@@ -43,12 +43,12 @@ def init_supabase():
             "SUPABASE_SERVICE_ROLE_KEY in deiner lokalen .env Datei."
         )
 
-    print(f"🔗 URL: {url[:50]}...")
-    print(f"🔑 Key: {key[:20]}...{key[-10:]}")
+    print(f" URL: {url[:50]}...")
+    print(f" Key: {key[:20]}...{key[-10:]}")
 
     supabase = create_client(url, key)
     supabase_auth = create_client(url, key)
-    print(f"✅ Supabase verbunden! Clients initialisiert.")
+    print(f"[OK] Supabase verbunden! Clients initialisiert.")
     return supabase
 
 
@@ -97,7 +97,7 @@ def get_all_projects(limit: int = 50) -> List[Dict]:
             .execute()
         return [transform_project(row) for row in (response.data or [])]
     except Exception as e:
-        print(f"❌ get_all_projects Fehler: {e}")
+        print(f"[ERROR] get_all_projects Fehler: {e}")
         return []
 
 
@@ -171,7 +171,7 @@ def get_projects_paginated(page=1, per_page=30, search='', canton='',
         }
 
     except Exception as e:
-        print(f"❌ get_projects_paginated Fehler: {e}")
+        print(f"[ERROR] get_projects_paginated Fehler: {e}")
         return {'data': [], 'total': 0, 'page': page, 'per_page': per_page, 'pages': 0}
 
 
@@ -197,13 +197,13 @@ def get_filter_options() -> Dict:
         process_types = sorted(set(r.get('process_type') for r in all_rows if r.get('process_type') and r.get('process_type').strip()))
         pub_types = sorted(set(r.get('pub_type') for r in all_rows if r.get('pub_type') and r.get('pub_type').strip()))
 
-        print(f"✅ Filter-Optionen: {len(cantons)} Kantone, {len(order_types)} Auftragsarten, {len(process_types)} Verfahren, {len(pub_types)} Pub-Typen")
+        print(f"[OK] Filter-Optionen: {len(cantons)} Kantone, {len(order_types)} Auftragsarten, {len(process_types)} Verfahren, {len(pub_types)} Pub-Typen")
         return {
             'cantons': cantons, 'order_types': order_types,
             'process_types': process_types, 'pub_types': pub_types
         }
     except Exception as e:
-        print(f"❌ get_filter_options Fehler: {e}")
+        print(f"[ERROR] get_filter_options Fehler: {e}")
         return {'cantons': [], 'order_types': [], 'process_types': [], 'pub_types': []}
 
 
@@ -214,7 +214,7 @@ def get_project_by_id(project_id: str) -> Optional[Dict]:
             return transform_project(response.data[0], include_details=True)
         return None
     except Exception as e:
-        print(f"❌ get_project_by_id Fehler: {e}")
+        print(f"[ERROR] get_project_by_id Fehler: {e}")
         return None
 
 
@@ -230,7 +230,7 @@ def search_projects(query: str, limit: int = 50) -> List[Dict]:
             .execute()
         return [transform_project(row) for row in (response.data or [])]
     except Exception as e:
-        print(f"❌ search_projects Fehler: {e}")
+        print(f"[ERROR] search_projects Fehler: {e}")
         return []
 
 
@@ -246,7 +246,7 @@ def filter_projects(canton=None, process_type=None, order_type=None, limit=50) -
         response = query.order('publication_date', desc=True).limit(limit).execute()
         return [transform_project(row) for row in (response.data or [])]
     except Exception as e:
-        print(f"❌ filter_projects Fehler: {e}")
+        print(f"[ERROR] filter_projects Fehler: {e}")
         return []
 
 
@@ -264,10 +264,10 @@ def get_cantons() -> List[str]:
                 break
             offset += batch_size
         cantons = sorted(set(row.get('canton') for row in all_cantons if row.get('canton')))
-        print(f"✅ {len(cantons)} Kantone geladen")
+        print(f"[OK] {len(cantons)} Kantone geladen")
         return cantons
     except Exception as e:
-        print(f"❌ get_cantons Fehler: {e}")
+        print(f"[ERROR] get_cantons Fehler: {e}")
         return []
 
 
@@ -281,7 +281,7 @@ def get_statistics() -> Dict:
             'today': today_count.count if today_count.count else 0
         }
     except Exception as e:
-        print(f"❌ get_statistics Fehler: {e}")
+        print(f"[ERROR] get_statistics Fehler: {e}")
         return {'total': 0, 'today': 0}
 
 
@@ -599,10 +599,10 @@ def get_user_ratings_with_details(user_id):
                     'award_decision_date': None,
                 })
 
-        print(f"✅ {len(result)} Likes geladen ({len(project_ids)} Projekte + {len(archive_ids)} Archiv)")
+        print(f"[OK] {len(result)} Likes geladen ({len(project_ids)} Projekte + {len(archive_ids)} Archiv)")
         return result
     except Exception as e:
-        print(f"❌ get_user_ratings_with_details Fehler: {e}")
+        print(f"[ERROR] get_user_ratings_with_details Fehler: {e}")
         return []
 
 
@@ -622,10 +622,10 @@ def remove_user_rating(user_id, tender_id, source='project'):
             .eq('tender_id', str(tender_id)) \
             .eq('source', source) \
             .execute()
-        print(f"✅ Like entfernt: {tender_id} ({source})")
+        print(f"[OK] Like entfernt: {tender_id} ({source})")
         return {'success': True}
     except Exception as e:
-        print(f"❌ remove_user_rating Fehler: {e}")
+        print(f"[ERROR] remove_user_rating Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -798,7 +798,7 @@ def get_test_runs_overview(top_n: int = 10) -> List[Dict]:
             .like('email', '%@recommender.dev') \
             .execute().data or []
     except Exception as e:
-        print(f"❌ get_test_runs_overview (users): {e}")
+        print(f"[ERROR] get_test_runs_overview (users): {e}")
         return []
 
     overview = []
@@ -889,7 +889,7 @@ def get_feed_ratings_map(user_id, source='project'):
             .execute().data or []
         return {r['tender_id']: 1 for r in rows if r.get('tender_id')}
     except Exception as e:
-        print(f"❌ get_feed_ratings_map Fehler: {e}")
+        print(f"[ERROR] get_feed_ratings_map Fehler: {e}")
         return {}
 
 
@@ -931,7 +931,7 @@ def upsert_feed_rating(user_id, tender_id, rating, source='project'):
         ).execute()
         return {'success': True, 'action': 'upsert', 'rating': 1}
     except Exception as e:
-        print(f"❌ upsert_feed_rating Fehler: {e}")
+        print(f"[ERROR] upsert_feed_rating Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -961,7 +961,7 @@ def register_user(email: str, password: str, company_name: str) -> Dict:
                     'company_name': company_name,
                     'created_at': datetime.utcnow().isoformat()
                 }).execute()
-                print(f"✅ User in ui.users gespeichert")
+                print(f"[OK] User in ui.users gespeichert")
             except Exception as e:
                 print(f"⚠️ ui.users: {e} (Auth war erfolgreich)")
 
@@ -973,7 +973,7 @@ def register_user(email: str, password: str, company_name: str) -> Dict:
 
     except Exception as e:
         msg = str(e)
-        print(f"❌ Register-Fehler: {msg}")
+        print(f"[ERROR] Register-Fehler: {msg}")
         if 'already' in msg.lower():
             return {'success': False, 'error': 'E-Mail bereits registriert'}
         return {'success': False, 'error': f'Fehler: {msg}'}
@@ -1003,7 +1003,7 @@ def login_user(email: str, password: str) -> Dict:
             if not company_name and auth_response.user.user_metadata:
                 company_name = auth_response.user.user_metadata.get('company_name')
 
-            print(f"✅ Login erfolgreich: {email}, Firma: {company_name}")
+            print(f"[OK] Login erfolgreich: {email}, Firma: {company_name}")
             return {
                 'success': True,
                 'user': {
@@ -1016,7 +1016,7 @@ def login_user(email: str, password: str) -> Dict:
 
     except Exception as e:
         msg = str(e)
-        print(f"❌ Login-Fehler: {msg}")
+        print(f"[ERROR] Login-Fehler: {msg}")
         if 'invalid' in msg.lower() or 'credentials' in msg.lower():
             return {'success': False, 'error': 'Ungültige E-Mail oder Passwort'}
         return {'success': False, 'error': f'Fehler: {msg}'}
@@ -1068,7 +1068,7 @@ def get_user_profile(user_id):
             profile['preferred_cantons'] = [s for s in pc.strip('{}').split(',') if s]
         return profile
     except Exception as e:
-        print(f"❌ get_user_profile Fehler: {e}")
+        print(f"[ERROR] get_user_profile Fehler: {e}")
         return {}
 
 
@@ -1143,11 +1143,11 @@ def save_user_profile(user_id, data):
         except:
             pass
 
-        print(f"✅ Profil gespeichert für User: {user_id}")
+        print(f"[OK] Profil gespeichert für User: {user_id}")
         return {'success': True}
 
     except Exception as e:
-        print(f"❌ Profil-Fehler: {e}")
+        print(f"[ERROR] Profil-Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -1180,14 +1180,14 @@ def save_user_simap_ids(user_id, ids):
                     rating_rows, on_conflict='user_id,tender_id,source'
                 ).execute()
                 matched_count = len(rating_rows)
-                print(f"✅ {matched_count}/{len(ids)} Simap-IDs als Likes gespeichert → Taste-Vector wird berechnet")
+                print(f"[OK] {matched_count}/{len(ids)} Simap-IDs als Likes gespeichert → Taste-Vector wird berechnet")
 
         mark_onboarding_complete(user_id)
-        print(f"✅ {len(ids)} Simap-IDs gespeichert für User: {user_id}")
+        print(f"[OK] {len(ids)} Simap-IDs gespeichert für User: {user_id}")
         return {'success': True, 'count': len(ids), 'matched': matched_count}
 
     except Exception as e:
-        print(f"❌ Simap-IDs-Fehler: {e}")
+        print(f"[ERROR] Simap-IDs-Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -1214,11 +1214,11 @@ def get_onboarding_filter_options():
             r['project_subtype'] for r in all_rows
             if r.get('project_subtype') and r['project_subtype'].strip()
         ))
-        print(f"✅ {len(subtypes)} project_subtypes geladen")
+        print(f"[OK] {len(subtypes)} project_subtypes geladen")
         return {'subtypes': subtypes}
 
     except Exception as e:
-        print(f"❌ get_onboarding_filter_options Fehler: {e}")
+        print(f"[ERROR] get_onboarding_filter_options Fehler: {e}")
         return {'subtypes': []}
 
 
@@ -1362,10 +1362,10 @@ def get_user_recommendations(user_id, count: int = 20):
         reranked = _mmr_rerank(candidates, k=count)
         clean = [_strip_embedding(c) for c in reranked]
 
-        print(f"✅ {len(clean)} recommendations (pool={len(candidates)}) für User: {user_id}")
+        print(f"[OK] {len(clean)} recommendations (pool={len(candidates)}) für User: {user_id}")
         return clean
     except Exception as e:
-        print(f"❌ get_user_recommendations Fehler: {e}")
+        print(f"[ERROR] get_user_recommendations Fehler: {e}")
         return []
 
 
@@ -1432,7 +1432,7 @@ def recommendation_diversity_metric(user_id, count: int = 10) -> Dict:
             'target_max': 0.75,
         }
     except Exception as e:
-        print(f"❌ recommendation_diversity_metric Fehler: {e}")
+        print(f"[ERROR] recommendation_diversity_metric Fehler: {e}")
         return {'error': str(e)}
 
 
@@ -1501,19 +1501,19 @@ def get_filtered_sample_projects(user_id, sample_size=20):
             if p.get('award_decision_date'):
                 p['award_decision_date'] = str(p['award_decision_date'])
 
-        print(f"✅ {len(projects)} Sample-Projekte geladen für User: {user_id}")
+        print(f"[OK] {len(projects)} Sample-Projekte geladen für User: {user_id}")
         return projects
     except Exception as e:
-        print(f"❌ get_filtered_sample_projects Fehler: {e} — Fallback")
+        print(f"[ERROR] get_filtered_sample_projects Fehler: {e} — Fallback")
         try:
             out = _build_fallback(max(1, sample_size // 2))
             for p in out:
                 if p.get('award_decision_date'):
                     p['award_decision_date'] = str(p['award_decision_date'])
-            print(f"✅ Fallback Sample-Projekte: {len(out)}")
+            print(f"[OK] Fallback Sample-Projekte: {len(out)}")
             return out
         except Exception as e2:
-            print(f"❌ Fallback komplett fehlgeschlagen: {e2}")
+            print(f"[ERROR] Fallback komplett fehlgeschlagen: {e2}")
             return []
 
 
@@ -1558,10 +1558,10 @@ def save_user_ratings_v2(user_id, ratings_list):
 
         mark_onboarding_complete(user_id)
 
-        print(f"✅ {len(rows)} Likes gespeichert für User: {user_id}")
+        print(f"[OK] {len(rows)} Likes gespeichert für User: {user_id}")
         return {'success': True, 'count': len(rows)}
     except Exception as e:
-        print(f"❌ save_user_ratings_v2 Fehler: {e}")
+        print(f"[ERROR] save_user_ratings_v2 Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -1624,7 +1624,7 @@ def get_analytics_data() -> Dict:
             'order_type_counts': order_type_counts,
         }
     except Exception as e:
-        print(f"❌ get_analytics_data Fehler: {e}")
+        print(f"[ERROR] get_analytics_data Fehler: {e}")
         return {'canton_counts': {}, 'subtype_counts': {}, 'order_type_counts': {}}
 
 
@@ -1726,7 +1726,7 @@ def get_market_pulse_data() -> Dict:
             'avg_per_day': avg_per_day,
         }
     except Exception as e:
-        print(f"❌ get_market_pulse_data Fehler: {e}")
+        print(f"[ERROR] get_market_pulse_data Fehler: {e}")
         return {
             'canton_counts': {}, 'order_type_counts': {}, 'trend_30d': {},
             'top_orgs': [], 'total_all': 0, 'total_30d': 0, 'avg_per_day': 0,
@@ -1748,7 +1748,7 @@ def get_tender_note(user_id: str, simap_id: str) -> str:
             .execute()
         return (r.data[0].get('note') or '') if r.data else ''
     except Exception as e:
-        print(f"❌ get_tender_note Fehler: {e}")
+        print(f"[ERROR] get_tender_note Fehler: {e}")
         return ''
 
 
@@ -1767,7 +1767,7 @@ def save_tender_note(user_id: str, simap_id: str, note: str) -> Dict:
         ).execute()
         return {'success': True}
     except Exception as e:
-        print(f"❌ save_tender_note Fehler: {e}")
+        print(f"[ERROR] save_tender_note Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -1778,7 +1778,7 @@ def get_project_by_simap_id(simap_id: str) -> Optional[Dict]:
             return transform_project(r.data[0], include_details=True)
         return None
     except Exception as e:
-        print(f"❌ get_project_by_simap_id Fehler: {e}")
+        print(f"[ERROR] get_project_by_simap_id Fehler: {e}")
         return None
 
 
@@ -1819,7 +1819,7 @@ def create_team(owner_id: str, team_name: str) -> Dict:
 
         return {'success': True, 'team_id': team_id, 'invite_code': invite_code, 'name': team_name}
     except Exception as e:
-        print(f"❌ create_team Fehler: {e}")
+        print(f"[ERROR] create_team Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -1840,7 +1840,7 @@ def join_team(user_id: str, invite_code: str) -> Dict:
 
         return {'success': True, 'team_id': team_id, 'name': team['name']}
     except Exception as e:
-        print(f"❌ join_team Fehler: {e}")
+        print(f"[ERROR] join_team Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -1857,7 +1857,7 @@ def leave_team(user_id: str, team_id: str) -> Dict:
         ui('org_team_members').delete().eq('team_id', team_id).eq('user_id', user_id).execute()
         return {'success': True}
     except Exception as e:
-        print(f"❌ leave_team Fehler: {e}")
+        print(f"[ERROR] leave_team Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -1872,7 +1872,7 @@ def delete_team(owner_id: str, team_id: str) -> Dict:
         ui('org_teams').delete().eq('id', team_id).execute()
         return {'success': True}
     except Exception as e:
-        print(f"❌ delete_team Fehler: {e}")
+        print(f"[ERROR] delete_team Fehler: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -1893,7 +1893,7 @@ def get_user_team(user_id: str) -> Optional[Dict]:
         team['my_role'] = role
         return team
     except Exception as e:
-        print(f"❌ get_user_team Fehler: {e}")
+        print(f"[ERROR] get_user_team Fehler: {e}")
         return None
 
 
@@ -1919,7 +1919,7 @@ def get_team_members_data(team_id: str) -> List[Dict]:
             })
         return result
     except Exception as e:
-        print(f"❌ get_team_members_data Fehler: {e}")
+        print(f"[ERROR] get_team_members_data Fehler: {e}")
         return []
 
 
@@ -1943,7 +1943,7 @@ def get_team_favorites(team_id: str) -> List[Dict]:
                 result.append(f)
         return result
     except Exception as e:
-        print(f"❌ get_team_favorites Fehler: {e}")
+        print(f"[ERROR] get_team_favorites Fehler: {e}")
         return []
 
 
@@ -1967,7 +1967,7 @@ def get_team_ratings(team_id: str) -> List[Dict]:
                 result.append(r)
         return result
     except Exception as e:
-        print(f"❌ get_team_ratings Fehler: {e}")
+        print(f"[ERROR] get_team_ratings Fehler: {e}")
         return []
 
 
@@ -1978,7 +1978,7 @@ def mark_onboarding_complete(user_id):
             .update({'onboarding_completed': True, 'updated_at': datetime.utcnow().isoformat()}) \
             .eq('user_id', user_id) \
             .execute()
-        print(f"✅ Onboarding completed für User: {user_id}")
+        print(f"[OK] Onboarding completed für User: {user_id}")
     except Exception as e:
         print(f"⚠️ mark_onboarding_complete Fehler: {e}")
 
