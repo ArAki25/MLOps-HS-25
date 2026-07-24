@@ -1,0 +1,68 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: SSH Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ secrets.APP_DIR }}
+
+            echo "→ Pulling latest code..."
+            git pull origin main
+
+            echo "→ Activating venv and installing dependencies..."
+            source venv/bin/activate
+            pip install -q -r simap_ui/requirements.txt
+
+            echo "→ Restarting service..."
+            sudo systemctl restart sajf
+
+            echo "✓ Deploy complete."
+
+# ─────────────────────────────────────────────
+# REQUIRED GITHUB SECRETS (Settings → Secrets → Actions):
+#
+#   SERVER_HOST     — IP or hostname of your server (e.g. 65.21.1.2)
+#   SERVER_USER     — SSH user (e.g. ubuntu or root)
+#   SERVER_SSH_KEY  — Private SSH key (contents of ~/.ssh/id_rsa, the PRIVATE key)
+#   APP_DIR         — Absolute path to the project on server (e.g. /home/ubuntu/sajf)
+#
+# HOW TO SET UP SSH KEY:
+#   On your server:
+#     ssh-keygen -t ed25519 -f ~/.ssh/deploy_key -N ""
+#     cat ~/.ssh/deploy_key.pub >> ~/.ssh/authorized_keys
+#   Copy the PRIVATE key (deploy_key) into the SERVER_SSH_KEY secret.
+#
+# SUDOERS (needed for systemctl restart without password prompt):
+#   On your server run: sudo visudo
+#   Add this line (replace 'ubuntu' with your username):
+#     ubuntu ALL=(ALL) NOPASSWD: /bin/systemctl restart sajf
+# ─────────────────────────────────────────────
+
+# ─────────────────────────────────────────────
+# ALTERNATIVE: Deploy to Render (comment out the SSH job above, use this instead)
+#
+#  render-deploy:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Trigger Render deploy hook
+#        run: curl -s "${{ secrets.RENDER_DEPLOY_HOOK }}" > /dev/null
+#
+#  Required secret: RENDER_DEPLOY_HOOK
+#    → In Render: Service → Settings → Deploy Hook → copy URL → add as GitHub Secret
+# ─────────────────────────────────────────────

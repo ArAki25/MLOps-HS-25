@@ -7,6 +7,7 @@ from flask import Flask, render_template, jsonify, request, session, redirect, u
 from functools import wraps
 import os
 import secrets
+from datetime import timedelta
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from supabase_client import (
@@ -75,6 +76,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'sajf-strategies-secret-2025')
+app.permanent_session_lifetime = timedelta(hours=8)
 
 # Supabase initialisieren
 print("=" * 60)
@@ -234,13 +236,6 @@ def about():
     return render_template('about.html', content=content, team=team)
 
 
-@app.route('/pro')
-def pro():
-    """Pro Version Seite"""
-    content = get_content('pro')
-    return render_template('pro.html', content=content)
-
-
 @app.route('/support')
 def support():
     """Support Seite"""
@@ -397,6 +392,7 @@ def auth_register():
         if result.get('success'):
             # Auto-Login: Session direkt setzen nach Registrierung
             user = result.get('user', {})
+            session.permanent = True
             session['user_logged_in'] = True
             session['user_id'] = user.get('id')
             session['user_email'] = user.get('email', email)
@@ -435,6 +431,7 @@ def auth_login():
         if result.get('success'):
             # Setze Session
             user = result.get('user')
+            session.permanent = True
             session['user_logged_in'] = True
             session['user_id'] = user.get('id')
             session['user_email'] = user.get('email')
